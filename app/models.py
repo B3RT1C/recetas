@@ -49,6 +49,7 @@ class RecipeIn(BaseModel):
     titulo: str = Field(min_length=1, max_length=200)
     autor: str = Field(default="", max_length=120)
     video_url: str = Field(default="", max_length=500)
+    source_url: Optional[str] = Field(default=None, max_length=1000)
     raciones: Optional[int] = Field(default=None, ge=1, le=100)
     raciones_estimadas: bool = False
     tiempo_total_min: Optional[int] = Field(default=None, ge=0, le=7 * 24 * 60)
@@ -65,6 +66,14 @@ class RecipeIn(BaseModel):
     favorito: bool = False
     valoracion: Optional[int] = Field(default=None, ge=0, le=5)
     cocinado: list[CookLog] = Field(default_factory=list, max_length=500)
+
+    @field_validator("source_url")
+    @classmethod
+    def _src(cls, v: Optional[str]) -> Optional[str]:
+        v = (v or "").strip()
+        if v and not v.startswith(("http://", "https://")):
+            raise ValueError("La URL de origen debe empezar por http:// o https://")
+        return v or None
 
     @field_validator("video_url")
     @classmethod

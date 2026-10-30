@@ -21,7 +21,7 @@ from .services.validator import ImportValidationError, check_recipe, classify_er
 
 def _summary(r: dict) -> dict:
     return {k: r.get(k) for k in ("id", "tipo", "titulo", "autor", "tiempo_total_min", "precio_racion_eur",
-                                  "raciones", "etiquetas", "video_url")}
+                                  "raciones", "etiquetas", "video_url", "source_url", "source_type")}
 
 
 def build_mcp(services: Any, stdio_token: Optional[dict] = None) -> MCPServer:

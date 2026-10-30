@@ -1,5 +1,6 @@
 """Recipe repository: CRUD + search on top of the SQLite document store."""
 from __future__ import annotations
+from .source_link import with_source
 
 import json
 import re
@@ -109,6 +110,7 @@ class RecipeService:
         data = json.loads(row["data"])
         out = {"id": row["id"], "tipo": row["tipo"], "shortcode": row["shortcode"],
                "estado": ESTADO_COMPLETA if row["tipo"] == "receta" else ESTADO_PENDIENTE, **data}
+        with_source(out, row["shortcode"])
         out["media"] = self.media_for(row["shortcode"], data)
         thumbs = getattr(self, "thumbs", None)
         if thumbs is not None:
@@ -270,7 +272,7 @@ class RecipeService:
         for r in self.all():
             if ids is not None and r["id"] not in ids:
                 continue
-            item = {k: v for k, v in r.items() if k not in V2_KEYS and k not in ("id", "tipo", "shortcode", "media", "estado", "portada")}
+            item = {k: v for k, v in r.items() if k not in V2_KEYS and k not in ("id", "tipo", "shortcode", "media", "estado", "portada", "source_url", "source_type")}
             if r["tipo"] == "receta":
                 doc["recetas"].append({"id": r["id"], **item})
             else:

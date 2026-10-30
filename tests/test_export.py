@@ -12,6 +12,10 @@ def test_export_json_selection(client):
 
 def test_export_legacy_json_roundtrip(client, legacy):
     data = client.post("/api/export", json={"formato": "json_legacy"}).json()
+    # v1 shape is preserved; the only additions are the original-post link fields.
+    for item in data["recetas"] + data["solo_video"]:
+        assert item.pop("source_type") in ("instagram", None)
+        item.pop("source_url")
     assert data == legacy
 
 
