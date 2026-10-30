@@ -2,6 +2,17 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versiones según [SemVer](https://semver.org/lang/es/).
 
+## [2.1.5] — 2026-10-30 — Corrección urgente: caché y planificador en móvil
+
+### Corregido
+- **Planificador roto en móvil (causa real):** en v2.1.4 la regla `.hero{flex-wrap:nowrap}` pensada para la cabecera de Recetas se aplicaba a todas las cabeceras, y `.hero-actions{flex:0 0 auto}` impedía encogerse. En 360–390 px los botones de semana y «Añadir a la lista» se montaban sobre el título «Planificador» y lo partían en una columna de palabras. Ahora el comportamiento sin salto de línea es solo para Recetas (`.hero-rec`) y en las demás cabeceras las acciones bajan a su propia fila en móvil.
+- **Planificador con datos reales:** un título o nota sin espacios muy largo ensanchaba la rejilla de la semana (`1fr` = `minmax(auto,1fr)`) y provocaba desplazamiento horizontal. Las columnas usan `minmax(0,1fr)` y el texto se parte donde haga falta.
+- **Iconos y estilos antiguos tras actualizar:** `/assets` se servía sin `Cache-Control` y con URLs sin versión, así que el navegador del móvil podía reutilizar por heurística el JS/CSS de v2.1.3 con el HTML de v2.1.4. Ahora `index.html` enlaza cada recurso como `?v=<versión>-<hash del contenido>` (calculado al arrancar), esas URLs se sirven con `public, max-age=31536000, immutable` y cualquier otra petición a `/assets` lleva `no-cache` (revalidación con ETag/Last-Modified). No hay service worker.
+
+### Pruebas
+- Cada recurso de `index.html` existe en `git archive HEAD` (no solo en la copia de trabajo) y responde 200; las URLs versionadas cambian con el contenido; cabeceras de caché correctas; todos los iconos usados existen en `icons.js`.
+- Prueba de humo en navegador con los datos reales de `data/seed/recetas.json` más casos límite (título enorme, palabra larguísima, 100 raciones, sin raciones/etiquetas/pasos/precio, semana vacía, plan con receta borrada): las 4 vistas de Recetas, detalle, planificador, compra y ajustes a 360, 390 y 1440 px, claro y oscuro, densidad cómoda y compacta. Falla con errores de consola, peticiones propias fallidas, desbordamiento horizontal, cabecera solapada o días del planificador solapados o de tamaño cero.
+
 ## [2.1.4] — 2026-10-30 — Más aire en móvil
 
 ### Cambiado

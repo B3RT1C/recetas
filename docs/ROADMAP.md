@@ -10,6 +10,12 @@ con reproducción del vídeo local al abrir, filtros actuales reutilizados y nav
 **Estimación:** 1–1,5 días (componente de cuadrícula + carga diferida de portadas + tests de accesibilidad y capturas).
 No requiere cambios de esquema.
 
+## v2.1.6 — Runner y Ajustes (antes previsto para v2.1.5)
+El trabajo planificado del runner y de Ajustes pasa a v2.1.6: v2.1.5 se dedicó a una corrección urgente.
+
+## v2.1.5 — Corrección urgente (hecho)
+Caché de recursos versionada y planificador roto en móvil; ver CHANGELOG.
+
 ## v2.1.3 — Selector de vistas
 
 Hecho: «una sola» más compacta; iconos y orden corregidos (una · compacta · miniatura · cuadrícula); vista recordada por dispositivo; ajuste de miniatura/icono en listas (API y MCP); comprobación a 360 px.

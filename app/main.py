@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import contextlib
+
+from fastapi.responses import HTMLResponse
 import logging
 import os
 import shutil
@@ -520,10 +522,13 @@ def create_app(services: Optional[Services] = None) -> FastAPI:
     app.mount("/mcp", BearerAuthASGI(mcp_app, lambda t: svc.tokens.verify(t, "read")))
     app.mount("/videos", StaticFiles(directory=st.videos_dir, check_dir=False), name="videos")
     app.mount("/media", StaticFiles(directory=st.media_dir, check_dir=False), name="media")
-    app.mount("/assets", StaticFiles(directory=STATIC / "assets"), name="assets")
+    from .assets_cache import VersionedStaticFiles, version_html
+    assets_app = VersionedStaticFiles(directory=STATIC / "assets")
+    app.mount("/assets", assets_app, name="assets")
+    index_html = version_html((STATIC / "index.html").read_text(encoding="utf-8"), assets_app.versions)
 
     @app.get("/", include_in_schema=False)
     def index():
-        return FileResponse(STATIC / "index.html", headers={"Cache-Control": "no-cache"})
+        return HTMLResponse(index_html, headers={"Cache-Control": "no-cache"})
 
     return app
