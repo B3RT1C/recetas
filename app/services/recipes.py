@@ -11,6 +11,7 @@ from typing import Any, Optional
 from ..config import Settings
 from ..db import ESTADO_COMPLETA, ESTADO_PENDIENTE, Database, now, shortcode_of
 from .tags import norm, suggest_allergens, suggest_tags
+from .covers import DEFAULTS as COVER_DEFAULTS, SETTING as COVER_SETTING, SOURCES as COVER_SOURCES, ensure_library_file, generic_for
 
 UNIT_LABELS = {"ud": "", "diente": "diente(s)", "taza": "taza(s)"}
 
@@ -72,8 +73,8 @@ class RecipeService:
     # -- media -------------------------------------------------------------
     def media_for(self, shortcode: Optional[str], data: dict) -> dict:
         """Resolve local media URLs; anything missing on disk is reported as null."""
-        out: dict[str, Optional[str]] = {"video": None, "foto": None}
-        for kind in ("video", "foto"):
+        out: dict[str, Optional[str]] = {"video": None, "foto": None, "miniatura": None}
+        for kind in ("video", "foto", "miniatura"):
             rel = data.get(kind)
             if rel:
                 if self._path_for_url(rel).exists():
@@ -112,14 +113,71 @@ class RecipeService:
                "estado": ESTADO_COMPLETA if row["tipo"] == "receta" else ESTADO_PENDIENTE, **data}
         with_source(out, row["shortcode"])
         out["media"] = self.media_for(row["shortcode"], data)
-        thumbs = getattr(self, "thumbs", None)
-        if thumbs is not None:
-            video = out["media"]["video"]
-            out["portada"] = thumbs.cover(row["shortcode"] or f"r{row['id']}",
-                                          self._path_for_url(video) if video else None, out["media"]["foto"])
-        else:
-            out["portada"] = out["media"]["foto"]
+        keys = row.keys()
+        src = row["cover_source"] if "cover_source" in keys else None
+        param = row["cover_param"] if "cover_param" in keys else None
+        out["portada"], efectiva = self._cover(row["id"], row["shortcode"], out["media"], src, param)
+        out["portada_fuente"] = src  # None = follows the global default
+        out["portada_param"] = param
+        out["portada_efectiva"] = efectiva
         return out
+
+    # -- covers ------------------------------------------------------------
+    def cover_default(self) -> str:
+        v = self.db.get_setting(COVER_SETTING)
+        return v if v in COVER_DEFAULTS else "original"
+
+    def _cover(self, rid: int, sc: Optional[str], media: dict, src: Optional[str], param: Optional[str]):
+        """(url, effective source). Explicit choice first, then the original thumbnail chain."""
+        thumbs = getattr(self, "thumbs", None)
+        key = sc or f"r{rid}"
+        video = self._path_for_url(media["video"]) if media.get("video") else None
+        want = src or self.cover_default()
+        if want == "upload" and param and self._path_for_url(param).exists():
+            return "/" + param.lstrip("/"), "upload"
+        if want == "generic":
+            lid = param if src == "generic" else generic_for(rid)
+            url = ensure_library_file(self.settings.media_dir, lid) if lid else None
+            if url:
+                return url, "generic"
+        if want == "frame" and thumbs is not None and video is not None:
+            if src == "frame" and param:
+                try:
+                    url = thumbs.frame_cover(key, video, float(param))
+                except ValueError:
+                    url = None
+                if url:
+                    return url, "frame"
+            else:
+                url = thumbs.cover(key, video, None)
+                if url:
+                    return url, "frame"
+        # original: the post/reel thumbnail Instagram shows, else the imported/uploaded photo
+        orig = media.get("miniatura") or media.get("foto")
+        if orig:
+            return orig, "original"
+        if thumbs is not None and video is not None:
+            url = thumbs.cover(key, video, None)  # auto frame, black frames skipped
+            return url, ("frame" if url else None)
+        return None, None
+
+    def set_cover(self, rid: int, source: Optional[str], param: Optional[str] = None) -> Optional[dict]:
+        if source is not None and source not in COVER_SOURCES:
+            raise ValueError("Origen de portada no válido")
+        n = self.db.execute("UPDATE recipes SET cover_source=?, cover_param=? WHERE id=?",
+                            (source, param if source else None, rid)).rowcount
+        return self.get(rid) if n else None
+
+    def refresh_import_media(self, rid: int, media: dict) -> Optional[dict]:
+        """Reimport: refresh downloaded media (video/photo/original thumbnail) of an existing recipe.
+
+        Never touches cover_source/cover_param, so an uploaded, frame or generic cover survives."""
+        def fn(data):
+            for k in ("video", "foto", "miniatura"):
+                if media.get(k):
+                    data[k] = media[k]
+            data["reimportado"] = now()
+        return self._patch_data(rid, fn)
 
     def get(self, rid: int) -> Optional[dict]:
         rows = self.db.query("SELECT * FROM recipes WHERE id=?", (rid,))
@@ -191,7 +249,8 @@ class RecipeService:
 
     # -- write -------------------------------------------------------------
     def create(self, payload: dict, origen: str = "manual") -> dict:
-        data = normalize({k: v for k, v in payload.items() if k not in ("id", "media", "shortcode", "estado")})
+        data = normalize({k: v for k, v in payload.items()
+                          if k not in ("id", "media", "shortcode", "estado") and not k.startswith("portada")})
         if not data.get("etiquetas"):
             data["etiquetas"] = suggest_tags(data)
         if not data.get("alergenos"):
@@ -212,9 +271,10 @@ class RecipeService:
         if not rows:
             return None
         old = json.loads(rows[0]["data"])
-        data = {k: v for k, v in payload.items() if k not in ("id", "media", "shortcode", "estado")}
+        data = {k: v for k, v in payload.items()
+                if k not in ("id", "media", "shortcode", "estado") and not k.startswith("portada")}
         tipo = data.pop("tipo", rows[0]["tipo"])
-        for k in ("origen", "creado", "foto", "video"):  # server-managed
+        for k in ("origen", "creado", "foto", "video", "miniatura"):  # server-managed
             if k in old:
                 data[k] = old[k]
         data = normalize({**data, "tipo": tipo})
@@ -272,7 +332,7 @@ class RecipeService:
         for r in self.all():
             if ids is not None and r["id"] not in ids:
                 continue
-            item = {k: v for k, v in r.items() if k not in V2_KEYS and k not in ("id", "tipo", "shortcode", "media", "estado", "portada", "source_url", "source_type")}
+            item = {k: v for k, v in r.items() if k not in V2_KEYS and k not in ("id", "tipo", "shortcode", "media", "estado", "portada", "portada_fuente", "portada_param", "portada_efectiva", "source_url", "source_type")}
             if r["tipo"] == "receta":
                 doc["recetas"].append({"id": r["id"], **item})
             else:

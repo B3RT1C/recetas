@@ -90,6 +90,7 @@ class CookiesIn(BaseModel):
 class ImportItem(BaseModel):
     shortcode: str = Field(pattern=r"^[A-Za-z0-9_-]{5,40}$")
     contenido: Literal["video", "foto", "ambos"] = "ambos"
+    reimportar: bool = False
 
 
 class ImportIn(BaseModel):
@@ -496,6 +497,8 @@ def create_app(services: Optional[Services] = None) -> FastAPI:
     register_access(app, svc)
     from .api_prefs import register as register_prefs
     register_prefs(app, svc)
+    from .api_covers import register as register_covers
+    register_covers(app, svc, get_or_404)
 
     # ------------------------------------------------------------ static + media + MCP
     app.mount("/mcp", BearerAuthASGI(mcp_app, lambda t: svc.tokens.verify(t, "read")))

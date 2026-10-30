@@ -24,6 +24,7 @@ log = logging.getLogger("recetas.import")
 class JobItem:
     shortcode: str
     contenido: str  # video | foto | ambos
+    reimportar: bool = False  # existing recipe: refresh its media only (never its cover choice)
     estado: str = "pendiente"  # pendiente | descargando | ok | incompleto | duplicado | error
     mensaje: str = ""
     draft_id: Optional[int] = None
@@ -79,7 +80,7 @@ class ImportService:
         cur = self.draft(did)
         if not cur:
             return None
-        keep = {k: cur[k] for k in ("foto", "video", "metodo") if k in cur}
+        keep = {k: cur[k] for k in ("foto", "video", "miniatura", "metodo") if k in cur}
         clean = {k: v for k, v in data.items() if k not in ("id", "job_id", "shortcode", "creado")}
         self.db.execute("UPDATE drafts SET data=? WHERE id=?", (json.dumps({**clean, **keep}, ensure_ascii=False), did))
         return self.draft(did)
@@ -105,7 +106,7 @@ class ImportService:
 
     # -- jobs --------------------------------------------------------------
     def start(self, selection: list[dict]) -> Job:
-        items = [JobItem(s["shortcode"], s.get("contenido", "ambos")) for s in selection]
+        items = [JobItem(s["shortcode"], s.get("contenido", "ambos"), bool(s.get("reimportar"))) for s in selection]
         job = Job(uuid.uuid4().hex[:12], items)
         self.jobs[job.id] = job
         self._pool.submit(self._run, job)
@@ -117,6 +118,16 @@ class ImportService:
         for n, item in enumerate(job.items):
             if job.cancelar:
                 item.estado, item.mensaje = "error", "Cancelado"
+                continue
+            if item.reimportar and item.shortcode in self.recipes.existing_shortcodes():
+                try:
+                    self._reimport_one(item)
+                except InstagramError as e:
+                    res = classify_error(e)
+                    item.estado, item.mensaje, item.code, item.reason_en = "error", res["reason_es"], res["code"], res["reason_en"]
+                except Exception as e:  # noqa: BLE001
+                    log.exception("reimport failed for %s", item.shortcode)
+                    item.estado, item.mensaje = "error", f"Error inesperado: {type(e).__name__}"
                 continue
             if item.shortcode in existing:
                 item.estado, item.mensaje = "duplicado", "Ya estaba en el recetario o en borradores"
@@ -149,23 +160,50 @@ class ImportService:
         except Exception:  # never break an import because of the log
             log.exception("job_log")
 
-    def _import_one(self, job: Job, item: JobItem) -> None:
-        post = self.provider.post(item.shortcode)
+    def _download_media(self, post, contenido: str, avisos: list[str], force: bool = False) -> dict[str, str]:
+        """Video and/or photo as asked, plus the original post/reel thumbnail whenever Instagram gives one."""
         media: dict[str, str] = {}
-        avisos = []
-        if item.contenido in ("video", "ambos"):
+        if contenido in ("video", "ambos"):
             if post.es_video:
                 dest = self.settings.videos_dir / f"{post.shortcode}.mp4"  # legacy-compatible layout
-                if not dest.exists():
+                if force or not dest.exists():
                     self.provider.download(post, "video", dest)
                 media["video"] = f"videos/{post.shortcode}.mp4"
             else:
                 avisos.append("sin vídeo (es una foto)")
-        if item.contenido in ("foto", "ambos"):
+        if contenido in ("foto", "ambos"):
             ext = "png" if (post.foto_src or "").endswith(".png") else "jpg"
             dest = self.settings.media_dir / "photos" / f"{post.shortcode}.{ext}"
             self.provider.download(post, "foto", dest)
             media["foto"] = f"media/photos/{post.shortcode}.{ext}"
+        if post.foto_src:  # display_url: the cover Instagram itself shows for the post/reel
+            if "foto" in media:
+                media["miniatura"] = media["foto"]
+            else:
+                dest = self.settings.media_dir / "originals" / f"{post.shortcode}.jpg"
+                try:
+                    self.provider.download(post, "foto", dest)
+                    media["miniatura"] = f"media/originals/{post.shortcode}.jpg"
+                except InstagramError as e:  # a missing thumbnail never fails the import
+                    log.info("sin miniatura original para %s: %s", post.shortcode, e)
+        return media
+
+    def _reimport_one(self, item: JobItem) -> None:
+        post = self.provider.post(item.shortcode)
+        avisos: list[str] = []
+        media = self._download_media(post, item.contenido, avisos, force=True)
+        rec = self.recipes.get_by_shortcode(item.shortcode)
+        self.recipes.refresh_import_media(rec["id"], media)
+        fuente = rec.get("portada_fuente")
+        item.estado = "ok"
+        item.mensaje = "Medios actualizados" + (f" · portada elegida a mano conservada ({fuente})"
+                                                if fuente in ("upload", "frame", "generic") else "") + \
+            (f" · {', '.join(avisos)}" if avisos else "")
+
+    def _import_one(self, job: Job, item: JobItem) -> None:
+        post = self.provider.post(item.shortcode)
+        avisos: list[str] = []
+        media = self._download_media(post, item.contenido, avisos)
         draft, metodo = self.ai.extract_recipe(post.caption, autor=post.autor, video_url=post.url)
         draft.update(media, metodo=metodo, caption_original=post.caption[:5000])
         res = check_recipe(draft, has_media=post.es_video)

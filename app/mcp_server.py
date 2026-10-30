@@ -14,6 +14,7 @@ from mcp.server.mcpserver.exceptions import ToolError
 from mcp.server.mcpserver import Context, MCPServer
 
 from .models import RecipeIn
+from .services import covers
 from .services.instagram import InstagramError
 from .services.recipes import DuplicateError
 from .services.validator import ImportValidationError, check_recipe, classify_error
@@ -21,7 +22,7 @@ from .services.validator import ImportValidationError, check_recipe, classify_er
 
 def _summary(r: dict) -> dict:
     return {k: r.get(k) for k in ("id", "tipo", "titulo", "autor", "tiempo_total_min", "precio_racion_eur",
-                                  "raciones", "etiquetas", "video_url", "source_url", "source_type")}
+                                  "raciones", "etiquetas", "video_url", "source_url", "source_type", "portada", "portada_fuente")}
 
 
 def build_mcp(services: Any, stdio_token: Optional[dict] = None) -> MCPServer:
@@ -98,6 +99,26 @@ def build_mcp(services: Any, stdio_token: Optional[dict] = None) -> MCPServer:
         except InstagramError as e:
             raise ToolError(json.dumps(classify_error(e), ensure_ascii=False)) from None
         return _summary(r)
+
+    @mcp.tool()
+    def list_cover_library(ctx: Context) -> list[dict]:
+        """Fotos genéricas libres (CC0 / dominio público) disponibles como portada, con su crédito."""
+        require(ctx, "read")
+        return covers.library()
+
+    @mcp.tool()
+    def set_recipe_cover(ctx: Context, recipe_id: int, source: Optional[str] = None,
+                         frame_seconds: Optional[float] = None, library_id: str = "") -> dict:
+        """Elige la portada de una receta. source: 'original' (miniatura del post/reel), 'frame' (fotograma del
+        vídeo en frame_seconds), 'generic' (library_id de list_cover_library), 'upload' (vuelve a la foto ya
+        subida desde la web) o vacío para seguir el ajuste global. Las portadas upload/frame/generic no se pisan
+        al reimportar. Necesita scope 'write'."""
+        require(ctx, "write")
+        try:
+            r = covers.choose(services.recipes, recipe_id, source or None, frame_seconds, library_id or None)
+        except (covers.CoverError, LookupError) as e:
+            raise ToolError(str(e)) from None
+        return {k: r.get(k) for k in ("id", "titulo", "portada", "portada_fuente", "portada_param", "portada_efectiva")}
 
     return mcp
 
