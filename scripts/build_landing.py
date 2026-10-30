@@ -24,6 +24,8 @@ def load_icons():
     out["linkedin"] = '<path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/> <rect width="4" height="12" x="2" y="9"/> <circle cx="4" cy="4" r="2"/>'
     out["monitor"] = '<rect width="20" height="14" x="2" y="3" rx="2"/> <line x1="8" x2="16" y1="21" y2="21"/> <line x1="12" x2="12" y1="17" y2="21"/>'
     out["container"] = '<path d="M22 7.7c0-.6-.4-1.2-.8-1.5l-6.3-3.9a1.72 1.72 0 0 0-1.7 0l-10.3 6c-.5.2-.9.8-.9 1.4v6.6c0 .5.4 1.2.8 1.5l6.3 3.9a1.72 1.72 0 0 0 1.7 0l10.3-6c.5-.3.9-1 .9-1.5Z"/> <path d="M10 21.9V14L2.1 9.1"/> <path d="m10 14 11.9-6.9"/> <path d="M14 19.8v-8.1"/> <path d="M18 17.5V9.4"/>'
+    out["pause"] = '<rect x="14" y="4" width="4" height="16" rx="1"/> <rect x="6" y="4" width="4" height="16" rx="1"/>'
+    out["play"] = '<polygon points="6 3 20 12 6 21 6 3"/>'
     return out
 ICONS = load_icons()
 
@@ -71,7 +73,10 @@ T = {
   mk_label="Demo interactiva de Recetario C con recetas de ejemplo", mk_tabs=("Recetas","Planificador","Compra"), mk_search="Buscar receta", mk_tags=("Todas","Rápidas","Baratas","Legumbres","Postres"),
   mk_back="Volver", mk_serv="Raciones", mk_less="Menos raciones", mk_more="Más raciones", mk_ing="Ingredientes", mk_none="Ninguna receta coincide.",
   mk_add="Añadir a la lista", mk_added="Añadido", mk_list="Lista de la compra", mk_cook="Modo cocina", mk_prev="Anterior", mk_next="Siguiente", mk_step="Paso", mk_of="de", mk_done="¡Listo! Buen provecho.",
-  mk_days=("Lun","Mar","Mié","Jue","Vie"), mk_meals=("Comida","Cena"), mk_hint="Prueba a buscar, filtrar o abrir una receta. Todo funciona sin servidor.", mk_per="/ración", mk_empty="La lista está vacía.",
+  mk_days=("Lun","Mar","Mié","Jue","Vie"), mk_meals=("Comida","Cena"), mk_hint="Es la app de verdad con recetas de ejemplo: mira el recorrido o tócala tú (buscar, raciones, planificador, compra). No se guarda nada.",
+  mk_dlabel="Demo en vivo de Recetario C en el escritorio", mk_mlabel="Demo en vivo de Recetario C en el móvil", mk_dtitle="Recetario C (demo con recetas de ejemplo), vista de escritorio", mk_mtitle="Recetario C (demo con recetas de ejemplo), vista de móvil",
+  mk_pause="Pausar recorrido", mk_play="Reproducir recorrido", mk_search_demo="paella",
+  car_label="Carrusel de capturas", car_slide="diapositiva", car_of="de", car_go="Ir a la captura", car_pause="Pausar carrusel", car_play="Reproducir carrusel", mob_h="En el móvil", mk_per="/ración", mk_empty="La lista está vacía.",
   more="Ver más", less="Ver menos",
   feat_more=["Elige qué traer de cada publicación y la app lo descarga en segundo plano.","Cada paso con su temporizador; la pantalla no se apaga.","Marca lo que ya llevas en el carro; se ordena por pasillos.","Lo que siempre tienes en casa no vuelve a la lista.","Arrastra recetas a cada día; las raciones se ajustan solas.","El precio se recalcula al cambiar las raciones.","Gráficas sencillas de lo que cocinas y lo que cuesta.","Tu IA puede leer y crear recetas con permisos limitados."],
   gal_open="Ampliar captura", gal_close="Cerrar", gal_prev="Anterior", gal_next="Siguiente",
@@ -117,7 +122,10 @@ T = {
   mk_label="Interactive Recetario C demo with sample recipes", mk_tabs=("Recipes","Planner","Shopping"), mk_search="Search recipes", mk_tags=("All","Quick","Cheap","Pulses","Desserts"),
   mk_back="Back", mk_serv="Servings", mk_less="Fewer servings", mk_more="More servings", mk_ing="Ingredients", mk_none="No recipe matches.",
   mk_add="Add to list", mk_added="Added", mk_list="Shopping list", mk_cook="Cooking mode", mk_prev="Previous", mk_next="Next", mk_step="Step", mk_of="of", mk_done="Done! Enjoy your meal.",
-  mk_days=("Mon","Tue","Wed","Thu","Fri"), mk_meals=("Lunch","Dinner"), mk_hint="Try searching, filtering or opening a recipe. It all runs without a server. Sample recipes are in Spanish.", mk_per="/serving", mk_empty="The list is empty.",
+  mk_days=("Mon","Tue","Wed","Thu","Fri"), mk_meals=("Lunch","Dinner"), mk_hint="This is the real app with sample recipes: watch the tour or try it yourself (search, servings, planner, shopping). Nothing is saved.",
+  mk_dlabel="Live demo of Recetario C on desktop", mk_mlabel="Live demo of Recetario C on mobile", mk_dtitle="Recetario C (demo with sample recipes), desktop view", mk_mtitle="Recetario C (demo with sample recipes), mobile view",
+  mk_pause="Pause tour", mk_play="Play tour", mk_search_demo="paella",
+  car_label="Screenshot carousel", car_slide="slide", car_of="of", car_go="Go to screenshot", car_pause="Pause carousel", car_play="Play carousel", mob_h="On mobile", mk_per="/serving", mk_empty="The list is empty.",
   more="More", less="Less",
   feat_more=["Choose what to bring from each post and the app downloads it in the background.","Every step has its own timer; the screen stays on.","Tick what is already in the trolley; sorted by aisle.","What you always have at home stays off the list.","Drop recipes on each day; servings adjust themselves.","The price is recalculated when you change servings.","Simple charts of what you cook and what it costs.","Your AI can read and create recipes with scoped permissions."],
   gal_open="Enlarge screenshot", gal_close="Close", gal_prev="Previous", gal_next="Next",
@@ -147,47 +155,19 @@ def demo_data():
 def eur(x, k): return (f"{x:.2f} €".replace(".", ",") if k == "es" else f"€{x:.2f}")
 
 def mockup(t, k):
+    """Hero simulators: the existing browser and phone frames, with the real app (landing/demo, built by
+    scripts/build_landing_demo.py) running inside on sample data. landing.js scales them and plays a guided tour."""
     e = html.escape
-    cards = "\n".join(
-        f'<li data-tags="{e(" ".join(rtags(r)))}" data-name="{e(r["titulo"].lower())}"><button type="button" class="mcard" data-id="{r["id"]}">'
-        f'<img src="/img/r/{slug(r)}.webp" alt="" width="160" height="100" loading="{"eager" if i < 6 else "lazy"}" decoding="async">'
-        f'<span class="mt">{e(r["titulo"])}</span><span class="mm">{r["tiempo_total_min"]} min · {eur(r["precio_racion_eur"], k)}{e(t["mk_per"])}</span></button></li>'
-        for i, r in enumerate(SAMPLE))
-    chips = "".join(f'<button type="button" class="chip" data-tag="{key}" aria-pressed="{"true" if key == "all" else "false"}">{e(lab)}</button>' for key, lab in zip(TAGKEYS, t["mk_tags"]))
-    tabs = "".join(f'<button type="button" role="tab" id="mt-{n}" aria-controls="mp-{n}" aria-selected="{"true" if n == "rec" else "false"}" tabindex="{0 if n == "rec" else -1}">{e(lab)}</button>' for n, lab in zip(("rec", "plan", "buy"), t["mk_tabs"]))
-    byslug = {slug(r): r for r in SAMPLE}
-    plan_rows = "".join(f'<tr><th scope="row">{e(d)}</th>' + "".join(f'<td>{e(byslug[PLAN[i*2+j]]["titulo"])}</td>' for j in range(2)) + "</tr>" for i, d in enumerate(t["mk_days"]))
-    p = PHONE
-    ings = "".join(f'<li>{e(x["nombre"])} <span>{e(x["cantidad_normal"])}</span></li>' for x in p["ingredientes"])
+    q = "?lang=en" if k == "en" else ""
     return f"""<div class="shots" data-mock>
-    <div class="frame desk mock" role="region" aria-label="{e(t['mk_label'])}">
+    <div class="frame desk mock" role="region" aria-label="{e(t['mk_dlabel'])}">
       <div class="mbar" aria-hidden="true"><i></i><i></i><i></i><span>recetario.local</span></div>
-      <div class="mtabs" role="tablist" aria-label="Recetario C">{tabs}</div>
-      <div class="mpanel" id="mp-rec" role="tabpanel" aria-labelledby="mt-rec">
-        <div class="mlist">
-          <div class="mtools"><input type="search" id="mq" placeholder="{e(t['mk_search'])}" aria-label="{e(t['mk_search'])}" autocomplete="off"><div class="chips" role="group" aria-label="Filtros">{chips}</div></div>
-          <ul class="mgrid" id="mgrid">{cards}</ul>
-          <p class="mnone" id="mnone" hidden>{e(t['mk_none'])}</p>
-        </div>
-        <div class="mdet" id="mdet" hidden tabindex="-1" aria-live="polite"></div>
-      </div>
-      <div class="mpanel" id="mp-plan" role="tabpanel" aria-labelledby="mt-plan" hidden>
-        <table class="mplan"><thead><tr><td></td><th scope="col">{e(t['mk_meals'][0])}</th><th scope="col">{e(t['mk_meals'][1])}</th></tr></thead><tbody>{plan_rows}</tbody></table>
-      </div>
-      <div class="mpanel" id="mp-buy" role="tabpanel" aria-labelledby="mt-buy" hidden><ul class="mbuy" id="mbuy"></ul></div>
+      <div class="mscreen" data-w="1024"><iframe src="/demo/{q}#/recetas" title="{e(t['mk_dtitle'])}" data-tour="desk"></iframe></div>
     </div>
-    <div class="frame phone mock mphone" role="region" aria-label="{e(t['hero_m_alt'])}">
-      <div class="pbar"><span>{e(p['titulo'])}</span><button type="button" class="pcart" id="pcart" aria-label="{e(t['mk_list'])}: 0" aria-expanded="false" aria-controls="plist">{ic('shopping-cart')}<b id="pbadge">0</b></button></div>
-      <div class="pview" id="pdet"><img src="/img/r/{slug(p)}.webp" alt="" width="320" height="200" decoding="async">
-        <p class="pm">{p['raciones']} {e(t['mk_serv'].lower())} · {p['tiempo_total_min']} min · {eur(p['precio_racion_eur'], k)}{e(t['mk_per'])}</p>
-        <ul class="ping">{ings}</ul>
-        <div class="pact"><button type="button" class="pbtn primary" id="padd">{ic('shopping-cart')} <span>{e(t['mk_add'])}</span></button><button type="button" class="pbtn" id="pcook">{ic('chef-hat') if 'chef-hat' in ICONS else ''} {e(t['mk_cook'])}</button></div>
-      </div>
-      <div class="pview" id="plist" hidden><p class="ph">{e(t['mk_list'])}</p><ul class="ping" id="plistul"></ul></div>
-      <div class="pview pcookv" id="pcookv" hidden><p class="ph" id="pstepn" aria-live="polite"></p><p class="pstep" id="pstep"></p>
-        <div class="pact"><button type="button" class="pbtn" id="pprev">{e(t['mk_prev'])}</button><button type="button" class="pbtn primary" id="pnext">{e(t['mk_next'])}</button></div></div>
+    <div class="frame phone mock mphone" role="region" aria-label="{e(t['mk_mlabel'])}">
+      <div class="mscreen" data-w="390"><iframe src="/demo/{q}#/recetas" title="{e(t['mk_mtitle'])}" data-tour="phone"></iframe></div>
     </div>
-    <p class="muted small mhint">{e(t['mk_hint'])}</p>
+    <p class="muted small mhint">{e(t['mk_hint'])} <button type="button" class="tourbtn" id="tourbtn" data-pause="{e(t['mk_pause'])}" data-play="{e(t['mk_play'])}">{ic('pause', 'ic i-pause')}{ic('play', 'ic i-play')}<span>{e(t['mk_pause'])}</span></button></p>
   </div>"""
 
 def pic(base, alt, w, h, eager=False, sizes=None, small=None):
@@ -210,14 +190,29 @@ def page(k):
         + (f'<span class="badge b-soon">{e(t["soon"])}</span>' if f[3] is True else
            f'<span class="badge b-part">{e(t["partial"])}</span>' if f[3] == "partial" else
            f'<span class="badge b-ok">{e(t["now"])}</span>') + "</li>" for n, f in enumerate(t["feats"]))
-    gal = "\n".join(f'<figure class="rv"><button type="button" class="zoom" aria-label="{e(t["gal_open"])}: {e(c)}" data-full="/img/g-{n}-light.webp" data-full-dark="/img/g-{n}-dark.webp" data-cap="{e(c)}">{pic("g-"+n, c, 960, 600, sizes="(max-width: 700px) 92vw, 460px", small=(480,))}</button><figcaption>{e(c)}</figcaption></figure>' for n, c in t["gal"])
+    slides = [f'<figure><button type="button" class="zoom" aria-label="{e(t["gal_open"])}: {e(c)}" data-full="/img/g-{n}-light.webp" data-full-dark="/img/g-{n}-dark.webp" data-cap="{e(c)}">{pic("g-"+n, c, 960, 600, sizes="(max-width: 1000px) 92vw, 900px", small=(480,))}</button><figcaption>{e(c)}</figcaption></figure>' for n, c in t["gal"]]
+    slides.append('<figure class="car-mob"><div>' + "".join(f'<figure>{pic("m-"+n, c, 300, 650)}<figcaption>{e(c)}</figcaption></figure>' for n, c in t["mob"]) + f'</div><figcaption class="sr">{e(t["mob_h"])}</figcaption></figure>')
+    nsl = len(slides)
+    gal = "\n".join(f'<li class="car-s" id="cs-{i}" role="group" aria-roledescription="{e(t["car_slide"])}" aria-label="{i+1} {e(t["car_of"])} {nsl}">{sl}</li>' for i, sl in enumerate(slides))
+    caps = [c for _, c in t["gal"]] + [t["mob_h"]]
+    dots = "".join(f'<button type="button" class="car-dot" aria-controls="cs-{i}" aria-label="{e(t["car_go"])} {i+1}: {e(c)}"{" aria-current=\"true\"" if i == 0 else ""}></button>' for i, c in enumerate(caps))
+    carousel = f'''<div class="car" role="region" aria-roledescription="carousel" aria-label="{e(t['car_label'])}">
+  <ul class="car-track" id="cartrack" tabindex="0" aria-label="{e(t['gal_h'])}">
+{gal}
+  </ul>
+  <div class="car-ctl">
+    <button type="button" class="car-btn" id="carprev" aria-label="{e(t['gal_prev'])}">{ic('arrow-left')}</button>
+    <div class="car-dots">{dots}</div>
+    <button type="button" class="car-btn" id="carnext" aria-label="{e(t['gal_next'])}">{ic('arrow-right')}</button>
+    <button type="button" class="car-btn car-play" id="carplay" aria-label="{e(t['car_pause'])}" data-pause="{e(t['car_pause'])}" data-play="{e(t['car_play'])}">{ic('pause', 'ic i-pause')}{ic('play', 'ic i-play')}</button>
+  </div>
+</div>'''
     lightbox = f'''<dialog class="lb" id="lb" aria-label="{e(t['gal_h'])}"><figure><img id="lbimg" src="/img/g-cuadricula-light.webp" alt="" width="960" height="600"><figcaption id="lbcap"></figcaption></figure>
 <div class="lbnav"><button type="button" class="btn" id="lbprev">{ic('arrow-left')} {e(t['gal_prev'])}</button><button type="button" class="btn" id="lbclose">{e(t['gal_close'])}</button><button type="button" class="btn" id="lbnext">{e(t['gal_next'])} {ic('arrow-right')}</button></div></dialog>'''
     opts = "".join(f'<option value="{r["id"]}"{" selected" if slug(r) == "paella" else ""}>{e(r["titulo"])}</option>' for r in SAMPLE)
     calc = f'''<section id="precio" class="wrap sec rv"><div class="card calc"><div><h2>{e(t['calc_h'])}</h2><p class="muted">{e(t['calc_p'])}</p></div>
 <div class="calcf"><label>{e(t['calc_r'])}<select id="cr">{opts}</select></label><label>{e(t['calc_s'])}<input id="cs" type="number" min="1" max="20" value="{PHONE['raciones']}" inputmode="numeric"></label>
 <output id="co" for="cr cs" aria-live="polite"><span>{e(t['calc_tot'])} <b id="ct">{eur(PHONE['precio_total_eur'], k)}</b></span><span>{e(t['calc_per'])} <b id="cp">{eur(PHONE['precio_racion_eur'], k)}</b></span></output></div></div></section>'''
-    mob = "\n".join(f'<figure>{pic("m-"+n, c, 300, 650)}<figcaption>{e(c)}</figcaption></figure>' for n, c in t["mob"])
     stack = "\n".join(f"<li><strong>{e(a)}</strong><span>{e(b)}</span></li>" for a, b in t["stack"])
     repo = (f'<a class="btn" href="{e(CFG["repo_url"])}" rel="noopener">{e(t["repo"])} {ic("external-link")}</a>'
             if CFG["repo_public"] else f'<p class="muted">{ic("lock")} {e(t["repo_soon"])}</p>')
@@ -262,10 +257,10 @@ def page(k):
 <meta name="twitter:title" content="{e(t['title'])}">
 <meta name="twitter:description" content="{e(t['desc'])}">
 <meta name="twitter:image" content="{SITE}/img/og.jpg">
-<link rel="stylesheet" href="/assets/landing.css">
+<link rel="stylesheet" href="/assets/landing.2.css">
 <script src="/assets/theme.js"></script>
 <script src="/assets/demo-data.js" defer></script>
-<script src="/assets/landing.js" defer></script>
+<script src="/assets/landing.2.js" defer></script>
 </head>
 <body data-i18n="{e(json.dumps({x: t[x] for x in t if x.startswith('mk_')}, ensure_ascii=False))}" data-lang="{k}">
 <a class="skip" href="#main">{e(t['skip'])}</a>
@@ -296,12 +291,7 @@ def page(k):
 </section>
 <section id="capturas" class="wrap sec">
   <h2>{e(t['gal_h'])}</h2><p class="muted">{e(t['gal_p'])}</p>
-  <div class="gal">
-{gal}
-  </div>
-  <div class="gal mob">
-{mob}
-  </div>
+  {carousel}
 </section>
 {f'''<section id="demo" class="wrap sec band">
   <div><h2>{e(t['demo_h'])}</h2><p>{e(t['demo_p'])}</p></div>
@@ -353,7 +343,7 @@ def credits_page(k):
 <link rel="canonical" href="{SITE}{p}">
 <link rel="alternate" hreflang="es" href="{SITE}/creditos/"><link rel="alternate" hreflang="en" href="{SITE}/en/credits/"><link rel="alternate" hreflang="x-default" href="{SITE}/creditos/">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="icon" href="/favicon.ico" sizes="32x32">
-<link rel="stylesheet" href="/assets/landing.css"><script src="/assets/theme.js"></script>
+<link rel="stylesheet" href="/assets/landing.2.css"><script src="/assets/theme.js"></script>
 </head>
 <body><main id="main" class="wrap sec">
 <p><a href="{t['path']}">{ic('arrow-left')} {h[3]}</a></p>
