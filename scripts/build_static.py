@@ -1,7 +1,7 @@
 """Build a read-only static demo of the UI into dist/ (no backend, no media, no secrets).
 
     python scripts/build_static.py [--out dist]
-Recipes come from the bundled seed data; video/photo paths and Instagram thumbnails are stripped.
+Recipes come from the invented sample data in data/sample (never the private seed); video/photo paths and Instagram thumbnails are stripped.
 """
 import argparse
 import json
@@ -24,6 +24,8 @@ def main():
         for k in ("RECETAS_DATA_DIR", "RECETAS_MEDIA_DIR", "RECETAS_SECRET_DIR", "RECETAS_VIDEOS_DIR"):
             os.environ[k] = str(Path(tmp) / k.lower())
         os.environ["RECETAS_IG_PROVIDER"] = "mock"
+        # sample data only: the real seed contains third-party creators' captions and handles
+        os.environ["RECETAS_SEED_FILE"] = str(ROOT / "data" / "sample" / "recetas-demo.json")
         from fastapi.testclient import TestClient
         from app.main import create_app
         with TestClient(create_app()) as c:

@@ -131,3 +131,13 @@ def test_static_build_bypasses_login(tmp_path):
     data = json.loads((out / "data" / "recipes.json").read_text(encoding="utf-8"))
     assert data["recetas"] and all(r["portada"] is None for r in data["recetas"])
     assert 'data-mode="static"' in (out / "index.html").read_text(encoding="utf-8")
+
+
+def test_static_demo_uses_only_sample_data(tmp_path):
+    import subprocess, sys, json
+    out = tmp_path / "dist"
+    subprocess.run([sys.executable, "scripts/build_static.py", "--out", str(out)], check=True,
+                   cwd=Path(__file__).resolve().parent.parent, capture_output=True)
+    raw = (out / "data" / "recipes.json").read_text(encoding="utf-8")
+    assert "instagram.com" not in raw and "@" not in raw
+    assert len(json.loads(raw)["recetas"]) == 8
