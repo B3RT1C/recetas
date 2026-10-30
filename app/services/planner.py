@@ -13,6 +13,21 @@ def monday(d: date) -> date:
     return d - timedelta(days=d.weekday())
 
 
+DEFAULT_SERVINGS = 2
+MAX_DEFAULT_SERVINGS = 12
+
+
+def default_servings(rec: dict) -> float:
+    """Servings a new plan entry starts with: the recipe's own declared servings, else 2.
+
+    Estimated servings and batch yields (e.g. "31 tortillas", "for the whole week") are not a
+    sensible portion for one meal, so they fall back to the default too.
+    """
+    n = rec.get("raciones")
+    if rec.get("raciones_estimadas") or isinstance(n, bool) or not isinstance(n, (int, float)):
+        return DEFAULT_SERVINGS
+    return n if 0 < n <= MAX_DEFAULT_SERVINGS else DEFAULT_SERVINGS
+
 class PlannerService:
     def __init__(self, db: Database, recipes):
         self.db = db
@@ -51,7 +66,7 @@ class PlannerService:
                             (fecha, comida))[0]["p"]
         pid = self.db.execute("INSERT INTO plan_items(fecha,comida,recipe_id,raciones,nota,position,created) "
                               "VALUES(?,?,?,?,?,?,?)",
-                              (fecha, comida, receta_id, raciones or rec.get("raciones") or 2, nota or None, pos, now())).lastrowid
+                              (fecha, comida, receta_id, raciones or default_servings(rec), nota or None, pos, now())).lastrowid
         return self.get(pid)
 
     def update(self, pid: int, fecha: Optional[str] = None, comida: Optional[str] = None,

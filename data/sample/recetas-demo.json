@@ -78,7 +78,8 @@
     }
    ],
    "notas": "",
-   "pasos_sugeridos": false
+   "pasos_sugeridos": false,
+   "foto": "media/covers/tortilla-de-patatas.jpg"
   },
   {
    "id": 2,
@@ -170,7 +171,8 @@
     }
    ],
    "notas": "",
-   "pasos_sugeridos": false
+   "pasos_sugeridos": false,
+   "foto": "media/covers/lentejas-estofadas.jpg"
   },
   {
    "id": 3,
@@ -253,81 +255,92 @@
     }
    ],
    "notas": "",
-   "pasos_sugeridos": false
+   "pasos_sugeridos": false,
+   "foto": "media/covers/ensalada-de-garbanzos.jpg"
   },
   {
    "id": 4,
-   "titulo": "Pollo al ajillo",
+   "titulo": "Pollo asado con patatas",
    "autor": "Recetario de ejemplo",
    "video_url": null,
    "raciones": 4,
    "raciones_estimadas": false,
-   "tiempo_total_min": 35,
-   "precio_total_eur": 5.1,
-   "precio_racion_eur": 1.27,
+   "tiempo_total_min": 80,
+   "precio_total_eur": 8.35,
+   "precio_racion_eur": 2.09,
    "ingredientes": [
     {
-     "nombre": "muslos de pollo",
+     "nombre": "pollo entero",
+     "cantidad_1": "",
+     "cantidad_normal": "1,6 kg",
+     "cantidad_num": 1600,
+     "unidad": "g",
+     "estimada": false,
+     "precio_eur": 6.4
+    },
+    {
+     "nombre": "patatas",
      "cantidad_1": "",
      "cantidad_normal": "800 g",
      "cantidad_num": 800,
      "unidad": "g",
      "estimada": false,
-     "precio_eur": 4.0
+     "precio_eur": 1.1
     },
     {
      "nombre": "ajo",
      "cantidad_1": "",
-     "cantidad_normal": "8 diente",
-     "cantidad_num": 8,
+     "cantidad_normal": "4 dientes",
+     "cantidad_num": 4,
      "unidad": "diente",
      "estimada": false,
-     "precio_eur": 0.4
+     "precio_eur": 0.2
     },
     {
-     "nombre": "vino blanco",
+     "nombre": "limón",
      "cantidad_1": "",
-     "cantidad_normal": "100 ml",
-     "cantidad_num": 100,
-     "unidad": "ml",
+     "cantidad_normal": "1",
+     "cantidad_num": 1,
+     "unidad": "ud",
      "estimada": false,
      "precio_eur": 0.3
     },
     {
      "nombre": "aceite de oliva",
      "cantidad_1": "",
-     "cantidad_normal": "4 cda",
-     "cantidad_num": 4,
+     "cantidad_normal": "3 cda",
+     "cantidad_num": 3,
      "unidad": "cda",
      "estimada": false,
-     "precio_eur": 0.3
+     "precio_eur": 0.25
     },
     {
-     "nombre": "perejil",
+     "nombre": "tomillo",
      "cantidad_1": "",
-     "cantidad_normal": "1 cda",
+     "cantidad_normal": "1 cdta",
      "cantidad_num": 1,
-     "unidad": "cda",
+     "unidad": "cdta",
      "estimada": false,
      "precio_eur": 0.1
     }
    ],
    "pasos": [
     {
-     "texto": "Dora el pollo salpimentado en el aceite.",
-     "minutos": 12
+     "texto": "Precalienta el horno a 200 °C y corta las patatas en gajos.",
+     "minutos": 10
     },
     {
-     "texto": "Añade los ajos laminados y, cuando cojan color, el vino.",
-     "minutos": 3
+     "texto": "Unta el pollo con aceite, ajo, limón y tomillo.",
+     "minutos": 5
     },
     {
-     "texto": "Tapa y cuece hasta que el pollo esté hecho; termina con perejil.",
-     "minutos": 15
+     "texto": "Hornea el pollo sobre las patatas, regándolo con su jugo a mitad.",
+     "minutos": 65
     }
    ],
    "notas": "",
-   "pasos_sugeridos": false
+   "pasos_sugeridos": false,
+   "foto": "media/covers/pollo-asado.jpg"
   },
   {
    "id": 5,
@@ -401,7 +414,8 @@
     }
    ],
    "notas": "",
-   "pasos_sugeridos": false
+   "pasos_sugeridos": false,
+   "foto": "media/covers/crema-de-calabaza.jpg"
   },
   {
    "id": 6,
@@ -475,18 +489,19 @@
     }
    ],
    "notas": "",
-   "pasos_sugeridos": false
+   "pasos_sugeridos": false,
+   "foto": "media/covers/macarrones-con-tomate.jpg"
   },
   {
    "id": 7,
-   "titulo": "Merluza en salsa verde",
+   "titulo": "Merluza al horno con ensalada",
    "autor": "Recetario de ejemplo",
    "video_url": null,
    "raciones": 2,
    "raciones_estimadas": false,
-   "tiempo_total_min": 25,
-   "precio_total_eur": 5.77,
-   "precio_racion_eur": 2.88,
+   "tiempo_total_min": 22,
+   "precio_total_eur": 6.7,
+   "precio_racion_eur": 3.35,
    "ingredientes": [
     {
      "nombre": "lomos de merluza",
@@ -495,37 +510,37 @@
      "cantidad_num": 400,
      "unidad": "g",
      "estimada": false,
-     "precio_eur": 5.0
+     "precio_eur": 5.2
     },
     {
-     "nombre": "ajo",
+     "nombre": "lechuga",
      "cantidad_1": "",
-     "cantidad_normal": "2 diente",
+     "cantidad_normal": "1/2",
+     "cantidad_num": 0.5,
+     "unidad": "ud",
+     "estimada": false,
+     "precio_eur": 0.45
+    },
+    {
+     "nombre": "tomate",
+     "cantidad_1": "",
+     "cantidad_normal": "2",
      "cantidad_num": 2,
-     "unidad": "diente",
+     "unidad": "ud",
      "estimada": false,
-     "precio_eur": 0.1
+     "precio_eur": 0.6
     },
     {
-     "nombre": "harina",
+     "nombre": "limón",
      "cantidad_1": "",
-     "cantidad_normal": "1 cda",
+     "cantidad_normal": "1",
      "cantidad_num": 1,
-     "unidad": "cda",
+     "unidad": "ud",
      "estimada": false,
-     "precio_eur": 0.02
+     "precio_eur": 0.3
     },
     {
-     "nombre": "caldo de pescado",
-     "cantidad_1": "",
-     "cantidad_normal": "200 ml",
-     "cantidad_num": 200,
-     "unidad": "ml",
-     "estimada": false,
-     "precio_eur": 0.5
-    },
-    {
-     "nombre": "perejil",
+     "nombre": "aceite de oliva",
      "cantidad_1": "",
      "cantidad_normal": "2 cda",
      "cantidad_num": 2,
@@ -536,31 +551,32 @@
    ],
    "pasos": [
     {
-     "texto": "Dora el ajo en aceite y añade la harina.",
-     "minutos": 3
-    },
-    {
-     "texto": "Incorpora el caldo poco a poco y el perejil.",
+     "texto": "Precalienta el horno a 200 °C.",
      "minutos": 5
     },
     {
-     "texto": "Cocina la merluza en la salsa moviendo la cazuela.",
-     "minutos": 8
+     "texto": "Hornea la merluza con aceite, sal y limón.",
+     "minutos": 12
+    },
+    {
+     "texto": "Prepara la ensalada y sirve.",
+     "minutos": 5
     }
    ],
    "notas": "",
-   "pasos_sugeridos": false
+   "pasos_sugeridos": false,
+   "foto": "media/covers/pescado-al-horno.jpg"
   },
   {
    "id": 8,
-   "titulo": "Natillas caseras",
+   "titulo": "Flan de huevo",
    "autor": "Recetario de ejemplo",
    "video_url": null,
-   "raciones": 4,
+   "raciones": 6,
    "raciones_estimadas": false,
-   "tiempo_total_min": 25,
+   "tiempo_total_min": 63,
    "precio_total_eur": 1.5,
-   "precio_racion_eur": 0.38,
+   "precio_racion_eur": 0.25,
    "ingredientes": [
     {
      "nombre": "leche",
@@ -572,7 +588,7 @@
      "precio_eur": 0.5
     },
     {
-     "nombre": "yemas de huevo",
+     "nombre": "huevos",
      "cantidad_1": "",
      "cantidad_normal": "4",
      "cantidad_num": 4,
@@ -583,48 +599,411 @@
     {
      "nombre": "azúcar",
      "cantidad_1": "",
-     "cantidad_normal": "80 g",
-     "cantidad_num": 80,
+     "cantidad_normal": "120 g",
+     "cantidad_num": 120,
      "unidad": "g",
      "estimada": false,
-     "precio_eur": 0.1
+     "precio_eur": 0.15
     },
     {
-     "nombre": "maicena",
+     "nombre": "piel de limón",
      "cantidad_1": "",
-     "cantidad_normal": "1 cda",
+     "cantidad_normal": "1 tira",
      "cantidad_num": 1,
-     "unidad": "cda",
-     "estimada": false,
-     "precio_eur": 0.05
-    },
-    {
-     "nombre": "canela",
-     "cantidad_1": "",
-     "cantidad_normal": "1 cdta",
-     "cantidad_num": 1,
-     "unidad": "cdta",
+     "unidad": "ud",
      "estimada": false,
      "precio_eur": 0.05
     }
    ],
    "pasos": [
     {
-     "texto": "Infusiona la leche con la canela.",
+     "texto": "Haz un caramelo con 60 g de azúcar y repártelo en la flanera.",
      "minutos": 8
     },
     {
-     "texto": "Bate las yemas con el azúcar y la maicena y añade la leche.",
-     "minutos": 3
+     "texto": "Bate huevos, leche infusionada y el resto del azúcar.",
+     "minutos": 5
     },
     {
-     "texto": "Cuece sin dejar de remover hasta que espese.",
-     "minutos": 8
+     "texto": "Cuece al baño maría en el horno a 170 °C.",
+     "minutos": 45
+    },
+    {
+     "texto": "Deja enfriar y refrigera al menos 2 horas antes de desmoldar.",
+     "minutos": 5
     }
    ],
    "notas": "",
-   "pasos_sugeridos": false
+   "pasos_sugeridos": false,
+   "foto": "media/covers/flan-de-huevo.jpg"
+  },
+  {
+   "id": 9,
+   "titulo": "Salmorejo cordobés",
+   "autor": "Recetario de ejemplo",
+   "video_url": null,
+   "raciones": 4,
+   "raciones_estimadas": false,
+   "tiempo_total_min": 23,
+   "precio_total_eur": 5.45,
+   "precio_racion_eur": 1.36,
+   "ingredientes": [
+    {
+     "nombre": "tomates maduros",
+     "cantidad_1": "",
+     "cantidad_normal": "1 kg",
+     "cantidad_num": 1000,
+     "unidad": "g",
+     "estimada": false,
+     "precio_eur": 2.2
+    },
+    {
+     "nombre": "pan del día anterior",
+     "cantidad_1": "",
+     "cantidad_normal": "200 g",
+     "cantidad_num": 200,
+     "unidad": "g",
+     "estimada": false,
+     "precio_eur": 0.6
+    },
+    {
+     "nombre": "ajo",
+     "cantidad_1": "",
+     "cantidad_normal": "1 diente",
+     "cantidad_num": 1,
+     "unidad": "diente",
+     "estimada": false,
+     "precio_eur": 0.05
+    },
+    {
+     "nombre": "aceite de oliva virgen extra",
+     "cantidad_1": "",
+     "cantidad_normal": "100 ml",
+     "cantidad_num": 100,
+     "unidad": "ml",
+     "estimada": false,
+     "precio_eur": 0.9
+    },
+    {
+     "nombre": "jamón serrano",
+     "cantidad_1": "",
+     "cantidad_normal": "50 g",
+     "cantidad_num": 50,
+     "unidad": "g",
+     "estimada": false,
+     "precio_eur": 1.5
+    },
+    {
+     "nombre": "huevo cocido",
+     "cantidad_1": "",
+     "cantidad_normal": "1",
+     "cantidad_num": 1,
+     "unidad": "ud",
+     "estimada": false,
+     "precio_eur": 0.2
+    }
+   ],
+   "pasos": [
+    {
+     "texto": "Tritura los tomates con el ajo y cuela.",
+     "minutos": 5
+    },
+    {
+     "texto": "Añade el pan y deja que se empape.",
+     "minutos": 10
+    },
+    {
+     "texto": "Emulsiona con el aceite hasta que quede cremoso y enfría.",
+     "minutos": 5
+    },
+    {
+     "texto": "Sirve con jamón picado y huevo cocido.",
+     "minutos": 3
+    }
+   ],
+   "notas": "",
+   "pasos_sugeridos": false,
+   "foto": "media/covers/salmorejo.jpg"
+  },
+  {
+   "id": 10,
+   "titulo": "Paella de marisco",
+   "autor": "Recetario de ejemplo",
+   "video_url": null,
+   "raciones": 4,
+   "raciones_estimadas": false,
+   "tiempo_total_min": 36,
+   "precio_total_eur": 13.6,
+   "precio_racion_eur": 3.4,
+   "ingredientes": [
+    {
+     "nombre": "arroz bomba",
+     "cantidad_1": "",
+     "cantidad_normal": "320 g",
+     "cantidad_num": 320,
+     "unidad": "g",
+     "estimada": false,
+     "precio_eur": 1.3
+    },
+    {
+     "nombre": "mejillones",
+     "cantidad_1": "",
+     "cantidad_normal": "500 g",
+     "cantidad_num": 500,
+     "unidad": "g",
+     "estimada": false,
+     "precio_eur": 2.0
+    },
+    {
+     "nombre": "gambas",
+     "cantidad_1": "",
+     "cantidad_normal": "300 g",
+     "cantidad_num": 300,
+     "unidad": "g",
+     "estimada": false,
+     "precio_eur": 4.5
+    },
+    {
+     "nombre": "calamar",
+     "cantidad_1": "",
+     "cantidad_normal": "250 g",
+     "cantidad_num": 250,
+     "unidad": "g",
+     "estimada": false,
+     "precio_eur": 2.8
+    },
+    {
+     "nombre": "caldo de pescado",
+     "cantidad_1": "",
+     "cantidad_normal": "1 l",
+     "cantidad_num": 1000,
+     "unidad": "ml",
+     "estimada": false,
+     "precio_eur": 1.6
+    },
+    {
+     "nombre": "tomate triturado",
+     "cantidad_1": "",
+     "cantidad_normal": "100 g",
+     "cantidad_num": 100,
+     "unidad": "g",
+     "estimada": false,
+     "precio_eur": 0.2
+    },
+    {
+     "nombre": "azafrán",
+     "cantidad_1": "",
+     "cantidad_normal": "1 sobre",
+     "cantidad_num": 1,
+     "unidad": "ud",
+     "estimada": false,
+     "precio_eur": 0.9
+    },
+    {
+     "nombre": "limón",
+     "cantidad_1": "",
+     "cantidad_normal": "1",
+     "cantidad_num": 1,
+     "unidad": "ud",
+     "estimada": false,
+     "precio_eur": 0.3
+    }
+   ],
+   "pasos": [
+    {
+     "texto": "Sofríe el calamar y el tomate en la paellera.",
+     "minutos": 10
+    },
+    {
+     "texto": "Añade el arroz, el azafrán y el caldo caliente.",
+     "minutos": 3
+    },
+    {
+     "texto": "Cuece 10 minutos a fuego fuerte y 8 a fuego suave, añadiendo gambas y mejillones.",
+     "minutos": 18
+    },
+    {
+     "texto": "Reposa tapada 5 minutos y sirve con limón.",
+     "minutos": 5
+    }
+   ],
+   "notas": "",
+   "pasos_sugeridos": false,
+   "foto": "media/covers/paella.jpg"
+  },
+  {
+   "id": 11,
+   "titulo": "Croquetas de jamón",
+   "autor": "Recetario de ejemplo",
+   "video_url": null,
+   "raciones": 6,
+   "raciones_estimadas": false,
+   "tiempo_total_min": 170,
+   "precio_total_eur": 5.75,
+   "precio_racion_eur": 0.96,
+   "ingredientes": [
+    {
+     "nombre": "leche",
+     "cantidad_1": "",
+     "cantidad_normal": "750 ml",
+     "cantidad_num": 750,
+     "unidad": "ml",
+     "estimada": false,
+     "precio_eur": 0.75
+    },
+    {
+     "nombre": "harina",
+     "cantidad_1": "",
+     "cantidad_normal": "90 g",
+     "cantidad_num": 90,
+     "unidad": "g",
+     "estimada": false,
+     "precio_eur": 0.1
+    },
+    {
+     "nombre": "mantequilla",
+     "cantidad_1": "",
+     "cantidad_normal": "70 g",
+     "cantidad_num": 70,
+     "unidad": "g",
+     "estimada": false,
+     "precio_eur": 0.7
+    },
+    {
+     "nombre": "jamón serrano",
+     "cantidad_1": "",
+     "cantidad_normal": "120 g",
+     "cantidad_num": 120,
+     "unidad": "g",
+     "estimada": false,
+     "precio_eur": 2.4
+    },
+    {
+     "nombre": "huevos",
+     "cantidad_1": "",
+     "cantidad_normal": "2",
+     "cantidad_num": 2,
+     "unidad": "ud",
+     "estimada": false,
+     "precio_eur": 0.4
+    },
+    {
+     "nombre": "pan rallado",
+     "cantidad_1": "",
+     "cantidad_normal": "150 g",
+     "cantidad_num": 150,
+     "unidad": "g",
+     "estimada": false,
+     "precio_eur": 0.4
+    },
+    {
+     "nombre": "aceite de girasol",
+     "cantidad_1": "",
+     "cantidad_normal": "500 ml",
+     "cantidad_num": 500,
+     "unidad": "ml",
+     "estimada": false,
+     "precio_eur": 1.0
+    }
+   ],
+   "pasos": [
+    {
+     "texto": "Haz una bechamel espesa con mantequilla, harina y leche; añade el jamón.",
+     "minutos": 20
+    },
+    {
+     "texto": "Deja enfriar la masa en la nevera.",
+     "minutos": 120
+    },
+    {
+     "texto": "Forma las croquetas, pásalas por huevo y pan rallado.",
+     "minutos": 20
+    },
+    {
+     "texto": "Fríelas en aceite bien caliente.",
+     "minutos": 10
+    }
+   ],
+   "notas": "",
+   "pasos_sugeridos": false,
+   "foto": "media/covers/croquetas.jpg"
+  },
+  {
+   "id": 12,
+   "titulo": "Arroz con leche",
+   "autor": "Recetario de ejemplo",
+   "video_url": null,
+   "raciones": 6,
+   "raciones_estimadas": false,
+   "tiempo_total_min": 50,
+   "precio_total_eur": 1.57,
+   "precio_racion_eur": 0.26,
+   "ingredientes": [
+    {
+     "nombre": "arroz redondo",
+     "cantidad_1": "",
+     "cantidad_normal": "150 g",
+     "cantidad_num": 150,
+     "unidad": "g",
+     "estimada": false,
+     "precio_eur": 0.3
+    },
+    {
+     "nombre": "leche entera",
+     "cantidad_1": "",
+     "cantidad_normal": "1 l",
+     "cantidad_num": 1000,
+     "unidad": "ml",
+     "estimada": false,
+     "precio_eur": 1.0
+    },
+    {
+     "nombre": "azúcar",
+     "cantidad_1": "",
+     "cantidad_normal": "100 g",
+     "cantidad_num": 100,
+     "unidad": "g",
+     "estimada": false,
+     "precio_eur": 0.12
+    },
+    {
+     "nombre": "canela en rama",
+     "cantidad_1": "",
+     "cantidad_normal": "1",
+     "cantidad_num": 1,
+     "unidad": "ud",
+     "estimada": false,
+     "precio_eur": 0.1
+    },
+    {
+     "nombre": "piel de limón",
+     "cantidad_1": "",
+     "cantidad_normal": "1 tira",
+     "cantidad_num": 1,
+     "unidad": "ud",
+     "estimada": false,
+     "precio_eur": 0.05
+    }
+   ],
+   "pasos": [
+    {
+     "texto": "Infusiona la leche con canela y piel de limón.",
+     "minutos": 5
+    },
+    {
+     "texto": "Añade el arroz y cuece a fuego suave removiendo.",
+     "minutos": 40
+    },
+    {
+     "texto": "Incorpora el azúcar, cuece 5 minutos más y enfría.",
+     "minutos": 5
+    }
+   ],
+   "notas": "",
+   "pasos_sugeridos": false,
+   "foto": "media/covers/arroz-con-leche.jpg"
   }
  ],
- "solo_video": []
+ "solo_video": [],
+ "nota_portadas": "Fotos libres (CC0 / dominio público) de Wikimedia Commons; ver data/sample/covers/ATTRIBUTION.md."
 }

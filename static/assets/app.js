@@ -105,12 +105,19 @@ async function viewList() {
         ${[["", "all"], ["completa", "complete"], ["pendiente de transcribir", "pending"]].map(([v, k]) => `<button type="button" data-estado="${v}" aria-pressed="${F.estado === v}">${t(k)}</button>`).join("")}
       </div>
       <button class="chip" type="button" id="favF" aria-pressed="${F.favoritos}">${ic("star")} ${t("favorites")}</button>
-      <label class="sr" for="tmax">${t("time")}</label>
-      <select id="tmax" class="input" style="width:auto"><option value="">${t("time")}: ${t("any")}</option>${[15, 30, 45, 60].map(m => `<option value="${m}" ${F.max_min == m ? "selected" : ""}>≤ ${m} min</option>`).join("")}</select>
-      <label class="sr" for="pmax">${t("price")}</label>
-      <select id="pmax" class="input" style="width:auto"><option value="">€ ${t("price")}: ${t("any")}</option>${[1, 1.5, 2, 3].map(p => `<option value="${p}" ${F.max_precio == p ? "selected" : ""}>≤ ${eur(p)}</option>`).join("")}</select>
-      <label class="sr" for="ord">${t("sort")}</label>
-      <select id="ord" class="input" style="width:auto">${[["original", "sort_original"], ["rapidas", "sort_fast"], ["baratas", "sort_cheap"], ["az", "sort_az"], ["recientes", "sort_recent"], ["valoracion", "sort_rating"]].map(([v, k]) => `<option value="${v}" ${F.orden === v ? "selected" : ""}>${t(k)}</option>`).join("")}</select>
+      <div class="fpop-wrap">
+        <button class="btn" type="button" id="filtBtn" aria-haspopup="dialog" aria-expanded="false" aria-controls="filtPanel">${ic("sliders-horizontal")} Filtros<span class="fbadge" id="filtN" hidden></span></button>
+        <div class="fpop" id="filtPanel" role="dialog" aria-modal="true" aria-labelledby="filtTitle" hidden>
+          <div class="fpop-head"><h2 id="filtTitle">Filtros</h2><button class="btn ghost sm" type="button" id="filtX" aria-label="Cerrar filtros">${ic("x")}</button></div>
+          <label class="f" for="tmax">${t("time")}</label>
+          <select id="tmax" class="input"><option value="">${t("any")}</option>${[15, 30, 45, 60].map(m => `<option value="${m}" ${F.max_min == m ? "selected" : ""}>≤ ${m} min</option>`).join("")}</select>
+          <label class="f" for="pmax">${t("price")}</label>
+          <select id="pmax" class="input"><option value="">${t("any")}</option>${[1, 1.5, 2, 3].map(p => `<option value="${p}" ${F.max_precio == p ? "selected" : ""}>≤ ${eur(p)}</option>`).join("")}</select>
+          <label class="f" for="ord">${t("sort")}</label>
+          <select id="ord" class="input">${[["original", "sort_original"], ["rapidas", "sort_fast"], ["baratas", "sort_cheap"], ["az", "sort_az"], ["recientes", "sort_recent"], ["valoracion", "sort_rating"]].map(([v, k]) => `<option value="${v}" ${F.orden === v ? "selected" : ""}>${t(k)}</option>`).join("")}</select>
+          <div class="row fpop-foot"><button class="btn ghost" type="button" id="filtReset">Restablecer</button><button class="btn primary" type="button" id="filtOk">Ver resultados</button></div>
+        </div>
+      </div>
     </div>
     <div class="scroller" role="group" aria-label="${t("tags")}">${tags.map(x => `<button type="button" class="chip" data-tag="${esc(x.etiqueta)}" aria-pressed="${F.etiqueta === x.etiqueta}">${esc(x.etiqueta)} <span class="n">${x.total}</span></button>`).join("")}</div>
   </div>
@@ -122,14 +129,46 @@ async function viewList() {
   $$("[data-estado]").forEach(b => b.onclick = () => { F.estado = b.dataset.estado; $$("[data-estado]").forEach(x => x.setAttribute("aria-pressed", x === b)); reload(); });
   $("#favF").onclick = e => { F.favoritos = !F.favoritos; e.currentTarget.setAttribute("aria-pressed", F.favoritos); reload(); };
   $$("[data-tag]").forEach(b => b.onclick = () => { F.etiqueta = F.etiqueta === b.dataset.tag ? "" : b.dataset.tag; $$("[data-tag]").forEach(x => x.setAttribute("aria-pressed", x.dataset.tag === F.etiqueta)); reload(); });
-  $("#tmax").onchange = e => { F.max_min = e.target.value; reload(); };
-  $("#pmax").onchange = e => { F.max_precio = e.target.value; reload(); };
-  $("#ord").onchange = e => { F.orden = e.target.value; reload(); };
+  $("#tmax").onchange = e => { F.max_min = e.target.value; badge(); reload(); };
+  $("#pmax").onchange = e => { F.max_precio = e.target.value; badge(); reload(); };
+  $("#ord").onchange = e => { F.orden = e.target.value; badge(); reload(); };
+  const badge = () => { const n = [F.max_min, F.max_precio, F.orden !== "original"].filter(Boolean).length, b = $("#filtN");
+    b.hidden = !n; b.textContent = n; $("#filtBtn").setAttribute("aria-label", n ? `Filtros, ${n} activo${n > 1 ? "s" : ""}` : "Filtros"); };
+  badge(); bindFilterPopover(() => { Object.assign(F, { max_min: "", max_precio: "", orden: "original" }); $("#tmax").value = ""; $("#pmax").value = ""; $("#ord").value = "original"; badge(); reload(); });
+  bindFade($(".toolbar .scroller"));
   $("#selBtn").onclick = () => { selecting = !selecting; if (!selecting) selected.clear(); $("#selBtn").setAttribute("aria-pressed", selecting); renderResults(); };
   $("#expBtn") && ($("#expBtn").onclick = () => exportDialog());
   bindViewPicker();
   await loadResults();
   API.prefsLista().then(p => { if (p && (p.vista !== VIEW.vista || p.densidad !== VIEW.densidad)) { setView(p, false); } }).catch(() => {});
+}
+// 'Filtros' popover (desktop) / bottom sheet (mobile): focus trap, Esc and outside click close, focus returns to the button
+function bindFilterPopover(onReset) {
+  const btn = $("#filtBtn"), pnl = $("#filtPanel"), wrap = pnl.parentElement;
+  const focusables = () => $$("button,select,input,[tabindex]:not([tabindex='-1'])", pnl).filter(x => !x.disabled && x.offsetParent !== null);
+  const outside = e => { if (!wrap.contains(e.target)) close(false); };
+  const open = () => { pnl.hidden = false; btn.setAttribute("aria-expanded", "true"); document.body.classList.add("fpop-open");
+    document.addEventListener("pointerdown", outside, true); (focusables()[1] || pnl).focus(); };
+  const close = (refocus = true) => { if (pnl.hidden) return; pnl.hidden = true; btn.setAttribute("aria-expanded", "false"); document.body.classList.remove("fpop-open");
+    document.removeEventListener("pointerdown", outside, true); refocus && btn.focus(); };
+  btn.onclick = () => pnl.hidden ? open() : close();
+  $("#filtX").onclick = $("#filtOk").onclick = () => close();
+  $("#filtReset").onclick = onReset;
+  pnl.addEventListener("keydown", e => {
+    if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); close(); return; }
+    if (e.key !== "Tab") return;
+    const f = focusables(), first = f[0], last = f[f.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  });
+  window.addEventListener("hashchange", () => close(false), { once: true });
+}
+// horizontal chip rows: fade only the edge that has more content, so no chip looks cut mid-word without a cue
+function bindFade(el) {
+  if (!el) return;
+  const upd = () => { const max = el.scrollWidth - el.clientWidth;
+    el.classList.toggle("fade-r", el.scrollLeft < max - 2); el.classList.toggle("fade-l", el.scrollLeft > 2); };
+  el.addEventListener("scroll", upd, { passive: true }); new ResizeObserver(upd).observe(el); upd();
 }
 async function loadResults() {
   lastResults = await API.recipes(F);
@@ -218,7 +257,7 @@ function cardWide(r, detailed) {
       r.precio_total_eur != null || r.precio_racion_eur != null ? `<div><dt>Coste estimado</dt><dd>${[r.precio_total_eur != null ? `${eur(r.precio_total_eur)} total` : "", r.precio_racion_eur != null ? `${eur(r.precio_racion_eur)}/ración` : ""].filter(Boolean).join(" · ")}</dd></div>` : "",
       r.autor ? `<div><dt>Fuente</dt><dd>${esc(r.autor)}</dd></div>` : "",
       fecha ? `<div><dt>Añadida</dt><dd>${fecha}</dd></div>` : ""].filter(Boolean);
-    extra = (rows.length ? `<dl class="facts">${rows.join("")}</dl>` : "") + (tags.length ? `<div class="tags">${tags.map(x => `<span class="chip small">${esc(x)}</span>`).join("")}</div>` : "");
+    extra = (rows.length ? `<dl class="facts">${rows.join("")}</dl>` : "") + (tags.length ? `<div class="tags">${tags.slice(0, 4).map(x => `<span class="chip small">${esc(x)}</span>`).join("")}${tags.length > 4 ? `<span class="chip small more" title="${esc(tags.slice(4).join(", "))}">+${tags.length - 4}<span class="sr"> etiquetas más: ${esc(tags.slice(4).join(", "))}</span></span>` : ""}</div>` : "");
   }
   return `<article class="card ${detailed ? "vdet" : "vuna"} ${pend ? "pending" : ""}">${selBox(r)}${r.favorito ? `<span class="fav">${ic("star", "Favorita", "fill")}</span>` : ""}
     <a href="#/receta/${r.id}" class="cardlink">${thumbHtml(r)}<div class="body"><h3>${esc(r.titulo)}</h3>
@@ -375,7 +414,7 @@ async function viewDetail(id) {
   $("#minus") && ($("#minus").onclick = () => { if (base * k > 1) { k = (base * k - 1) / base; rescale(); } });
   $("#toList") && ($("#toList").onclick = () => listPicker(`Añadir «${r.titulo}» a la lista`, Math.round(base * k * 100) / 100, async (lid, n) => {
     const l = await API.shop.addRecipe(lid, r.id, n); toast(`${l.añadidos} ingredientes añadidos a «${l.nombre}»`); }));
-  $("#toPlan") && ($("#toPlan").onclick = () => planDialog(r, Math.round(base * k)));
+  $("#toPlan") && ($("#toPlan").onclick = () => planDialog(r, k === 1 ? planServings(r) : Math.round(base * k)));
   $$("[data-timer]").forEach(b => b.onclick = () => startTimer(`${r.titulo.slice(0, 24)} · paso ${+b.dataset.timer + 1}`, r.pasos[b.dataset.timer].minutos));
   $("#cookBtn") && ($("#cookBtn").onclick = () => cookMode(r));
   $("#favBtn") && ($("#favBtn").onclick = () => guard(async () => { r.favorito = !r.favorito; await API.patch(r.id, { favorito: r.favorito }); $("#favBtn").innerHTML = ic("star", "", r.favorito ? "fill" : ""); $("#favBtn").setAttribute("aria-pressed", r.favorito); toast(r.favorito ? "Añadida a favoritas" : "Quitada de favoritas"); }));
@@ -691,6 +730,8 @@ async function listPicker(title, servings, onPick) {
     let id = sel.value; if (id === "new") id = (await API.shop.create($("#lpnn", d).value.trim())).id;
     d.close(); await onPick(+id, servings != null ? +$("#lpr", d).value : null); }); };
 }
+// mirrors app/services/planner.py default_servings: declared servings, else 2 (estimated values and batch yields fall back)
+function planServings(r) { const n = r.raciones; return !r.raciones_estimadas && typeof n === "number" && n > 0 && n <= 12 ? n : 2; }
 function planDialog(r, servings) {
   const d = dialog(`<form class="dlg" id="pdF"><h2>${ic("calendar-days")} Planificar «${esc(r.titulo)}»</h2>
     <div class="form-grid"><div><label class="f" for="pdd">Día</label><input id="pdd" type="date" class="input" required value="${isoToday()}"></div>

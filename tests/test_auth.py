@@ -138,7 +138,7 @@ def test_static_build_bypasses_login(tmp_path):
     out = tmp_path / "dist"
     _build_static(out)
     data = json.loads((out / "data" / "recipes.json").read_text(encoding="utf-8"))
-    assert data["recetas"] and all(r["portada"] is None for r in data["recetas"])
+    assert data["recetas"] and all(r["portada"] is None or r["portada"].startswith("media/covers/") for r in data["recetas"])
     assert 'data-mode="static"' in (out / "index.html").read_text(encoding="utf-8")
 
 
@@ -148,4 +148,4 @@ def test_static_demo_uses_only_sample_data(tmp_path):
     _build_static(out)
     raw = (out / "data" / "recipes.json").read_text(encoding="utf-8")
     assert "instagram.com" not in raw and "@" not in raw
-    assert len(json.loads(raw)["recetas"]) == 8
+    assert len(json.loads(raw)["recetas"]) == 12

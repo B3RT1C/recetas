@@ -13,6 +13,8 @@ temporizadores, modo cocina, importador de Instagram, lista de la compra, planif
 | **Entrar** | **Importar** | **Ajustes → Estado** |
 | ![](docs/screenshots/login-light-desktop.png) | ![](docs/screenshots/importar-dark-desktop.png) | ![](docs/screenshots/estado-light-desktop.png) |
 
+Filtros: `filtros`. Vista general de todas las capturas: `docs/screenshots/_overview.png`. Para regenerarlas: arrancar con `RECETAS_SEED_FILE=data/sample/recetas-demo.json` y `--mock-instagram`, poblar con `scripts/seed_demo.py --password-stdin` y ejecutar `scripts/screenshots.py --base http://127.0.0.1:PUERTO`. Fotos de muestra: ver `data/sample/covers/ATTRIBUTION.md`.
+
 Vistas de la lista: `lista-una`, `lista-info`, `lista-detalle`, `lista-cuadricula`, `lista-cuadricula-densa`.
 
 Todas las capturas (claro/oscuro, 1440×900 y 390×844): `docs/screenshots/`.
@@ -124,7 +126,7 @@ python scripts/build_static.py      # → dist/ (solo lectura, sin vídeos, mini
 
 ```bash
 pip install -r requirements-dev.txt && python -m playwright install chromium
-python -m pytest                                    # 147 tests (Instagram con proveedor mock)
+python -m pytest                                    # 150 tests (Instagram con proveedor mock)
 python run.py --mock-instagram --port 8088 &
 python scripts/screenshots.py --base http://127.0.0.1:8088
 ```
