@@ -91,6 +91,8 @@
       async logout() { await req("POST", "/api/auth/logout"); csrf = ""; },
     },
     scale: (id, raciones) => req("GET", `/api/recipes/${id}/escalar?raciones=${raciones}`),
+    acceso: () => req("GET", "/api/acceso"),
+    accesoRed: (host, port) => req("PUT", "/api/acceso/red", { host, port }),
     estado: refrescar => req("GET", "/api/estado" + (refrescar ? "?refrescar=true" : "")),
     shop: {
       lists: () => req("GET", "/api/compra/listas"),

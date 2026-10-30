@@ -1,4 +1,7 @@
-"""Runtime configuration, read from environment variables (all optional)."""
+"""Runtime configuration, read from environment variables (all optional).
+
+Precedence: CLI flags (run.py) > real environment variables > .env file > built-in defaults.
+"""
 from __future__ import annotations
 
 import os
@@ -6,6 +9,48 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+
+
+def parse_dotenv(text: str) -> dict[str, str]:
+    """Tiny .env parser: KEY=VALUE lines, # comments, optional 'export ', single/double quotes."""
+    out: dict[str, str] = {}
+    for raw in text.splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        if line.startswith("export "):
+            line = line[7:].lstrip()
+        key, sep, value = line.partition("=")
+        key = key.strip()
+        if not sep or not key.replace("_", "").isalnum():
+            continue
+        value = value.strip()
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in "'\"":
+            value = value[1:-1]
+        elif " #" in value:
+            value = value.split(" #", 1)[0].rstrip()
+        out[key] = value
+    return out
+
+
+def config_file_path() -> Path:
+    """RECETAS_CONFIG_FILE (production, e.g. C:\\ProgramData\\recetas-web\\config.env) or <repo>/.env."""
+    return Path(os.environ.get("RECETAS_CONFIG_FILE") or ROOT / ".env")
+
+
+def load_dotenv(path: Path | None = None) -> list[str]:
+    """Load .env (RECETAS_ENV_FILE or <repo>/.env) without overriding variables already set.
+
+    Returns the names that were applied (never the values: the file may hold secrets)."""
+    path = path or config_file_path()
+    if not path.is_file():
+        return []
+    applied = []
+    for k, v in parse_dotenv(path.read_text(encoding="utf-8-sig")).items():
+        if k not in os.environ:
+            os.environ[k] = v
+            applied.append(k)
+    return applied
 
 
 def _path(env: str, default: Path) -> Path:

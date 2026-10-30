@@ -19,5 +19,6 @@ secrets/
 setup-code.txt
 .env
 .env.*
+!.env.example
 dist/
 COMMIT

@@ -869,6 +869,62 @@ async function pantryDialog() {
   $("#paF", d).onsubmit = e => { e.preventDefault(); guard(async () => { await API.shop.addPantry($("#pan", d).value.trim()); $("#pan", d).value = ""; paint(); }); };
 }
 
+/* =========================================================== ACCESO (settings) */
+// Probe a different origin without CORS: an opaque no-cors fetch resolves only if the server answers.
+async function probeHealth(base, ms = 3000) {
+  const c = new AbortController(), tm = setTimeout(() => c.abort(), ms);
+  try { await fetch(base + "api/health?t=" + Date.now(), { mode: "no-cors", cache: "no-store", signal: c.signal }); return true; }
+  catch { return false; } finally { clearTimeout(tm); }
+}
+function pickNewUrl(urls) {
+  const here = location.hostname;
+  return (urls.find(u => new URL(u.url).hostname === here) || urls.find(u => u.tipo === "lan") || urls[0]).url;
+}
+async function renderAcceso() {
+  const box = $("#s-acc"); if (!box) return;
+  const a = await API.acceso();
+  box.innerHTML = `<h2>${ic("wifi")} Acceso</h2>
+  <p class="muted small">Direcciones con las que abrir el recetario desde otros dispositivos. El QR se genera en este servidor.</p>
+  <ul class="acc-list">${a.urls.map((u, i) => `<li><code>${esc(u.url)}</code> <span class="chip small">${{ lan: "Red local", tailscale: "Tailscale", local: "Este equipo", otra: "Otra" }[u.tipo]}</span>
+    <button class="btn sm" type="button" data-copy="${esc(u.url)}">${ic("copy")} Copiar</button>
+    ${u.tipo === "local" ? "" : `<button class="btn sm" type="button" data-qr="${i}" aria-expanded="false">QR</button><div class="qr" id="qr${i}" hidden></div>`}</li>`).join("")}</ul>
+  <form id="accF" class="row" style="gap:.5rem;align-items:end;flex-wrap:wrap;margin-top:1rem">
+    <label>Dirección <input name="host" value="${esc(a.host)}" list="accHosts" required inputmode="decimal" size="15"></label>
+    <datalist id="accHosts"><option value="0.0.0.0"><option value="127.0.0.1"></datalist>
+    <label>Puerto <input name="port" type="number" min="1024" max="65535" value="${a.port}" required></label>
+    <button class="btn" type="submit">Guardar y reiniciar</button>
+  </form>
+  <p class="warn small">${ic("triangle-alert")} Si cambias la dirección o el puerto, la URL del recetario cambiará y el servidor se reiniciará. Si no arranca en unos 60 s, se restaura la configuración anterior.</p>
+  ${a.aviso ? `<p class="muted small">${esc(a.aviso)}</p>` : ""}
+  <p class="muted small">Archivo de configuración: <code>${esc(a.archivo_config)}</code></p>
+  <p id="accMsg" role="status" aria-live="polite"></p>`;
+  $$("[data-copy]", box).forEach(b => b.onclick = async () => { try { await navigator.clipboard.writeText(b.dataset.copy); toast("Copiado"); } catch { toast("No se pudo copiar"); } });
+  $$("[data-qr]", box).forEach(b => b.onclick = () => {
+    const d = $("#qr" + b.dataset.qr), url = a.urls[+b.dataset.qr].url, open = d.hidden;
+    if (open && !d.innerHTML) d.innerHTML = `<img src="/api/acceso/qr?url=${encodeURIComponent(url)}" alt="Código QR de ${esc(url)}" width="160" height="160">`;
+    d.hidden = !open; b.setAttribute("aria-expanded", open);
+  });
+  $("#accF").onsubmit = async ev => {
+    ev.preventDefault();
+    const f = ev.target, host = f.host.value.trim(), port = +f.port.value, msg = $("#accMsg");
+    if (host === a.host && port === a.port) { msg.textContent = "No hay cambios."; return; }
+    if (!confirm("La URL del recetario cambiará y el servidor se reiniciará. ¿Continuar?")) return;
+    let r;
+    try { r = await API.accesoRed(host, port); } catch (e) { msg.textContent = e.message; return; }
+    if (!r.reiniciando) { msg.textContent = "Guardado. " + r.mensajes.join(" "); return; }
+    const target = pickNewUrl(r.urls), t0 = Date.now();
+    f.querySelector("button").disabled = true;
+    msg.textContent = `Reiniciando… esperando a ${target}`;
+    await new Promise(res => setTimeout(res, 4000)); // let the old server go down first
+    while (Date.now() - t0 < 60000) {
+      if (await probeHealth(target)) { msg.textContent = "Listo. Redirigiendo…"; location.href = target + location.hash; return; }
+      await new Promise(res => setTimeout(res, 2000));
+    }
+    msg.textContent = "El servidor no respondió en la nueva dirección en 60 s: se ha restaurado la configuración anterior. Sigues en la URL actual.";
+    f.querySelector("button").disabled = false;
+  };
+}
+
 /* =========================================================== ESTADO (settings) */
 const fmtBytes = b => b == null ? "—" : b < 1024 ** 2 ? `${Math.round(b / 1024)} KB` : b < 1024 ** 3 ? `${(b / 1024 ** 2).toFixed(1).replace(".", ",")} MB` : `${(b / 1024 ** 3).toFixed(2).replace(".", ",")} GB`;
 async function renderEstado(refresh) {
@@ -898,12 +954,12 @@ async function viewSettings() {
   setTitle(t("nav_ajustes"));
   const meta = await API.meta();
   main.innerHTML = `<h1>${t("nav_ajustes")}</h1><div class="settings">
-  <nav class="side" aria-label="Apartados">${[["ap", t("appearance")], ...(API.STATIC ? [] : [["ia", "Conectar tu IA"], ["tok", "Acceso para agentes"], ["ig", "Instagram"], ["estado", "Estado"], ["sesion", "Sesión"]]), ["about", t("about")]].map(([id, l]) => `<a href="#/ajustes" data-jump="${id}">${l}</a>`).join("")}</nav>
+  <nav class="side" aria-label="Apartados">${[["ap", t("appearance")], ...(API.STATIC ? [] : [["ia", "Conectar tu IA"], ["tok", "Acceso para agentes"], ["ig", "Instagram"], ["estado", "Estado"], ["acc", "Acceso"], ["sesion", "Sesión"]]), ["about", t("about")]].map(([id, l]) => `<a href="#/ajustes" data-jump="${id}">${l}</a>`).join("")}</nav>
   <div>
    <section class="panel" id="s-ap"><h2>${t("appearance")}</h2><div class="row">
      <button class="btn" type="button" id="tg">${ic("sun-moon")} ${t("theme")}</button>
      <label>${t("language")} <select class="input" id="lang" style="width:auto">${[["es", "Español"], ["en", "English"]].map(([v, l]) => `<option value="${v}" ${LANG === v ? "selected" : ""}>${l}</option>`).join("")}</select></label></div></section>
-   ${API.STATIC ? "" : `<section class="panel" id="s-ia"></section><section class="panel" id="s-tok"></section><section class="panel" id="s-ig"></section><section class="panel" id="s-estado"><h2>${ic("activity")} Estado</h2><p class="muted">Cargando…</p></section>
+   ${API.STATIC ? "" : `<section class="panel" id="s-ia"></section><section class="panel" id="s-tok"></section><section class="panel" id="s-ig"></section><section class="panel" id="s-acc"></section><section class="panel" id="s-estado"><h2>${ic("activity")} Estado</h2><p class="muted">Cargando…</p></section>
    <section class="panel" id="s-sesion"><h2>${ic("lock")} Sesión</h2><p>Has entrado como <b>${esc(AUTH.user)}</b>. Para cambiar la contraseña usa <code>python -m app.cli create-admin --replace</code> en el servidor.</p><button class="btn" type="button" id="logout">Cerrar sesión</button></section>`}
    <section class="panel" id="s-about"><h2>${t("about")}</h2>
      <p>Recetario personal que convierte vídeos de recetas guardados en Instagram en recetas escalables, con precios <b>estimados</b> y modo cocina. Versión ${esc(meta.version || "2")}.</p>
@@ -923,7 +979,7 @@ FastAPI + uvicorn ──► SQLite (recetas como documentos JSON, migración sin
   $("#tg").onclick = () => $("#themeBtn").click();
   $("#lang").onchange = e => { localStorage.setItem("lang", e.target.value); location.reload(); };
   if (API.STATIC) return;
-  renderAI(); renderTokens(); renderIG(); renderEstado().catch(e => $("#s-estado").innerHTML = `<h2>${ic("activity")} Estado</h2><p class="muted">${esc(e.message)}</p>`);
+  renderAI(); renderTokens(); renderIG(); renderAcceso().catch(e => $("#s-acc").innerHTML = `<h2>${ic("wifi")} Acceso</h2><p class="muted">${esc(e.message)}</p>`); renderEstado().catch(e => $("#s-estado").innerHTML = `<h2>${ic("activity")} Estado</h2><p class="muted">${esc(e.message)}</p>`);
   $("#logout").onclick = () => guard(async () => { await API.auth.logout(); AUTH.ok = false; location.hash = "#/login"; viewLogin(); });
 }
 async function renderAI() {
