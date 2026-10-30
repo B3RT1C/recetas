@@ -228,3 +228,46 @@ def test_fab_respects_reduced_motion(page):
     pg, _ = page
     pg.emulate_media(reduced_motion="reduce")
     assert pg.eval_on_selector(".fab", "e => getComputedStyle(e).transitionDuration") in ("0s", "0s, 0s")
+
+
+_CONTRAST_JS = """([sels]) => {
+  const rgb = c => { const m = c.match(/[\\d.]+/g).map(Number); return m.slice(0, 3); };
+  const lum = c => { const v = rgb(c).map(x => { x /= 255; return x <= .03928 ? x / 12.92 : ((x + .055) / 1.055) ** 2.4; });
+                     return .2126 * v[0] + .7152 * v[1] + .0722 * v[2]; };
+  const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + .05) / (y + .05); };
+  const okl = c => { const v = rgb(c).map(x => { x /= 255; return x <= .04045 ? x / 12.92 : ((x + .055) / 1.055) ** 2.4; });
+    const l = Math.cbrt(.4122214708*v[0]+.5363325363*v[1]+.0514459929*v[2]), m = Math.cbrt(.2119034982*v[0]+.6806995451*v[1]+.1073969566*v[2]),
+          s = Math.cbrt(.0883024619*v[0]+.2817188376*v[1]+.6299787005*v[2]);
+    return .2104542553*l + .7936177850*m - .0040720468*s; };
+  const st = getComputedStyle(document.documentElement), get = n => {
+    const d = document.createElement('i'); d.style.color = `var(${n})`; document.body.append(d); const c = getComputedStyle(d).color; d.remove(); return c; };
+  const out = {};
+  for (const n of ['--elev-0', '--elev-1', '--elev-2', '--elev-3', '--text', '--muted', '--accent']) out[n] = get(n);
+  out.ratio = ratio; out.okl = okl;
+  return { c: Object.fromEntries(Object.entries(out).filter(([k]) => k.startsWith('--'))),
+           L: ['--elev-0','--elev-1','--elev-2','--elev-3'].map(n => okl(out[n])),
+           text: ['--elev-1','--elev-2','--elev-3'].map(s => [ratio(out['--text'], out[s]), ratio(out['--muted'], out[s])]),
+           acc: ['--elev-1','--elev-2'].map(s => ratio(out['--accent'], s === '--elev-1' ? out['--elev-1'] : out['--elev-2'])),
+           card: ratio(out['--elev-1'], out['--elev-0']),
+           cardBorder: getComputedStyle(document.querySelector('#results .card')).borderTopWidth,
+           cardShadow: getComputedStyle(document.querySelector('#results .card')).boxShadow };
+}"""
+
+
+@pytest.mark.parametrize("theme", ["dark", "light"])
+def test_surface_elevation_and_text_contrast(page, theme):
+    pg, _ = page
+    pg.evaluate(f"document.documentElement.dataset.theme = '{theme}'"); pg.wait_for_timeout(100)
+    r = pg.evaluate(_CONTRAST_JS, [None])
+    L = r["L"]
+    print(theme, "OKLCH L", [round(x * 100, 1) for x in L], "card/bg ratio", round(r["card"], 3))
+    assert r["cardBorder"] == "1px"
+    if theme == "dark":
+        # each elevation step is at least 6 points lighter (OKLCH L, 0–100)
+        assert all(b - a >= 0.06 for a, b in zip(L, L[1:])), L
+        assert r["card"] >= 1.15
+    else:
+        assert L[1] - L[0] >= 0.02 and r["cardShadow"] != "none"
+    for txt, muted in r["text"]:
+        assert txt >= 4.5 and muted >= 4.5, r["text"]
+    assert all(a >= 3 for a in r["acc"]), r["acc"]

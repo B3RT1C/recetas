@@ -569,3 +569,29 @@ h3{font-size:1.125rem;line-height:1.3}
   .fab.fab-hide{transform:translateY(calc(100% + 96px));opacity:0;pointer-events:none}
 }
 @media(prefers-reduced-motion:reduce){.fab{transition:none}}
+/* v2.1.4 elevated surfaces: --elev-0 page, --elev-1 cards, --elev-2 sheets/menus/dialogs, --elev-3 controls on sheets */
+:root{
+  --elev-0:#f6f1ea;--elev-1:#ffffff;--elev-2:#ffffff;--elev-3:#f6f1ea;
+  --card-border:rgba(0,0,0,.08);--sep:rgba(0,0,0,.06);--hover-lift:#fffaf5;
+  --card-shadow:0 1px 2px rgba(43,26,11,.06),0 4px 14px rgba(43,26,11,.07);
+}
+[data-theme=dark]{
+  --elev-0:#121010;--elev-1:#24201d;--elev-2:#36312d;--elev-3:#48423d;
+  --card-border:rgba(255,255,255,.08);--sep:rgba(255,255,255,.06);--hover-lift:#2e2925;
+  --card-shadow:0 1px 2px rgba(0,0,0,.5);
+}
+body,.cook{background:var(--elev-0)}
+.card,.panel,.day,.aisle{background:var(--elev-1);border-color:var(--card-border);box-shadow:var(--card-shadow)}
+.card:hover{background:var(--hover-lift)}
+.v-cuadricula .card .meta,.card hr,.card .gmeta{border-color:var(--sep)}
+.fpop,.moremenu,dialog,.tabbar{background:var(--elev-2);border-color:var(--card-border)}
+.card .input,.card .chip,.card .badge:not([class*=" est"]),.panel .input,.panel .chip{background:var(--elev-2)}
+.fpop .input,.fpop .chip,.moremenu .mi-range,dialog .input,dialog .chip,.fpop select{background:var(--elev-3)}
+.input,.chip,.icon-btn,.btn:not(.primary){border-color:var(--card-border)}
+[data-theme=dark] .input,[data-theme=dark] .chip,[data-theme=dark] .icon-btn,[data-theme=dark] .btn:not(.primary){background:var(--elev-1);border-color:rgba(255,255,255,.14)}
+[data-theme=dark] .card .chip,[data-theme=dark] .panel .input,[data-theme=dark] .panel .chip{background:var(--elev-2)}
+[data-theme=dark] .fpop .input,[data-theme=dark] .fpop .chip,[data-theme=dark] dialog .input,[data-theme=dark] dialog .chip{background:var(--elev-3)}
+.chip[aria-pressed=true]{background:var(--accent)!important}
+[data-theme=dark]{--muted:#c9bdb1;--bg:var(--elev-0);--surface:var(--elev-1);--surface-2:var(--elev-2)}
+:root:not([data-theme=dark]){--bg:var(--elev-0)}
+.card .fav{background:var(--elev-2)}

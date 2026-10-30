@@ -14,6 +14,7 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 - Áreas táctiles de al menos 44 px.
 - Subtítulo de Recetas en una sola línea, sin repetir el recuento; «pendientes de transcribir» solo si hay alguna.
 - El botón flotante ya no tapa la última tarjeta (margen inferior con zona segura) y se oculta al bajar y reaparece al subir (sin animación con «reducir movimiento»).
+- Superficies por elevación en ambos temas: en oscuro fondo #121010, tarjetas #24201D, paneles y hojas (Filtros, «Más acciones», diálogos) #36312D y controles un nivel por encima (≥ 7 puntos de luminosidad OKLCH entre niveles), borde de 1 px rgba(255,255,255,.08) y separadores al 6 %; en claro, tarjetas blancas sobre fondo crema con borde sutil y sombra suave. Texto ≥ 4,5:1 y controles ≥ 3:1 en todas las superficies.
 - Cuadrícula en móvil: tiempo y precio por ración en hasta 2 líneas, sin cortar el precio.
 
 ### Añadido
