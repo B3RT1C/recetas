@@ -2,6 +2,25 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versiones según [SemVer](https://semver.org/lang/es/).
 
+## [2.1.1] — 2026-10-30 — Correcciones visuales
+
+### Cambiado
+- **Filtros** agrupados en un botón con contador de filtros activos: *popover* en escritorio y hoja inferior en móvil, con trampa de foco y cierre con Esc. La búsqueda y el selector de vista siguen siempre visibles.
+- Vista **Una sola**: portada 16:9 con altura máxima de ~380 px; la información se ve sin desplazarse.
+- **Etiquetas**: sin cortes a mitad de palabra; desvanecido en los bordes del carrusel y chip «+N» en las tarjetas.
+- **Cuadrícula**: tarjetas de igual altura, títulos limitados a 2 líneas y portadas con proporción fija 4:3.
+- **Planificador**: las raciones por defecto son las de la receta (2 si son estimadas, no numéricas o fuera de 1–12).
+- Miniaturas del importador simulado sobrias y con cuentas inventadas.
+
+### Añadido
+- Fotos de muestra libres (CC0 / dominio público) en `data/sample/covers/` con `ATTRIBUTION.md`; la demo estática ya no incluye vídeos ni contenido de Instagram.
+- `scripts/seed_demo.py`: plan semanal, favoritos, despensa y listas de la compra realistas para las capturas.
+- `docs/screenshots/_overview.png` y nueva captura `filtros-*`.
+
+### Corregido
+- Ninguna captura muestra cartas de ajuste ni barras de color.
+- Etiqueta duplicada «Precio/ración por ración».
+
 ## [2.1.0] — 2026-10-30 — Fase 2
 
 ### Añadido
