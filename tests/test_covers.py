@@ -181,3 +181,16 @@ def test_global_default_setting(client):
 def test_migration_adds_cover_columns(services):
     cols = {r[1] for r in services.db.conn.execute("PRAGMA table_info(recipes)")}
     assert {"cover_source", "cover_param"} <= cols
+
+
+def test_v1_cover_endpoints_need_token(client, anon, services):
+    rid = client.get("/api/recipes").json()[0]["id"]
+    assert anon.put(f"/api/v1/recipes/{rid}/cover", json={"fuente": "generic"}).status_code == 401
+    ro = {"Authorization": "Bearer " + services.tokens.create("r", ["read"])["token"]}
+    rw = {"Authorization": "Bearer " + services.tokens.create("w", ["read", "write"])["token"]}
+    lib = anon.get("/api/v1/covers/library", headers=ro).json()
+    assert lib and all(x["licencia"] for x in lib)
+    assert anon.put(f"/api/v1/recipes/{rid}/cover", headers=ro, json={"fuente": "generic"}).status_code in (401, 403)
+    r = anon.put(f"/api/v1/recipes/{rid}/cover", headers=rw, json={"fuente": "generic", "biblioteca": lib[0]["id"]})
+    assert r.status_code == 200 and r.json()["portada_fuente"] == "generic"
+    assert anon.put(f"/api/v1/recipes/{rid}/cover", headers=rw, json={"fuente": "nope"}).status_code == 422
