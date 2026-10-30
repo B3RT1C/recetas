@@ -83,7 +83,7 @@ label.f{display:block;font-weight:600;font-size:.9rem;margin:.8rem 0 .3rem}
 .toolbar{display:grid;gap:.75rem;margin-bottom:1rem}
 .search{position:relative}
 .search input{padding-left:2.6rem;font-size:1.05rem;min-height:50px;border-radius:14px}
-.search::before{content:"🔍";position:absolute;left:.9rem;top:50%;transform:translateY(-50%);opacity:.6}
+.search::before{content:"";width:1.05em;height:1.05em;background:currentColor;-webkit-mask:var(--ic-search) no-repeat center/contain;mask:var(--ic-search) no-repeat center/contain;position:absolute;left:.9rem;top:50%;transform:translateY(-50%);opacity:.6}
 .filters{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
 .scroller{display:flex;gap:.4rem;overflow-x:auto;scrollbar-width:thin;padding-bottom:.25rem;mask-image:linear-gradient(90deg,#000 92%,transparent)}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:1rem}
@@ -327,3 +327,29 @@ main:focus,main:focus-visible{outline:none}
   .day{break-inside:avoid;box-shadow:none}
   .addslot,.pchip .pc{display:none!important}
 }
+
+/* ---------- line icons (Lucide, ISC) ---------- */
+:root{--ic-search:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.3-4.3'/%3E%3C/svg%3E")}
+.ic{width:1.1em;height:1.1em;flex:none;vertical-align:-.18em;stroke-width:2}
+.ic.fill{fill:currentColor}
+.btn .ic,.chip .ic{margin-right:.1em}
+.nav a .ic,.tabbar a .ic{width:1.25em;height:1.25em}
+.tabbar a .ic{display:block;margin:0 auto 2px}
+.icon-btn .ic{width:1.15em;height:1.15em}
+.brand{display:inline-flex;align-items:center;gap:.4rem}
+.brand .ic{color:var(--accent);width:1.3em;height:1.3em}
+.thumb .ph,.pt .ph{display:grid;place-items:center;width:100%;height:100%;color:var(--muted);background:var(--surface-2)}
+.thumb .ph .ic{width:2.6rem;height:2.6rem;stroke-width:1.5;opacity:.7}
+.pt .ph{width:2rem;height:2rem;border-radius:8px}
+.pt .ph .ic{width:1.1rem;height:1.1rem}
+.empty .big .ic{width:3rem;height:3rem;stroke-width:1.5;color:var(--muted)}
+.login-logo .ic{width:2.2rem;height:2.2rem;color:var(--accent)}
+.fav .ic,.stars-ro .ic,.stars .on .ic{color:#e0a100}
+.stars-ro{display:inline-flex;align-items:center;gap:.15em}
+.stars button .ic{width:1.3em;height:1.3em}
+.stars button.on .ic{fill:currentColor}
+.joblist .st-ok>.ic{color:var(--ok)}
+.joblist .st-error>.ic{color:var(--danger,#b91c1c)}
+.joblist .st-incompleto>.ic{color:#b45309}
+.joblist li{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem}
+.jobsum{font-weight:600}

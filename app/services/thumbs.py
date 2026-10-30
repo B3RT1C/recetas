@@ -1,7 +1,7 @@
 """Card covers: grab one frame from each local video with ffmpeg, in a background thread.
 
 Thumbnails are cached as media/thumbs/<key>.jpg (key = shortcode, or r<id> for manual recipes).
-Fallback order for a card cover: video frame -> imported photo/thumbnail -> null (UI shows the emoji).
+Fallback order for a card cover: video frame -> imported photo/thumbnail -> null (UI shows a neutral line-icon placeholder).
 If ffmpeg is missing (RECETAS_FFMPEG unset and not on PATH) nothing breaks; the Estado panel says so.
 """
 from __future__ import annotations
