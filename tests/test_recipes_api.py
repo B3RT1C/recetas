@@ -65,3 +65,20 @@ def test_missing_video_is_null_and_legacy_video_path_works(client, settings):
     assert rec["media"]["video"] == "/videos/DPpn4clj0eC.mp4"
     res = client.get("/videos/DPpn4clj0eC.mp4", headers={"Range": "bytes=0-9"})
     assert res.status_code == 206 and len(res.content) == 10
+
+
+def test_price_model_ready(services, client):
+    from app.services.prices import PriceEntry, PriceRouter, price_label
+    services.prices.put(PriceEntry("Tomate Pera", "Mercadona", price_per_kg=1.99, source="superfudis"))
+    assert services.prices.get("tomate pera")[0].price_per_kg == 1.99
+    assert price_label({"precio_eur": 1}) == "estimado"
+    assert price_label({"precio_fuente": "superfudis", "precio_super": "Dia", "precio_fecha": "2026-10-30T10:00"}) == "real (Dia, 2026-10-30)"
+
+    class Boom:
+        def lookup(self, x): raise RuntimeError
+
+    class Est:
+        def lookup(self, x): return [PriceEntry(x[0], price_per_unit=0.3)]
+    assert PriceRouter(services.prices, [Boom(), Est()]).lookup("ajo").price_per_unit == 0.3
+    r = client.post("/api/recipes", json={"titulo": "t", "ingredientes": [{"nombre": "sal", "precio_eur": 0.1, "precio_fuente": "manual"}]})
+    assert r.json()["ingredientes"][0]["precio_fuente"] == "manual"

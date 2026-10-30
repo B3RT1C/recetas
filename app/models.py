@@ -15,6 +15,10 @@ class Ingredient(BaseModel):
     unidad: str = Field(default="ud", max_length=30)
     estimada: bool = False
     precio_eur: Optional[float] = Field(default=None, ge=0)
+    # Price provenance (see app/services/prices.py). Absent/None => 'estimado'.
+    precio_fuente: Optional[str] = Field(default=None, max_length=60)  # provider id
+    precio_super: Optional[str] = Field(default=None, max_length=60)
+    precio_fecha: Optional[str] = Field(default=None, max_length=30)
 
 
 class Step(BaseModel):

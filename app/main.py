@@ -42,6 +42,7 @@ class Services:
     instagram: InstagramProvider
     importer: ImportService
     tokens: TokenService
+    prices: Optional["PriceCache"] = None
 
 
 def build_services(settings: Optional[Settings] = None, ig_provider: Optional[InstagramProvider] = None,
@@ -54,7 +55,8 @@ def build_services(settings: Optional[Settings] = None, ig_provider: Optional[In
     ai = AIService(db, SecretBox(settings.secret_dir))
     ig = ig_provider or make_provider(settings.ig_provider, settings.secret_dir)
     importer = ImportService(db, settings, recipes, ai, ig, delay_s=0 if settings.ig_provider == "mock" else import_delay)
-    return Services(settings, db, recipes, ai, ig, importer, TokenService(db))
+    from .services.prices import PriceCache
+    return Services(settings, db, recipes, ai, ig, importer, TokenService(db), PriceCache(db))
 
 
 # ---------------------------------------------------------------- request models
