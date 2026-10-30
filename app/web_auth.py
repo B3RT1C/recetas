@@ -114,7 +114,8 @@ def install_auth(app: FastAPI, svc) -> None:
         """First run only: create the admin. Needs the setup code from the server log unless called from localhost."""
         if auth.has_admin():
             raise HTTPException(409, "Ya existe un administrador")
-        local = _ip(request) in ("127.0.0.1", "::1", "testclient")
+        proxied = any(h in request.headers for h in ("x-forwarded-for", "x-forwarded-proto", "forwarded", "x-real-ip"))
+        local = _ip(request) in ("127.0.0.1", "::1", "testclient") and not proxied
         if not local and not hmac.compare_digest(body.code.strip(), setup_code()):
             raise HTTPException(403, "Código de configuración incorrecto (míralo en el registro del servidor "
                                      "o en setup-code.txt de la carpeta de secretos)")

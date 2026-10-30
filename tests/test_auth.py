@@ -1,4 +1,5 @@
 import pytest
+from pathlib import Path
 from fastapi.testclient import TestClient
 
 from app.cli import main as cli_main
@@ -110,3 +111,23 @@ def test_cli_create_admin(tmp_path, monkeypatch, capsys):
     from app.db import Database
     db = Database(tmp_path / "d" / "recetas.db")
     assert db.query("SELECT username FROM users")[0]["username"] == "chef"
+
+
+def test_setup_behind_proxy_needs_code(anon, services):
+    """A reverse proxy on the same host makes every client look local: then the setup code is required."""
+    h = {"X-Forwarded-For": "203.0.113.9"}
+    r = anon.post("/api/auth/setup", json={"username": "chef", "password": "una-buena-clave"}, headers=h)
+    assert r.status_code == 403 and not services.auth.has_admin()
+    code = (services.settings.secret_dir / "setup-code.txt").read_text().strip()
+    r = anon.post("/api/auth/setup", json={"username": "chef", "password": "una-buena-clave", "code": code}, headers=h)
+    assert r.status_code == 200
+
+
+def test_static_build_bypasses_login(tmp_path):
+    import subprocess, sys, json
+    out = tmp_path / "dist"
+    subprocess.run([sys.executable, "scripts/build_static.py", "--out", str(out)], check=True,
+                   cwd=Path(__file__).resolve().parent.parent, capture_output=True)
+    data = json.loads((out / "data" / "recipes.json").read_text(encoding="utf-8"))
+    assert data["recetas"] and all(r["portada"] is None for r in data["recetas"])
+    assert 'data-mode="static"' in (out / "index.html").read_text(encoding="utf-8")

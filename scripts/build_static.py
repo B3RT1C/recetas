@@ -27,11 +27,15 @@ def main():
         from fastapi.testclient import TestClient
         from app.main import create_app
         with TestClient(create_app()) as c:
+            # the UI API needs a session: create a throwaway admin in the temp data dir
+            csrf = c.post("/api/auth/setup", json={"username": "demo", "password": "demo-static-build"}).json()["csrf"]
+            c.headers["X-CSRF-Token"] = csrf
             recetas = c.get("/api/recipes").json()
             meta = c.get("/api/meta").json()
     for r in recetas:
         r["media"] = {"video": None, "foto": None}
         r.pop("miniatura", None)
+        r["portada"] = None
     meta.update(instagram_proveedor=None, ia_configurada=False)
     if out.exists():
         shutil.rmtree(out)
