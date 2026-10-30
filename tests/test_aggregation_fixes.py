@@ -19,3 +19,12 @@ def test_count_units_pluralised():
     assert U.display(3, "loncha") == "3 lonchas"
     assert U.display(2, "ud") == "2"
     assert U.display(1500, "g") == "1,5 kg"
+
+
+def test_price_history_records_changes_only(services):
+    from app.services.prices import PriceEntry
+    pc = services.prices
+    for v in (2.0, 2.0, 2.5):
+        pc.put(PriceEntry(ingredient="Tomate", supermarket="", price_per_kg=v, source="manual", fetched_at=""))
+    rows = services.db.query("SELECT price_per_kg FROM price_history WHERE ingredient='tomate' ORDER BY id")
+    assert [r[0] for r in rows] == [2.0, 2.5]

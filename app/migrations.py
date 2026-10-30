@@ -62,7 +62,17 @@ def m1_phase2(c: sqlite3.Connection) -> None:
                       [(n, i) for i, n in enumerate(DEFAULT_CATEGORIES)])
 
 
-MIGRATIONS: list[Callable[[sqlite3.Connection], None]] = [m1_phase2]
+def m2_price_history(c: sqlite3.Connection) -> None:
+    """Append-only price history (one row per price change), groundwork for Fase 3 price features."""
+    c.executescript("""
+    CREATE TABLE IF NOT EXISTS price_history (
+      id INTEGER PRIMARY KEY AUTOINCREMENT, ingredient TEXT NOT NULL, supermarket TEXT NOT NULL DEFAULT '',
+      source TEXT NOT NULL, price_per_kg REAL, price_per_l REAL, price_per_unit REAL, recorded_at TEXT NOT NULL);
+    CREATE INDEX IF NOT EXISTS ix_price_history ON price_history(ingredient, supermarket, recorded_at);
+    """)
+
+
+MIGRATIONS: list[Callable[[sqlite3.Connection], None]] = [m1_phase2, m2_price_history]
 LATEST = len(MIGRATIONS)
 
 
