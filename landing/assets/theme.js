@@ -1,6 +1,7 @@
 /* Theme: prefers-color-scheme by default, explicit choice stored in localStorage ("light" | "dark"). */
 (function () {
   var KEY = "recetario-landing-theme", d = document.documentElement;
+  d.classList.add("js");
   function stored() { try { return localStorage.getItem(KEY); } catch (e) { return null; } }
   function sys() { return matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; }
   function apply(t) {

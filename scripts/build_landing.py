@@ -55,7 +55,7 @@ T = {
    ("bot","IA y MCP","«Conecta tu IA» con OpenAI, OpenRouter u Ollama local (claves cifradas). API REST y servidor MCP con tokens de solo lectura o escritura.",False),
   ],
   gal_h="Capturas", gal_p="Capturas reales de la aplicación con recetas de ejemplo y fotos libres CC0.",
-  gal=[("detalle","Detalle de receta con raciones y precios"),("planificador","Planificador semanal"),("compra","Lista de la compra"),
+  gal=[("cuadricula","Cuadrícula de recetas (v2.1.2)"),("detalle","Detalle de receta con raciones y precios"),("planificador","Planificador semanal"),("compra","Lista de la compra"),
        ("filtros","Filtros por tiempo y precio"),("lista-una","Vista «Una sola»"),("lista-info","Vista «Con info»")],
   mob=[("lista","Lista en el móvil"),("detalle","Detalle en el móvil"),("compra","Compra en el móvil")],
   demo_h="Pruébalo", demo_p="La demo estática funciona en el navegador con recetas de ejemplo. Para usarla con tus recetas, se instala en tu propio equipo.",
@@ -68,6 +68,14 @@ T = {
   app_h="App: próximamente", app_p="Una app para el móvil con tus recetas sin conexión, la lista de la compra en el súper y el plan de la semana. Aún en diseño.",
   foot_credits="Créditos de las fotos", foot_credits_p="Fotos de comida libres (CC0 y dominio público) de Wikimedia Commons.",
   foot_icons="Iconos: Lucide (licencia ISC).",
+  mk_label="Demo interactiva de Recetario C con recetas de ejemplo", mk_tabs=("Recetas","Planificador","Compra"), mk_search="Buscar receta", mk_tags=("Todas","Rápidas","Baratas","Legumbres","Postres"),
+  mk_back="Volver", mk_serv="Raciones", mk_less="Menos raciones", mk_more="Más raciones", mk_ing="Ingredientes", mk_none="Ninguna receta coincide.",
+  mk_add="Añadir a la lista", mk_added="Añadido", mk_list="Lista de la compra", mk_cook="Modo cocina", mk_prev="Anterior", mk_next="Siguiente", mk_step="Paso", mk_of="de", mk_done="¡Listo! Buen provecho.",
+  mk_days=("Lun","Mar","Mié","Jue","Vie"), mk_meals=("Comida","Cena"), mk_hint="Prueba a buscar, filtrar o abrir una receta. Todo funciona sin servidor.", mk_per="/ración", mk_empty="La lista está vacía.",
+  more="Ver más", less="Ver menos",
+  feat_more=["Elige qué traer de cada publicación y la app lo descarga en segundo plano.","Cada paso con su temporizador; la pantalla no se apaga.","Marca lo que ya llevas en el carro; se ordena por pasillos.","Lo que siempre tienes en casa no vuelve a la lista.","Arrastra recetas a cada día; las raciones se ajustan solas.","El precio se recalcula al cambiar las raciones.","Gráficas sencillas de lo que cocinas y lo que cuesta.","Tu IA puede leer y crear recetas con permisos limitados."],
+  gal_open="Ampliar captura", gal_close="Cerrar", gal_prev="Anterior", gal_next="Siguiente",
+  calc_h="Precio por ración", calc_p="Elige una receta de ejemplo y las raciones: el total se recalcula como en la app (precios estimados).", calc_r="Receta", calc_s="Raciones", calc_tot="Total estimado", calc_per="Por ración",
   about_h="Sobre el proyecto", about_p="Enlaces al código y a mi perfil.", dl_h="Descargas", dl=[("windows","monitor","Instalador de Windows"),("docker","container","Docker"),("app","smartphone","App")],
  ),
  "en": dict(
@@ -93,7 +101,7 @@ T = {
    ("bot","AI and MCP","“Connect your AI” with OpenAI, OpenRouter or local Ollama (encrypted keys). REST API and MCP server with read or write tokens.",False),
   ],
   gal_h="Screenshots", gal_p="Real screenshots of the app with sample recipes and free CC0 photos. The interface is in Spanish.",
-  gal=[("detalle","Recipe detail with servings and prices"),("planificador","Weekly planner"),("compra","Shopping list"),
+  gal=[("cuadricula","Recipe grid (v2.1.2)"),("detalle","Recipe detail with servings and prices"),("planificador","Weekly planner"),("compra","Shopping list"),
        ("filtros","Filters by time and price"),("lista-una","“Single” view"),("lista-info","“With info” view")],
   mob=[("lista","List on mobile"),("detalle","Detail on mobile"),("compra","Shopping on mobile")],
   demo_h="Try it", demo_p="The static demo runs in your browser with sample recipes. To use it with your own recipes, install it on your own machine.",
@@ -106,9 +114,81 @@ T = {
   app_h="App: coming soon", app_p="A mobile app with your recipes offline, the shopping list at the supermarket and the week's plan. Still being designed.",
   foot_credits="Photo credits", foot_credits_p="Free food photos (CC0 and public domain) from Wikimedia Commons.",
   foot_icons="Icons: Lucide (ISC licence).",
+  mk_label="Interactive Recetario C demo with sample recipes", mk_tabs=("Recipes","Planner","Shopping"), mk_search="Search recipes", mk_tags=("All","Quick","Cheap","Pulses","Desserts"),
+  mk_back="Back", mk_serv="Servings", mk_less="Fewer servings", mk_more="More servings", mk_ing="Ingredients", mk_none="No recipe matches.",
+  mk_add="Add to list", mk_added="Added", mk_list="Shopping list", mk_cook="Cooking mode", mk_prev="Previous", mk_next="Next", mk_step="Step", mk_of="of", mk_done="Done! Enjoy your meal.",
+  mk_days=("Mon","Tue","Wed","Thu","Fri"), mk_meals=("Lunch","Dinner"), mk_hint="Try searching, filtering or opening a recipe. It all runs without a server. Sample recipes are in Spanish.", mk_per="/serving", mk_empty="The list is empty.",
+  more="More", less="Less",
+  feat_more=["Choose what to bring from each post and the app downloads it in the background.","Every step has its own timer; the screen stays on.","Tick what is already in the trolley; sorted by aisle.","What you always have at home stays off the list.","Drop recipes on each day; servings adjust themselves.","The price is recalculated when you change servings.","Simple charts of what you cook and what it costs.","Your AI can read and create recipes with scoped permissions."],
+  gal_open="Enlarge screenshot", gal_close="Close", gal_prev="Previous", gal_next="Next",
+  calc_h="Price per serving", calc_p="Pick a sample recipe and the servings: the total is recalculated just like in the app (estimated prices).", calc_r="Recipe", calc_s="Servings", calc_tot="Estimated total", calc_per="Per serving",
   about_h="About the project", about_p="Links to the code and my profile.", dl_h="Downloads", dl=[("windows","monitor","Windows installer"),("docker","container","Docker"),("app","smartphone","App")],
  ),
 }
+
+SAMPLE = json.loads((ROOT / "data/sample/recetas-demo.json").read_text())["recetas"]
+TAGS = {"Legumbres": {"lentejas-estofadas", "ensalada-de-garbanzos"}, "Postres": {"flan-de-huevo", "arroz-con-leche"}}
+def slug(r): return Path(r["foto"]).stem
+def rtags(r):
+    out = [k for k, v in TAGS.items() if slug(r) in v]
+    if r["tiempo_total_min"] <= 30: out.append("Rápidas")
+    if r["precio_racion_eur"] < 1: out.append("Baratas")
+    return out
+TAGKEYS = ("all", "Rápidas", "Baratas", "Legumbres", "Postres")
+PHONE = next(r for r in SAMPLE if slug(r) == "paella")
+PLAN = ["lentejas-estofadas", "tortilla-de-patatas", "crema-de-calabaza", "pescado-al-horno", "macarrones-con-tomate", "salmorejo", "pollo-asado", "ensalada-de-garbanzos", "paella", "croquetas"]
+
+def demo_data():
+    rs = [{"id": r["id"], "t": r["titulo"], "s": slug(r), "r": r["raciones"], "m": r["tiempo_total_min"], "p": r["precio_total_eur"], "tags": rtags(r),
+           "i": [[x["nombre"], x["cantidad_num"], x["unidad"], x["cantidad_normal"]] for x in r["ingredientes"]],
+           "st": [p["texto"] for p in r["pasos"]]} for r in SAMPLE]
+    return "/* Generated by scripts/build_landing.py from data/sample/recetas-demo.json (sample data, CC0 covers). */\nwindow.RC_DATA=" + json.dumps({"r": rs, "plan": PLAN}, ensure_ascii=False, separators=(",", ":")) + ";\n"
+
+def eur(x, k): return (f"{x:.2f} €".replace(".", ",") if k == "es" else f"€{x:.2f}")
+
+def mockup(t, k):
+    e = html.escape
+    cards = "\n".join(
+        f'<li data-tags="{e(" ".join(rtags(r)))}" data-name="{e(r["titulo"].lower())}"><button type="button" class="mcard" data-id="{r["id"]}">'
+        f'<img src="/img/r/{slug(r)}.webp" alt="" width="160" height="100" loading="{"eager" if i < 6 else "lazy"}" decoding="async">'
+        f'<span class="mt">{e(r["titulo"])}</span><span class="mm">{r["tiempo_total_min"]} min · {eur(r["precio_racion_eur"], k)}{e(t["mk_per"])}</span></button></li>'
+        for i, r in enumerate(SAMPLE))
+    chips = "".join(f'<button type="button" class="chip" data-tag="{key}" aria-pressed="{"true" if key == "all" else "false"}">{e(lab)}</button>' for key, lab in zip(TAGKEYS, t["mk_tags"]))
+    tabs = "".join(f'<button type="button" role="tab" id="mt-{n}" aria-controls="mp-{n}" aria-selected="{"true" if n == "rec" else "false"}" tabindex="{0 if n == "rec" else -1}">{e(lab)}</button>' for n, lab in zip(("rec", "plan", "buy"), t["mk_tabs"]))
+    byslug = {slug(r): r for r in SAMPLE}
+    plan_rows = "".join(f'<tr><th scope="row">{e(d)}</th>' + "".join(f'<td>{e(byslug[PLAN[i*2+j]]["titulo"])}</td>' for j in range(2)) + "</tr>" for i, d in enumerate(t["mk_days"]))
+    p = PHONE
+    ings = "".join(f'<li>{e(x["nombre"])} <span>{e(x["cantidad_normal"])}</span></li>' for x in p["ingredientes"])
+    return f"""<div class="shots" data-mock>
+    <div class="frame desk mock" role="region" aria-label="{e(t['mk_label'])}">
+      <div class="mbar" aria-hidden="true"><i></i><i></i><i></i><span>recetario.local</span></div>
+      <div class="mtabs" role="tablist" aria-label="Recetario C">{tabs}</div>
+      <div class="mpanel" id="mp-rec" role="tabpanel" aria-labelledby="mt-rec">
+        <div class="mlist">
+          <div class="mtools"><input type="search" id="mq" placeholder="{e(t['mk_search'])}" aria-label="{e(t['mk_search'])}" autocomplete="off"><div class="chips" role="group" aria-label="Filtros">{chips}</div></div>
+          <ul class="mgrid" id="mgrid">{cards}</ul>
+          <p class="mnone" id="mnone" hidden>{e(t['mk_none'])}</p>
+        </div>
+        <div class="mdet" id="mdet" hidden tabindex="-1" aria-live="polite"></div>
+      </div>
+      <div class="mpanel" id="mp-plan" role="tabpanel" aria-labelledby="mt-plan" hidden>
+        <table class="mplan"><thead><tr><td></td><th scope="col">{e(t['mk_meals'][0])}</th><th scope="col">{e(t['mk_meals'][1])}</th></tr></thead><tbody>{plan_rows}</tbody></table>
+      </div>
+      <div class="mpanel" id="mp-buy" role="tabpanel" aria-labelledby="mt-buy" hidden><ul class="mbuy" id="mbuy"></ul></div>
+    </div>
+    <div class="frame phone mock mphone" role="region" aria-label="{e(t['hero_m_alt'])}">
+      <div class="pbar"><span>{e(p['titulo'])}</span><button type="button" class="pcart" id="pcart" aria-label="{e(t['mk_list'])}: 0" aria-expanded="false" aria-controls="plist">{ic('shopping-cart')}<b id="pbadge">0</b></button></div>
+      <div class="pview" id="pdet"><img src="/img/r/{slug(p)}.webp" alt="" width="320" height="200" decoding="async">
+        <p class="pm">{p['raciones']} {e(t['mk_serv'].lower())} · {p['tiempo_total_min']} min · {eur(p['precio_racion_eur'], k)}{e(t['mk_per'])}</p>
+        <ul class="ping">{ings}</ul>
+        <div class="pact"><button type="button" class="pbtn primary" id="padd">{ic('shopping-cart')} <span>{e(t['mk_add'])}</span></button><button type="button" class="pbtn" id="pcook">{ic('chef-hat') if 'chef-hat' in ICONS else ''} {e(t['mk_cook'])}</button></div>
+      </div>
+      <div class="pview" id="plist" hidden><p class="ph">{e(t['mk_list'])}</p><ul class="ping" id="plistul"></ul></div>
+      <div class="pview pcookv" id="pcookv" hidden><p class="ph" id="pstepn" aria-live="polite"></p><p class="pstep" id="pstep"></p>
+        <div class="pact"><button type="button" class="pbtn" id="pprev">{e(t['mk_prev'])}</button><button type="button" class="pbtn primary" id="pnext">{e(t['mk_next'])}</button></div></div>
+    </div>
+    <p class="muted small mhint">{e(t['mk_hint'])}</p>
+  </div>"""
 
 def pic(base, alt, w, h, eager=False, sizes=None, small=None):
     """<picture> with a dark source; theme.js rewrites media when the user forces a theme."""
@@ -124,11 +204,19 @@ def page(k):
     t = T[k]; o = T[t["other"]]
     e = html.escape
     feats = "\n".join(
-        f'<li class="card{" soon" if f[3] is True else ""}">{ic(f[0], "ic fi")}<h3>{e(f[1])}</h3><p>{e(f[2])}</p>'
+        f'<li class="card rv{" soon" if f[3] is True else ""}">{ic(f[0], "ic fi")}<h3>{e(f[1])}</h3><p>{e(f[2])}</p>'
+        + f'<button type="button" class="more" aria-expanded="false" aria-controls="fm-{k}-{n}" data-more="{e(t["more"])}" data-less="{e(t["less"])}">{e(t["more"])}</button>'
+        + f'<p class="fmore" id="fm-{k}-{n}" hidden><span class="pulse" aria-hidden="true"></span>{e(t["feat_more"][n])}</p>'
         + (f'<span class="badge b-soon">{e(t["soon"])}</span>' if f[3] is True else
            f'<span class="badge b-part">{e(t["partial"])}</span>' if f[3] == "partial" else
-           f'<span class="badge b-ok">{e(t["now"])}</span>') + "</li>" for f in t["feats"])
-    gal = "\n".join(f'<figure>{pic("g-"+n, c, 960, 600, sizes="(max-width: 700px) 92vw, 460px", small=(480,))}<figcaption>{e(c)}</figcaption></figure>' for n, c in t["gal"])
+           f'<span class="badge b-ok">{e(t["now"])}</span>') + "</li>" for n, f in enumerate(t["feats"]))
+    gal = "\n".join(f'<figure class="rv"><button type="button" class="zoom" aria-label="{e(t["gal_open"])}: {e(c)}" data-full="/img/g-{n}-light.webp" data-full-dark="/img/g-{n}-dark.webp" data-cap="{e(c)}">{pic("g-"+n, c, 960, 600, sizes="(max-width: 700px) 92vw, 460px", small=(480,))}</button><figcaption>{e(c)}</figcaption></figure>' for n, c in t["gal"])
+    lightbox = f'''<dialog class="lb" id="lb" aria-label="{e(t['gal_h'])}"><figure><img id="lbimg" src="/img/g-cuadricula-light.webp" alt="" width="960" height="600"><figcaption id="lbcap"></figcaption></figure>
+<div class="lbnav"><button type="button" class="btn" id="lbprev">{ic('arrow-left')} {e(t['gal_prev'])}</button><button type="button" class="btn" id="lbclose">{e(t['gal_close'])}</button><button type="button" class="btn" id="lbnext">{e(t['gal_next'])} {ic('arrow-right')}</button></div></dialog>'''
+    opts = "".join(f'<option value="{r["id"]}"{" selected" if slug(r) == "paella" else ""}>{e(r["titulo"])}</option>' for r in SAMPLE)
+    calc = f'''<section id="precio" class="wrap sec rv"><div class="card calc"><div><h2>{e(t['calc_h'])}</h2><p class="muted">{e(t['calc_p'])}</p></div>
+<div class="calcf"><label>{e(t['calc_r'])}<select id="cr">{opts}</select></label><label>{e(t['calc_s'])}<input id="cs" type="number" min="1" max="20" value="{PHONE['raciones']}" inputmode="numeric"></label>
+<output id="co" for="cr cs" aria-live="polite"><span>{e(t['calc_tot'])} <b id="ct">{eur(PHONE['precio_total_eur'], k)}</b></span><span>{e(t['calc_per'])} <b id="cp">{eur(PHONE['precio_racion_eur'], k)}</b></span></output></div></div></section>'''
     mob = "\n".join(f'<figure>{pic("m-"+n, c, 300, 650)}<figcaption>{e(c)}</figcaption></figure>' for n, c in t["mob"])
     stack = "\n".join(f"<li><strong>{e(a)}</strong><span>{e(b)}</span></li>" for a, b in t["stack"])
     repo = (f'<a class="btn" href="{e(CFG["repo_url"])}" rel="noopener">{e(t["repo"])} {ic("external-link")}</a>'
@@ -174,11 +262,12 @@ def page(k):
 <meta name="twitter:title" content="{e(t['title'])}">
 <meta name="twitter:description" content="{e(t['desc'])}">
 <meta name="twitter:image" content="{SITE}/img/og.jpg">
-<link rel="preload" as="image" href="/img/hero-light.webp" imagesrcset="/img/hero-light.webp 1200w, /img/hero-light-720.webp 720w" imagesizes="(max-width: 900px) 92vw, 720px" media="(prefers-color-scheme: light)">
 <link rel="stylesheet" href="/assets/landing.css">
 <script src="/assets/theme.js"></script>
+<script src="/assets/demo-data.js" defer></script>
+<script src="/assets/landing.js" defer></script>
 </head>
-<body>
+<body data-i18n="{e(json.dumps({x: t[x] for x in t if x.startswith('mk_')}, ensure_ascii=False))}" data-lang="{k}">
 <a class="skip" href="#main">{e(t['skip'])}</a>
 <header class="top"><div class="wrap bar">
   <a class="brand" href="{t['path']}">{ic('chef-hat')} Recetario C</a>
@@ -197,10 +286,7 @@ def page(k):
     <p class="ctas">{demo1}<a class="btn" href="#funciones">{e(t['cta_feat'])}</a></p>
     {f'<p class="muted small">{e(t["demo_note"])}</p>' if CFG['demo_url'] else ''}
   </div>
-  <div class="shots">
-    <div class="frame desk">{pic('hero', t['hero_alt'], 1200, 750, eager=True, sizes='(max-width: 900px) 92vw, 720px', small=(720,))}</div>
-    <div class="frame phone">{pic('hero-m', t['hero_m_alt'], 260, 562, eager=True)}</div>
-  </div>
+  {mockup(t, k)}
 </section>
 <section id="funciones" class="wrap sec">
   <h2>{e(t['feat_h'])}</h2><p class="muted">{e(t['feat_p'])}</p>
@@ -221,7 +307,8 @@ def page(k):
   <div><h2>{e(t['demo_h'])}</h2><p>{e(t['demo_p'])}</p></div>
   <p class="ctas"><a class="btn primary" href="{e(CFG['demo_url'])}" rel="noopener">{e(t['cta_demo'])} {ic('external-link')}</a></p>
 </section>
-''' if CFG['demo_url'] else ''}<section id="stack" class="wrap sec">
+''' if CFG['demo_url'] else ''}{calc}
+<section id="stack" class="wrap sec">
   <h2>{e(t['stack_h'])}</h2><p class="muted">{e(t['stack_p'])}</p>
   <ul class="stack">
 {stack}
@@ -232,6 +319,7 @@ def page(k):
   <div class="card app">{ic('smartphone','ic fi')}<div><h2>{e(t['app_h'])}</h2><p>{e(t['app_p'])}</p></div><span class="badge b-soon">{e(t['soon'])}</span></div>
 </section>
 </main>
+{lightbox}
 <footer class="foot"><div class="wrap">
   <div class="foot-cols"><div><h2 class="h3">{e(t['about_h'])}</h2><p class="links">{about}</p></div>
   <div><h2 class="h3">{e(t['dl_h'])}</h2><p class="links">{dls}</p></div></div>
@@ -278,6 +366,7 @@ def credits_page(k):
 """
 
 if __name__ == "__main__":
+    (L / "assets/demo-data.js").write_text(demo_data())
     (L / "index.html").write_text(page("es"))
     (L / "en").mkdir(exist_ok=True); (L / "en/index.html").write_text(page("en"))
     (L / "creditos").mkdir(exist_ok=True); (L / "creditos/index.html").write_text(credits_page("es"))
