@@ -125,3 +125,18 @@ def test_mcp_tools_with_sdk_client(server, services):
 
     res = anyio.run(_mcp, server, ro, ro_flow)
     assert res.is_error and "write" in res.content[0].text
+
+
+def test_mcp_list_preferences(server, services):
+    rw = services.tokens.create("mcp-prefs", ["read", "write"])["token"]
+
+    async def flow(c):
+        a = _payload(await c.call_tool("get_list_preferences", {}))
+        b = _payload(await c.call_tool("set_list_preferences", {"miniaturas": "icono"}))
+        bad = await c.call_tool("set_list_preferences", {"miniaturas": "foto"})
+        return a, b, bad
+
+    a, b, bad = anyio.run(_mcp, server, rw, flow)
+    assert a == {"miniaturas": "portada"} and b == {"miniaturas": "icono"} and bad.is_error
+    from app.api_prefs import get_thumbs
+    assert get_thumbs(services.db) == "icono"
