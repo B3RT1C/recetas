@@ -13,6 +13,8 @@ temporizadores, modo cocina, importador de Instagram, lista de la compra, planif
 | **Entrar** | **Importar** | **Ajustes → Estado** |
 | ![](docs/screenshots/login-light-desktop.png) | ![](docs/screenshots/importar-dark-desktop.png) | ![](docs/screenshots/estado-light-desktop.png) |
 
+Vistas de la lista: `lista-una`, `lista-info`, `lista-detalle`, `lista-cuadricula`, `lista-cuadricula-densa`.
+
 Todas las capturas (claro/oscuro, 1440×900 y 390×844): `docs/screenshots/`.
 
 ## Arranque rápido
@@ -122,7 +124,7 @@ python scripts/build_static.py      # → dist/ (solo lectura, sin vídeos, mini
 
 ```bash
 pip install -r requirements-dev.txt && python -m playwright install chromium
-python -m pytest                                    # 129 tests (Instagram con proveedor mock)
+python -m pytest                                    # 147 tests (Instagram con proveedor mock)
 python run.py --mock-instagram --port 8088 &
 python scripts/screenshots.py --base http://127.0.0.1:8088
 ```

@@ -39,6 +39,10 @@ def main():
                 csrf = pg.evaluate("fetch('/api/auth/me').then(r => r.json()).then(m => m.csrf)")
                 H = {"X-CSRF-Token": csrf}
                 pg.goto(f"{a.base}/#/recetas"); pg.wait_for_selector(".card"); pg.wait_for_timeout(300); shot("lista")
+                for mode in ("una", "info", "detalle", "cuadricula"):
+                    pg.click(f'[data-view="{mode}"]'); pg.wait_for_timeout(500); shot(f"lista-{mode}")
+                pg.fill("#densR", "6"); pg.dispatch_event("#densR", "input"); pg.wait_for_timeout(500); shot("lista-cuadricula-densa")
+                pg.fill("#densR", "4"); pg.dispatch_event("#densR", "input"); pg.wait_for_timeout(500)
                 pg.goto(f"{a.base}/#/receta/{a.recipe}"); pg.wait_for_selector(".ings li"); pg.wait_for_timeout(500); shot("detalle")
                 pg.goto(f"{a.base}/#/recetas"); pg.wait_for_selector(".card")
                 pg.click("#expBtn"); pg.wait_for_selector("dialog[open]"); pg.wait_for_timeout(200); shot("exportar")

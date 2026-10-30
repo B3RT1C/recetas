@@ -114,7 +114,7 @@ async function viewList() {
     </div>
     <div class="scroller" role="group" aria-label="${t("tags")}">${tags.map(x => `<button type="button" class="chip" data-tag="${esc(x.etiqueta)}" aria-pressed="${F.etiqueta === x.etiqueta}">${esc(x.etiqueta)} <span class="n">${x.total}</span></button>`).join("")}</div>
   </div>
-  <p class="muted small" id="count" aria-live="polite"></p>
+  <div class="listbar"><p class="muted small" id="count" aria-live="polite"></p>${viewPicker()}</div>
   <div id="results" class="grid"></div>
   <div id="selbar"></div>`;
   const reload = () => { sessionStorage.setItem("filtros", JSON.stringify(F)); loadResults(); };
@@ -127,29 +127,103 @@ async function viewList() {
   $("#ord").onchange = e => { F.orden = e.target.value; reload(); };
   $("#selBtn").onclick = () => { selecting = !selecting; if (!selecting) selected.clear(); $("#selBtn").setAttribute("aria-pressed", selecting); renderResults(); };
   $("#expBtn") && ($("#expBtn").onclick = () => exportDialog());
+  bindViewPicker();
   await loadResults();
+  API.prefsLista().then(p => { if (p && (p.vista !== VIEW.vista || p.densidad !== VIEW.densidad)) { setView(p, false); } }).catch(() => {});
 }
 async function loadResults() {
   lastResults = await API.recipes(F);
   renderResults();
 }
+/* ---- list view modes: una | info | detalle | cuadricula (+ density 2..8 columns) */
+const VIEWS = [["una", "Una sola", "square"], ["info", "Con info", "list"], ["detalle", "Muy detallado", "layout-list"], ["cuadricula", "Cuadrícula", "layout-grid"]];
+let VIEW = (() => { try { const v = JSON.parse(localStorage.getItem("vistaLista") || "null"); if (v && VIEWS.some(x => x[0] === v.vista)) return { vista: v.vista, densidad: Math.min(8, Math.max(2, +v.densidad || 4)) }; } catch {} return { vista: "cuadricula", densidad: 4 }; })();
+let viewSaveT;
+function viewPicker() {
+  return `<div class="viewpick"><div role="radiogroup" aria-label="Vista de la lista" class="seg vseg">${VIEWS.map(([v, l, i]) =>
+    `<button type="button" role="radio" data-view="${v}" aria-checked="${VIEW.vista === v}" tabindex="${VIEW.vista === v ? 0 : -1}" title="${l}">${ic(i)}<span class="vlabel">${l}</span></button>`).join("")}</div>
+    <label class="dens" ${VIEW.vista === "cuadricula" ? "" : "hidden"}><span>Columnas</span><input id="densR" type="range" min="2" max="8" step="1" value="${VIEW.densidad}" aria-valuetext="${VIEW.densidad} columnas"><output id="densO">${VIEW.densidad}</output></label></div>`;
+}
+function setView(p, save = true) {
+  VIEW = { vista: p.vista ?? VIEW.vista, densidad: p.densidad ?? VIEW.densidad };
+  localStorage.setItem("vistaLista", JSON.stringify(VIEW));
+  $$("[data-view]").forEach(b => { const on = b.dataset.view === VIEW.vista; b.setAttribute("aria-checked", on); b.tabIndex = on ? 0 : -1; });
+  const d = $(".dens"); if (d) d.hidden = VIEW.vista !== "cuadricula";
+  const r = $("#densR"); if (r) { r.value = VIEW.densidad; r.setAttribute("aria-valuetext", VIEW.densidad + " columnas"); $("#densO").textContent = VIEW.densidad; }
+  renderResults();
+  if (save) { clearTimeout(viewSaveT); viewSaveT = setTimeout(() => API.setPrefsLista(VIEW).catch(() => {}), 300); }
+}
+function bindViewPicker() {
+  const btns = $$("[data-view]");
+  btns.forEach((b, i) => {
+    b.onclick = () => setView({ vista: b.dataset.view });
+    b.onkeydown = e => {
+      const k = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+      let j = k ? (i + k + btns.length) % btns.length : e.key === "Home" ? 0 : e.key === "End" ? btns.length - 1 : -1;
+      if (j < 0) return; e.preventDefault(); setView({ vista: btns[j].dataset.view }); btns[j].focus();
+    };
+  });
+  const r = $("#densR"); if (r) r.oninput = () => setView({ densidad: +r.value });
+}
+const SRC_LABEL = { instagram: "Instagram", tiktok: "TikTok", youtube: "YouTube", pinterest: "Pinterest", facebook: "Facebook", x: "X", web: "la web" };
+const SRC_ICON = { instagram: "instagram", tiktok: "tiktok", youtube: "youtube", pinterest: "pinterest", facebook: "facebook", x: "x", web: "globe" };
+function sourceLink(r, cls = "") {
+  if (!r.source_url) return "";
+  const name = SRC_LABEL[r.source_type] || "la web";
+  return `<a class="srclink ${cls}" href="${esc(r.source_url)}" target="_blank" rel="noopener noreferrer" aria-label="Ver original en ${esc(name)} (se abre en otra pestaña)">${ic(SRC_ICON[r.source_type] || "link")}<span>Ver original</span></a>`;
+}
+const PHASES = [["Preparación", /\b(cort|pic|pel|mezcl|bat|ralla|lav|añad|sazon|prepar|amas|forma|monta|unt)/i], ["Reposo", /\b(repos|enfr|refriger|marin|dej[ae] (que )?(repos|enfri|levant)|congel|nevera)/i], ["Cocción", /\b(horne|horno|fr[ií]e|cuec|coce|cocin|sofr[ií]|saltea|dora|hierv|asa|gratin|tuesta|hornea|sart[eé]n|airfryer|freidora)/i]];
+function phaseTimes(r) {
+  const acc = {};
+  (r.pasos || []).forEach(p => { if (!p.minutos) return; const t = p.texto || ""; const f = (PHASES.find(([, rx]) => rx.test(t)) || ["Otros"])[0]; acc[f] = (acc[f] || 0) + p.minutos; });
+  return ["Preparación", "Cocción", "Reposo", "Otros"].filter(k => acc[k]).map(k => `${k} ${acc[k]} min`);
+}
+function mainIngredients(r, n = 5) {
+  return [...(r.ingredientes || [])].filter(i => i.nombre).sort((a, b) => (b.precio_eur || 0) - (a.precio_eur || 0)).slice(0, n).map(i => i.nombre);
+}
+const fdate = s => { const d = s ? new Date(s) : null; return d && !isNaN(d) ? d.toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" }) : ""; };
 function card(r) {
-  const src = r.portada || r.media?.foto;
-  const img = src ? `<img src="${esc(src)}" alt="" loading="lazy" onerror="this.remove()">` : "";
+  if (VIEW.vista === "una") return cardWide(r, false);
+  if (VIEW.vista === "info") return cardInfo(r);
+  if (VIEW.vista === "detalle") return cardWide(r, true);
+  return cardGrid(r);
+}
+function selBox(r) { return selecting ? `<input type="checkbox" class="sel" data-sel="${r.id}" aria-label="Seleccionar ${esc(r.titulo)}" ${selected.has(r.id) ? "checked" : ""}>` : ""; }
+function thumbHtml(r) { const src = r.portada || r.media?.foto; return `<div class="thumb" aria-hidden="true">${placeholder(r)}${src ? `<img src="${esc(src)}" alt="" loading="lazy" onerror="this.remove()">` : ""}</div>`; }
+function cardGrid(r) {
+  return `<article class="card vgrid ${r.estado !== "completa" ? "pending" : ""}">${selBox(r)}${r.favorito ? `<span class="fav">${ic("star", "Favorita", "fill")}</span>` : ""}
+    <a href="#/receta/${r.id}" class="cardlink">${thumbHtml(r)}<div class="body"><h3>${esc(r.titulo)}</h3></div></a></article>`;
+}
+function cardInfo(r) {
   const pend = r.estado !== "completa";
-  return `<article class="card ${pend ? "pending" : ""}">
-    ${selecting ? `<input type="checkbox" class="sel" data-sel="${r.id}" aria-label="Seleccionar ${esc(r.titulo)}" ${selected.has(r.id) ? "checked" : ""}>` : ""}
-    ${r.favorito ? `<span class="fav">${ic("star", "Favorita", "fill")}</span>` : ""}
-    <a href="#/receta/${r.id}" style="color:inherit;text-decoration:none;display:flex;flex-direction:column;flex:1">
-      <div class="thumb" aria-hidden="true">${placeholder(r)}${img}</div>
-      <div class="body">
-        <h3>${esc(r.titulo)}</h3>
-        <div class="meta">${pend ? `<span class="badge pend">Pendiente de transcribir</span>` : `
-          ${r.tiempo_total_min ? `<span>${ic("timer")} ${r.tiempo_total_min} min</span>` : ""}
-          ${r.precio_racion_eur != null ? `<span>${ic("euro")} ${eur(r.precio_racion_eur)}/ración <span class="badge est">${t("est")}</span></span>` : ""}`}
-        </div>
-        <div class="meta"><span>${esc(r.autor || "")}</span>${r.valoracion ? `<span class="stars-ro">${ic("star", r.valoracion + " de 5 estrellas", "fill")}${r.valoracion}</span>` : ""}${r.media?.video ? `<span>${ic("film", "Con vídeo")}</span>` : ""}</div>
-      </div></a></article>`;
+  const bits = pend ? [`<span class="badge pend">Pendiente de transcribir</span>`] : [
+    r.tiempo_total_min ? `<span>${ic("timer")} ${r.tiempo_total_min} min</span>` : "",
+    r.raciones ? `<span>${ic("users")} ${r.raciones} rac.</span>` : "",
+    r.precio_racion_eur != null ? `<span>${ic("euro")} ${eur(r.precio_racion_eur)}/rac. <span class="badge est">${t("est")}</span></span>` : ""].filter(Boolean);
+  return `<article class="card vinfo ${pend ? "pending" : ""}">${selBox(r)}
+    <a href="#/receta/${r.id}" class="cardlink">${thumbHtml(r)}<div class="body"><h3>${esc(r.titulo)}${r.favorito ? ` ${ic("star", "Favorita", "fill")}` : ""}</h3>${bits.length ? `<div class="meta">${bits.join("")}</div>` : ""}</div></a></article>`;
+}
+function cardWide(r, detailed) {
+  const pend = r.estado !== "completa";
+  const meta = pend ? [`<span class="badge pend">Pendiente de transcribir</span>`] : [
+    r.tiempo_total_min ? `<span>${ic("timer")} ${r.tiempo_total_min} min</span>` : "",
+    r.raciones ? `<span>${ic("users")} ${r.raciones} raciones</span>` : "",
+    r.precio_racion_eur != null ? `<span>${ic("euro")} ${eur(r.precio_racion_eur)}/ración <span class="badge est">${t("est")}</span></span>` : ""].filter(Boolean);
+  let extra = "";
+  if (detailed) {
+    const ings = mainIngredients(r), ph = phaseTimes(r), tags = r.etiquetas || [], fecha = fdate(r.creado);
+    const rows = [
+      ings.length ? `<div><dt>Ingredientes principales</dt><dd>${ings.map(esc).join(", ")}</dd></div>` : "",
+      ph.length ? `<div><dt>Tiempo por fase</dt><dd>${ph.join(" · ")}</dd></div>` : "",
+      r.precio_total_eur != null || r.precio_racion_eur != null ? `<div><dt>Coste estimado</dt><dd>${[r.precio_total_eur != null ? `${eur(r.precio_total_eur)} total` : "", r.precio_racion_eur != null ? `${eur(r.precio_racion_eur)}/ración` : ""].filter(Boolean).join(" · ")}</dd></div>` : "",
+      r.autor ? `<div><dt>Fuente</dt><dd>${esc(r.autor)}</dd></div>` : "",
+      fecha ? `<div><dt>Añadida</dt><dd>${fecha}</dd></div>` : ""].filter(Boolean);
+    extra = (rows.length ? `<dl class="facts">${rows.join("")}</dl>` : "") + (tags.length ? `<div class="tags">${tags.map(x => `<span class="chip small">${esc(x)}</span>`).join("")}</div>` : "");
+  }
+  return `<article class="card ${detailed ? "vdet" : "vuna"} ${pend ? "pending" : ""}">${selBox(r)}${r.favorito ? `<span class="fav">${ic("star", "Favorita", "fill")}</span>` : ""}
+    <a href="#/receta/${r.id}" class="cardlink">${thumbHtml(r)}<div class="body"><h3>${esc(r.titulo)}</h3>
+      ${meta.length ? `<div class="meta">${meta.join("")}</div>` : ""}${!detailed && r.autor ? `<div class="meta"><span>${esc(r.autor)}</span></div>` : ""}${extra}</div></a>
+    ${detailed && r.source_url ? `<div class="cardfoot">${sourceLink(r)}</div>` : ""}</article>`;
 }
 function renderResults() {
   const box = $("#results"); if (!box) return;
@@ -159,6 +233,7 @@ function renderResults() {
       <button class="btn" type="button" id="clearF">${t("clear")}</button></div>`;
     $("#clearF").onclick = () => { Object.assign(F, { q: "", estado: "", favoritos: false, etiqueta: "", max_min: "", max_precio: "" }); sessionStorage.removeItem("filtros"); viewList(); };
   } else box.innerHTML = lastResults.map(card).join("");
+  box.className = `grid v-${VIEW.vista}`; box.style.setProperty("--cols", VIEW.densidad);
   $$("[data-sel]").forEach(c => c.onchange = () => { const id = +c.dataset.sel; c.checked ? selected.add(id) : selected.delete(id); renderSelbar(); });
   renderSelbar();
 }
@@ -207,8 +282,8 @@ function exportDialog(pre) {
 
 /* =========================================================== DETAIL */
 function videoFrame(r) {
-  const ig = r.video_url || (r.shortcode ? `https://www.instagram.com/reel/${r.shortcode}/` : "");
-  const link = ig ? `<p class="iglink"><a href="${esc(ig)}" target="_blank" rel="noopener">Ver publicación original en Instagram ${ic("external-link")}</a></p>` : "";
+  const sl = sourceLink(r);
+  const link = sl ? `<p class="iglink">${sl}</p>` : "";
   if (r.media?.video) return `<div class="vf"><video src="${esc(r.media.video)}" controls playsinline preload="metadata" ${r.portada ? `poster="${esc(r.portada)}"` : ""}></video></div>${link}`;
   const code = r.shortcode;
   if (!code || API.STATIC) return (r.media?.foto ? `<img class="photo" src="${esc(r.media.foto)}" alt="">` : "") + link;

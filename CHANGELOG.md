@@ -5,6 +5,8 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 ## [2.1.0] — 2026-10-30 — Fase 2
 
 ### Añadido
+- **Selector de vista** en la lista de recetas: *Una sola*, *Con info*, *Muy detallado* y *Cuadrícula* (con control de columnas 2–8). Accesible con teclado (flechas, Inicio/Fin). La elección se guarda por usuario en el servidor (`GET/PUT /api/preferencias/lista`) con respaldo en `localStorage`.
+- Enlace discreto **«Ver original»** en cada receta con origen (Instagram, TikTok, YouTube, web…), con icono de la fuente, debajo del reproductor y en la vista *Muy detallado*. Nuevos campos `source_url` y `source_type` en la API, la API v1, MCP y todas las exportaciones (en el JSON v1 se añaden sin cambiar el resto del formato).
 - **Inicio de sesión web** con un único administrador (argon2), cookie de sesión, protección CSRF y freno a fuerza bruta.
   Primer arranque con **código de configuración** (registro del servidor / `setup-code.txt`) o `python -m app.cli create-admin`.
 - **Lista de la compra** completa: varias listas, pasillos ordenables, agregado de ingredientes con conversión de unidades,
@@ -30,6 +32,8 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 - Crear recetas por la API v1 valida que tengan ingredientes y pasos (salvo las de «solo vídeo»).
 
 ### Corregido
+- Los iconos SVG anidados se tragaban el texto que les seguía (p. ej. avisos y títulos de Ajustes).
+- Desbordamiento horizontal de Ajustes en móvil.
 - `build_static.py` en Windows: consola UTF‑8, cierre de SQLite antes de borrar la carpeta temporal y borrado de
   archivos de solo lectura; los tests muestran la salida del subproceso si falla.
 - Lista de la compra: «repollo» ya no cae en Carne, «huevos L» / «huevos grandes» se agrupan con «huevos»,
