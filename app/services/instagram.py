@@ -98,9 +98,12 @@ def _png(rgb: tuple[int, int, int], w: int = 48, h: int = 64) -> bytes:
 
 
 def _thumb(emoji: str, c1: str, c2: str) -> str:
-    svg = (f"<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 400'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>"
-           f"<stop offset='0' stop-color='{c1}'/><stop offset='1' stop-color='{c2}'/></linearGradient></defs>"
-           f"<rect width='300' height='400' fill='url(#g)'/><text x='150' y='225' font-size='120' text-anchor='middle'>{emoji}</text></svg>")
+    """Sober mock thumbnail: neutral warm card with a line-art plate icon (emoji/colours kept in data, unused)."""
+    svg = ("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 400'><rect width='300' height='400' fill='#efe8df'/>"
+           "<g fill='none' stroke='#b4a594' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'>"
+           "<circle cx='150' cy='200' r='58'/><circle cx='150' cy='200' r='36'/>"
+           "<path d='M64 150v34a12 12 0 0 0 12 12v58M76 150v40M88 150v34a12 12 0 0 1-12 12'/>"
+           "<path d='M236 254V150c-14 6-20 24-20 44v10h20'/></g></svg>")
     return "data:image/svg+xml;base64," + base64.b64encode(svg.encode()).decode()
 
 
@@ -114,7 +117,7 @@ MOCK_POSTS = {
          "Salmón al horno con verduras. Cena lista en 25 min 🙌\n- 2 lomos de salmón\n- 1 calabacín\n- 10 tomates cherry\n- 1 cda de aceite\n1. Corta las verduras y colócalas en la bandeja.\n2. Añade el salmón y hornea a 200º 18 minutos."),
         ("MOCKbrown04", "@dulcesdeana", "🍫", "#a18cd1", "#fbc2eb", False,
          "El brownie más fácil del mundo 😍 ¿Quieres la receta? ¡Comenta BROWNIE y te la mando! #postres"),
-        ("DPpn4clj0eC", "@seattlehanddoc", "🍢", "#fddb92", "#d1fdff", True,
+        ("DPpn4clj0eC", "@brasas.caseras", "🍢", "#fddb92", "#d1fdff", True,
          "Kebab skewers with tortillas (ya está en tu recetario)"),
         ("MOCKcurry05", "@spicekitchen", "🍛", "#ffecd2", "#fcb69f", True,
          "Chickpea curry 🍛 Serves 4\nIngredients:\n- 2 cans chickpeas\n- 400 ml coconut milk\n- 1 onion\n- 2 tbsp curry paste\nMethod:\n1. Fry the onion 5 min.\n2. Add paste, chickpeas and coconut milk, simmer 15 minutes."),
