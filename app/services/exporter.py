@@ -1,5 +1,7 @@
 """Export recipes as JSON / legacy JSON / Markdown / printable HTML, optionally zipped with media."""
 from __future__ import annotations
+from .source_link import LABELS, with_source
+from ..db import shortcode_of
 
 import html
 import io
@@ -20,6 +22,10 @@ def _qty(i: dict) -> str:
     return ("~" if i.get("estimada") else "") + (i.get("cantidad_normal") or "")
 
 
+def _src_label(r: dict) -> str:
+    return LABELS.get(r.get("source_type") or "web", "Web")
+
+
 def _clean(r: dict) -> dict:
     return {k: v for k, v in r.items() if k not in PRIVATE_KEYS}
 
@@ -37,8 +43,8 @@ def to_markdown(recipes: list[dict], media_prefix: str = "") -> str:
         if r.get("precio_racion_eur") is not None:
             meta.append(f"💶 {_eur(r['precio_racion_eur'])}/ración (estimado)")
         out.append(" · ".join(m for m in meta if m) + "\n")
-        if r.get("video_url"):
-            out.append(f"\n[Ver en Instagram]({r['video_url']})\n")
+        if r.get("source_url"):
+            out.append(f"\n[Ver original ({_src_label(r)})]({r['source_url']})\n")
         media = r.get("media") or {}
         if media_prefix and media.get("foto"):
             out.append(f"\n![{r['titulo']}]({media_prefix}{media['foto'].lstrip('/')})\n")
@@ -73,7 +79,8 @@ def to_html(recipes: list[dict], media_prefix: str = "") -> str:
         steps = "".join(
             "<li>" + e(p["texto"]) + (" <small>· %s min</small>" % p["minutos"] if p.get("minutos") else "") + "</li>"
             for p in r.get("pasos", []))
-        link = '<p><a href="%s">Ver en Instagram</a></p>' % e(r["video_url"]) if r.get("video_url") else ""
+        link = ('<p><a href="%s" target="_blank" rel="noopener noreferrer">Ver original (%s)</a></p>'
+                % (e(r["source_url"]), e(_src_label(r)))) if r.get("source_url") else ""
         ing_html = ("<h3>Ingredientes</h3><table><thead><tr><th>Cantidad</th><th>Ingrediente</th>"
                     "<th class=r>Precio est.</th></tr></thead><tbody>" + ings + "</tbody></table>") if ings else ""
         step_html = "<h3>Pasos</h3><ol>" + steps + "</ol>" if steps else ""
@@ -103,7 +110,10 @@ def build_export(svc: RecipeService, recipes: list[dict], formato: str, con_medi
                           ensure_ascii=False, indent=1).encode()
         name, mime = "recetas.json", "application/json"
     elif formato == "json_legacy":
-        body = json.dumps(svc.legacy_document({r["id"] for r in recipes}), ensure_ascii=False, indent=1).encode()
+        doc = svc.legacy_document({r["id"] for r in recipes})
+        for item in doc.get("recetas", []) + doc.get("solo_video", []):
+            with_source(item, shortcode_of(item.get("video_url")))
+        body = json.dumps(doc, ensure_ascii=False, indent=1).encode()
         name, mime = "recetas.json", "application/json"
     elif formato == "markdown":
         body, name, mime = to_markdown(recipes, prefix).encode(), "recetas.md", "text/markdown; charset=utf-8"

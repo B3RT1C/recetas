@@ -1,9 +1,14 @@
-"""Start the Recetas web server.  Usage: python run.py [--host 0.0.0.0] [--port 8088] [--mock-instagram]"""
+"""Start the Recetas web server.  Usage: python run.py [--host 0.0.0.0] [--port 8088] [--mock-instagram]
+
+Settings precedence: CLI flags > environment variables > .env file > defaults.
+"""
 import argparse
 import os
 
 
 def main() -> None:
+    from app.config import load_dotenv
+    load_dotenv()  # .env < environment < CLI
     ap = argparse.ArgumentParser(description="Recetario C — servidor web")
     ap.add_argument("--host", default=os.environ.get("RECETAS_HOST", "0.0.0.0"))
     ap.add_argument("--port", type=int, default=int(os.environ.get("RECETAS_PORT", "8088")))

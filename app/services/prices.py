@@ -114,6 +114,22 @@ class PriceCache:
         d = asdict(e)
         self.db.execute(f"INSERT OR REPLACE INTO price_cache ({','.join(d)}) VALUES ({','.join('?' * len(d))})",
                         tuple(d.values()))
+        self._record_history(e)
+
+    def _record_history(self, e: PriceEntry) -> None:
+        """Append to price_history only when the price actually changed (no rows for unchanged refreshes)."""
+        try:
+            last = self.db.query("SELECT price_per_kg, price_per_l, price_per_unit FROM price_history "
+                                 "WHERE ingredient=? AND supermarket=? ORDER BY id DESC LIMIT 1",
+                                 (e.ingredient, e.supermarket))
+        except Exception:  # table missing on a DB not yet migrated
+            return
+        cur = (e.price_per_kg, e.price_per_l, e.price_per_unit)
+        if last and tuple(last[0]) == cur:
+            return
+        self.db.execute("INSERT INTO price_history(ingredient, supermarket, source, price_per_kg, price_per_l, "
+                        "price_per_unit, recorded_at) VALUES (?,?,?,?,?,?,?)",
+                        (e.ingredient, e.supermarket, e.source, *cur, e.fetched_at))
 
 
 def price_label(ing: dict) -> str:

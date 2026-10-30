@@ -32,10 +32,28 @@ def services(settings):
     svc.db.close()
 
 
+ADMIN = ("admin", "contraseña-de-prueba")
+
+
+def login(c: TestClient, svc) -> TestClient:
+    if not svc.auth.has_admin():
+        svc.auth.create_admin(*ADMIN)
+    r = c.post("/api/auth/login", json={"username": ADMIN[0], "password": ADMIN[1]})
+    assert r.status_code == 200, r.text
+    c.headers["X-CSRF-Token"] = r.json()["csrf"]
+    return c
+
+
+@pytest.fixture()
+def anon(services):
+    with TestClient(create_app(services)) as c:
+        yield c
+
+
 @pytest.fixture()
 def client(services):
     with TestClient(create_app(services)) as c:
-        yield c
+        yield login(c, services)
 
 
 @pytest.fixture()

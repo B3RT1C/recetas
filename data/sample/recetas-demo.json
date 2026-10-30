@@ -1,0 +1,630 @@
+{
+ "generado": "2026-10-30",
+ "nota_precios": "Datos de ejemplo. Precios estimados y aproximados, solo orientativos.",
+ "recetas": [
+  {
+   "id": 1,
+   "titulo": "Tortilla de patatas",
+   "autor": "Recetario de ejemplo",
+   "video_url": null,
+   "raciones": 4,
+   "raciones_estimadas": false,
+   "tiempo_total_min": 40,
+   "precio_total_eur": 2.86,
+   "precio_racion_eur": 0.71,
+   "ingredientes": [
+    {
+     "nombre": "patatas",
+     "cantidad_1": "",
+     "cantidad_normal": "600 g",
+     "cantidad_num": 600,
+     "unidad": "g",
+     "estimada": false,
+     "precio_eur": 0.8
+    },
+    {
+     "nombre": "huevos",
+     "cantidad_1": "",
+     "cantidad_normal": "6",
+     "cantidad_num": 6,
+     "unidad": "ud",
+     "estimada": false,
+     "precio_eur": 1.2
+    },
+    {
+     "nombre": "cebolla",
+     "cantidad_1": "",
+     "cantidad_normal": "1",
+     "cantidad_num": 1,
+     "unidad": "ud",
+     "estimada": false,
+     "precio_eur": 0.25
+    },
+    {
+     "nombre": "aceite de oliva",
+     "cantidad_1": "",
+     "cantidad_normal": "100 ml",
+     "cantidad_num": 100,
+     "unidad": "ml",
+     "estimada": false,
+     "precio_eur": 0.6
+    },
+    {
+     "nombre": "sal",
+     "cantidad_1": "",
+     "cantidad_normal": "al gusto",
+     "cantidad_num": null,
+     "unidad": "",
+     "estimada": false,
+     "precio_eur": 0.01
+    }
+   ],
+   "pasos": [
+    {
+     "texto": "Pela y corta las patatas y la cebolla en láminas finas.",
+     "minutos": 5
+    },
+    {
+     "texto": "Confítalas en el aceite a fuego medio hasta que estén tiernas.",
+     "minutos": 20
+    },
+    {
+     "texto": "Escúrrelas, mézclalas con el huevo batido y sala.",
+     "minutos": 2
+    },
+    {
+     "texto": "Cuaja la tortilla por ambos lados en una sartén.",
+     "minutos": 6
+    }
+   ],
+   "notas": "",
+   "pasos_sugeridos": false
+  },
+  {
+   "id": 2,
+   "titulo": "Lentejas estofadas",
+   "autor": "Recetario de ejemplo",
+   "video_url": null,
+   "raciones": 4,
+   "raciones_estimadas": false,
+   "tiempo_total_min": 50,
+   "precio_total_eur": 1.67,
+   "precio_racion_eur": 0.42,
+   "ingredientes": [
+    {
+     "nombre": "lentejas pardinas",
+     "cantidad_1": "",
+     "cantidad_normal": "300 g",
+     "cantidad_num": 300,
+     "unidad": "g",
+     "estimada": false,
+     "precio_eur": 0.75
+    },
+    {
+     "nombre": "zanahoria",
+     "cantidad_1": "",
+     "cantidad_normal": "2",
+     "cantidad_num": 2,
+     "unidad": "ud",
+     "estimada": false,
+     "precio_eur": 0.3
+    },
+    {
+     "nombre": "pimiento verde",
+     "cantidad_1": "",
+     "cantidad_normal": "1",
+     "cantidad_num": 1,
+     "unidad": "ud",
+     "estimada": false,
+     "precio_eur": 0.3
+    },
+    {
+     "nombre": "ajo",
+     "cantidad_1": "",
+     "cantidad_normal": "2 diente",
+     "cantidad_num": 2,
+     "unidad": "diente",
+     "estimada": false,
+     "precio_eur": 0.1
+    },
+    {
+     "nombre": "pimentón dulce",
+     "cantidad_1": "",
+     "cantidad_normal": "1 cdta",
+     "cantidad_num": 1,
+     "unidad": "cdta",
+     "estimada": false,
+     "precio_eur": 0.05
+    },
+    {
+     "nombre": "aceite de oliva",
+     "cantidad_1": "",
+     "cantidad_normal": "2 cda",
+     "cantidad_num": 2,
+     "unidad": "cda",
+     "estimada": false,
+     "precio_eur": 0.15
+    },
+    {
+     "nombre": "hoja de laurel",
+     "cantidad_1": "",
+     "cantidad_normal": "1",
+     "cantidad_num": 1,
+     "unidad": "ud",
+     "estimada": false,
+     "precio_eur": 0.02
+    }
+   ],
+   "pasos": [
+    {
+     "texto": "Haz un sofrito con el ajo, el pimiento y la zanahoria picados.",
+     "minutos": 8
+    },
+    {
+     "texto": "Añade el pimentón, las lentejas lavadas, el laurel y agua que las cubra.",
+     "minutos": 2
+    },
+    {
+     "texto": "Cuece a fuego suave hasta que estén tiernas.",
+     "minutos": 35
+    }
+   ],
+   "notas": "",
+   "pasos_sugeridos": false
+  },
+  {
+   "id": 3,
+   "titulo": "Ensalada de garbanzos",
+   "autor": "Recetario de ejemplo",
+   "video_url": null,
+   "raciones": 2,
+   "raciones_estimadas": false,
+   "tiempo_total_min": 15,
+   "precio_total_eur": 2.28,
+   "precio_racion_eur": 1.14,
+   "ingredientes": [
+    {
+     "nombre": "garbanzos cocidos",
+     "cantidad_1": "",
+     "cantidad_normal": "400 g",
+     "cantidad_num": 400,
+     "unidad": "g",
+     "estimada": false,
+     "precio_eur": 0.9
+    },
+    {
+     "nombre": "tomate",
+     "cantidad_1": "",
+     "cantidad_normal": "2",
+     "cantidad_num": 2,
+     "unidad": "ud",
+     "estimada": false,
+     "precio_eur": 0.6
+    },
+    {
+     "nombre": "pepino",
+     "cantidad_1": "",
+     "cantidad_normal": "1",
+     "cantidad_num": 1,
+     "unidad": "ud",
+     "estimada": false,
+     "precio_eur": 0.4
+    },
+    {
+     "nombre": "cebolla morada",
+     "cantidad_1": "",
+     "cantidad_normal": "0.5",
+     "cantidad_num": 0.5,
+     "unidad": "ud",
+     "estimada": false,
+     "precio_eur": 0.15
+    },
+    {
+     "nombre": "aceite de oliva virgen extra",
+     "cantidad_1": "",
+     "cantidad_normal": "2 cda",
+     "cantidad_num": 2,
+     "unidad": "cda",
+     "estimada": false,
+     "precio_eur": 0.2
+    },
+    {
+     "nombre": "vinagre",
+     "cantidad_1": "",
+     "cantidad_normal": "1 cda",
+     "cantidad_num": 1,
+     "unidad": "cda",
+     "estimada": false,
+     "precio_eur": 0.03
+    }
+   ],
+   "pasos": [
+    {
+     "texto": "Escurre y enjuaga los garbanzos.",
+     "minutos": 2
+    },
+    {
+     "texto": "Trocea las verduras y mézclalo todo.",
+     "minutos": 8
+    },
+    {
+     "texto": "Aliña con aceite, vinagre y sal.",
+     "minutos": 1
+    }
+   ],
+   "notas": "",
+   "pasos_sugeridos": false
+  },
+  {
+   "id": 4,
+   "titulo": "Pollo al ajillo",
+   "autor": "Recetario de ejemplo",
+   "video_url": null,
+   "raciones": 4,
+   "raciones_estimadas": false,
+   "tiempo_total_min": 35,
+   "precio_total_eur": 5.1,
+   "precio_racion_eur": 1.27,
+   "ingredientes": [
+    {
+     "nombre": "muslos de pollo",
+     "cantidad_1": "",
+     "cantidad_normal": "800 g",
+     "cantidad_num": 800,
+     "unidad": "g",
+     "estimada": false,
+     "precio_eur": 4.0
+    },
+    {
+     "nombre": "ajo",
+     "cantidad_1": "",
+     "cantidad_normal": "8 diente",
+     "cantidad_num": 8,
+     "unidad": "diente",
+     "estimada": false,
+     "precio_eur": 0.4
+    },
+    {
+     "nombre": "vino blanco",
+     "cantidad_1": "",
+     "cantidad_normal": "100 ml",
+     "cantidad_num": 100,
+     "unidad": "ml",
+     "estimada": false,
+     "precio_eur": 0.3
+    },
+    {
+     "nombre": "aceite de oliva",
+     "cantidad_1": "",
+     "cantidad_normal": "4 cda",
+     "cantidad_num": 4,
+     "unidad": "cda",
+     "estimada": false,
+     "precio_eur": 0.3
+    },
+    {
+     "nombre": "perejil",
+     "cantidad_1": "",
+     "cantidad_normal": "1 cda",
+     "cantidad_num": 1,
+     "unidad": "cda",
+     "estimada": false,
+     "precio_eur": 0.1
+    }
+   ],
+   "pasos": [
+    {
+     "texto": "Dora el pollo salpimentado en el aceite.",
+     "minutos": 12
+    },
+    {
+     "texto": "Añade los ajos laminados y, cuando cojan color, el vino.",
+     "minutos": 3
+    },
+    {
+     "texto": "Tapa y cuece hasta que el pollo esté hecho; termina con perejil.",
+     "minutos": 15
+    }
+   ],
+   "notas": "",
+   "pasos_sugeridos": false
+  },
+  {
+   "id": 5,
+   "titulo": "Crema de calabaza",
+   "autor": "Recetario de ejemplo",
+   "video_url": null,
+   "raciones": 4,
+   "raciones_estimadas": false,
+   "tiempo_total_min": 35,
+   "precio_total_eur": 3.3,
+   "precio_racion_eur": 0.82,
+   "ingredientes": [
+    {
+     "nombre": "calabaza",
+     "cantidad_1": "",
+     "cantidad_normal": "800 g",
+     "cantidad_num": 800,
+     "unidad": "g",
+     "estimada": false,
+     "precio_eur": 1.6
+    },
+    {
+     "nombre": "patata",
+     "cantidad_1": "",
+     "cantidad_normal": "1",
+     "cantidad_num": 1,
+     "unidad": "ud",
+     "estimada": false,
+     "precio_eur": 0.2
+    },
+    {
+     "nombre": "cebolla",
+     "cantidad_1": "",
+     "cantidad_normal": "1",
+     "cantidad_num": 1,
+     "unidad": "ud",
+     "estimada": false,
+     "precio_eur": 0.25
+    },
+    {
+     "nombre": "caldo de verduras",
+     "cantidad_1": "",
+     "cantidad_normal": "600 ml",
+     "cantidad_num": 600,
+     "unidad": "ml",
+     "estimada": false,
+     "precio_eur": 0.9
+    },
+    {
+     "nombre": "nata para cocinar",
+     "cantidad_1": "",
+     "cantidad_normal": "100 ml",
+     "cantidad_num": 100,
+     "unidad": "ml",
+     "estimada": false,
+     "precio_eur": 0.35
+    }
+   ],
+   "pasos": [
+    {
+     "texto": "Rehoga la cebolla, añade la calabaza y la patata en dados.",
+     "minutos": 8
+    },
+    {
+     "texto": "Cubre con el caldo y cuece.",
+     "minutos": 20
+    },
+    {
+     "texto": "Tritura con la nata hasta que quede fina.",
+     "minutos": 3
+    }
+   ],
+   "notas": "",
+   "pasos_sugeridos": false
+  },
+  {
+   "id": 6,
+   "titulo": "Macarrones con tomate",
+   "autor": "Recetario de ejemplo",
+   "video_url": null,
+   "raciones": 3,
+   "raciones_estimadas": false,
+   "tiempo_total_min": 25,
+   "precio_total_eur": 1.95,
+   "precio_racion_eur": 0.65,
+   "ingredientes": [
+    {
+     "nombre": "macarrones",
+     "cantidad_1": "",
+     "cantidad_normal": "300 g",
+     "cantidad_num": 300,
+     "unidad": "g",
+     "estimada": false,
+     "precio_eur": 0.45
+    },
+    {
+     "nombre": "tomate triturado",
+     "cantidad_1": "",
+     "cantidad_normal": "400 g",
+     "cantidad_num": 400,
+     "unidad": "g",
+     "estimada": false,
+     "precio_eur": 0.6
+    },
+    {
+     "nombre": "cebolla",
+     "cantidad_1": "",
+     "cantidad_normal": "1",
+     "cantidad_num": 1,
+     "unidad": "ud",
+     "estimada": false,
+     "precio_eur": 0.25
+    },
+    {
+     "nombre": "queso rallado",
+     "cantidad_1": "",
+     "cantidad_normal": "60 g",
+     "cantidad_num": 60,
+     "unidad": "g",
+     "estimada": false,
+     "precio_eur": 0.6
+    },
+    {
+     "nombre": "orégano",
+     "cantidad_1": "",
+     "cantidad_normal": "1 cdta",
+     "cantidad_num": 1,
+     "unidad": "cdta",
+     "estimada": false,
+     "precio_eur": 0.05
+    }
+   ],
+   "pasos": [
+    {
+     "texto": "Cuece la pasta en agua con sal.",
+     "minutos": 11
+    },
+    {
+     "texto": "Haz la salsa con la cebolla pochada y el tomate.",
+     "minutos": 15
+    },
+    {
+     "texto": "Mézclalo y sirve con queso y orégano.",
+     "minutos": 1
+    }
+   ],
+   "notas": "",
+   "pasos_sugeridos": false
+  },
+  {
+   "id": 7,
+   "titulo": "Merluza en salsa verde",
+   "autor": "Recetario de ejemplo",
+   "video_url": null,
+   "raciones": 2,
+   "raciones_estimadas": false,
+   "tiempo_total_min": 25,
+   "precio_total_eur": 5.77,
+   "precio_racion_eur": 2.88,
+   "ingredientes": [
+    {
+     "nombre": "lomos de merluza",
+     "cantidad_1": "",
+     "cantidad_normal": "400 g",
+     "cantidad_num": 400,
+     "unidad": "g",
+     "estimada": false,
+     "precio_eur": 5.0
+    },
+    {
+     "nombre": "ajo",
+     "cantidad_1": "",
+     "cantidad_normal": "2 diente",
+     "cantidad_num": 2,
+     "unidad": "diente",
+     "estimada": false,
+     "precio_eur": 0.1
+    },
+    {
+     "nombre": "harina",
+     "cantidad_1": "",
+     "cantidad_normal": "1 cda",
+     "cantidad_num": 1,
+     "unidad": "cda",
+     "estimada": false,
+     "precio_eur": 0.02
+    },
+    {
+     "nombre": "caldo de pescado",
+     "cantidad_1": "",
+     "cantidad_normal": "200 ml",
+     "cantidad_num": 200,
+     "unidad": "ml",
+     "estimada": false,
+     "precio_eur": 0.5
+    },
+    {
+     "nombre": "perejil",
+     "cantidad_1": "",
+     "cantidad_normal": "2 cda",
+     "cantidad_num": 2,
+     "unidad": "cda",
+     "estimada": false,
+     "precio_eur": 0.15
+    }
+   ],
+   "pasos": [
+    {
+     "texto": "Dora el ajo en aceite y añade la harina.",
+     "minutos": 3
+    },
+    {
+     "texto": "Incorpora el caldo poco a poco y el perejil.",
+     "minutos": 5
+    },
+    {
+     "texto": "Cocina la merluza en la salsa moviendo la cazuela.",
+     "minutos": 8
+    }
+   ],
+   "notas": "",
+   "pasos_sugeridos": false
+  },
+  {
+   "id": 8,
+   "titulo": "Natillas caseras",
+   "autor": "Recetario de ejemplo",
+   "video_url": null,
+   "raciones": 4,
+   "raciones_estimadas": false,
+   "tiempo_total_min": 25,
+   "precio_total_eur": 1.5,
+   "precio_racion_eur": 0.38,
+   "ingredientes": [
+    {
+     "nombre": "leche",
+     "cantidad_1": "",
+     "cantidad_normal": "500 ml",
+     "cantidad_num": 500,
+     "unidad": "ml",
+     "estimada": false,
+     "precio_eur": 0.5
+    },
+    {
+     "nombre": "yemas de huevo",
+     "cantidad_1": "",
+     "cantidad_normal": "4",
+     "cantidad_num": 4,
+     "unidad": "ud",
+     "estimada": false,
+     "precio_eur": 0.8
+    },
+    {
+     "nombre": "azúcar",
+     "cantidad_1": "",
+     "cantidad_normal": "80 g",
+     "cantidad_num": 80,
+     "unidad": "g",
+     "estimada": false,
+     "precio_eur": 0.1
+    },
+    {
+     "nombre": "maicena",
+     "cantidad_1": "",
+     "cantidad_normal": "1 cda",
+     "cantidad_num": 1,
+     "unidad": "cda",
+     "estimada": false,
+     "precio_eur": 0.05
+    },
+    {
+     "nombre": "canela",
+     "cantidad_1": "",
+     "cantidad_normal": "1 cdta",
+     "cantidad_num": 1,
+     "unidad": "cdta",
+     "estimada": false,
+     "precio_eur": 0.05
+    }
+   ],
+   "pasos": [
+    {
+     "texto": "Infusiona la leche con la canela.",
+     "minutos": 8
+    },
+    {
+     "texto": "Bate las yemas con el azúcar y la maicena y añade la leche.",
+     "minutos": 3
+    },
+    {
+     "texto": "Cuece sin dejar de remover hasta que espese.",
+     "minutos": 8
+    }
+   ],
+   "notas": "",
+   "pasos_sugeridos": false
+  }
+ ],
+ "solo_video": []
+}

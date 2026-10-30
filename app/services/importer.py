@@ -15,6 +15,7 @@ from ..db import Database, now
 from .ai import AIService
 from .instagram import InstagramError, InstagramProvider
 from .recipes import DuplicateError, RecipeService
+from .validator import ImportValidationError, check_recipe, check_source, classify_error
 
 log = logging.getLogger("recetas.import")
 
@@ -23,9 +24,12 @@ log = logging.getLogger("recetas.import")
 class JobItem:
     shortcode: str
     contenido: str  # video | foto | ambos
-    estado: str = "pendiente"  # pendiente | descargando | ok | duplicado | error
+    estado: str = "pendiente"  # pendiente | descargando | ok | incompleto | duplicado | error
     mensaje: str = ""
     draft_id: Optional[int] = None
+    code: Optional[str] = None       # import-validator code when estado is incompleto/error
+    reason_en: str = ""
+    salvageable: bool = False
 
 
 @dataclass
@@ -41,6 +45,9 @@ class Job:
         d = asdict(self)
         d.pop("cancelar")
         d["total"] = len(self.items)
+        d["resumen"] = {k: sum(1 for i in self.items if i.estado == k) for k in ("ok", "incompleto", "duplicado", "error")}
+        d["fallos"] = [{"shortcode": i.shortcode, "code": i.code, "mensaje": i.mensaje, "salvageable": i.salvageable,
+                        "draft_id": i.draft_id} for i in self.items if i.estado in ("error", "incompleto")]
         d["hechos"] = sum(1 for i in self.items if i.estado not in ("pendiente", "descargando"))
         d["progreso"] = round(100 * d["hechos"] / d["total"]) if d["total"] else 100
         return d
@@ -88,6 +95,10 @@ class ImportService:
         payload["shortcode"] = d["shortcode"]
         for k in ("id", "job_id", "creado", "metodo"):
             payload.pop(k, None)
+        if payload.get("tipo", "receta") != "solo_video":
+            res = check_recipe(payload)
+            if not res["ok"]:
+                raise ImportValidationError(res)
         recipe = self.recipes.create(payload, origen="instagram")  # raises DuplicateError
         self.delete_draft(did)
         return recipe
@@ -115,7 +126,8 @@ class ImportService:
                 self._import_one(job, item)
                 existing.add(item.shortcode)
             except InstagramError as e:
-                item.estado, item.mensaje = "error", str(e)
+                res = classify_error(e)
+                item.estado, item.mensaje, item.code, item.reason_en = "error", res["reason_es"], res["code"], res["reason_en"]
             except Exception as e:  # noqa: BLE001
                 log.exception("import failed for %s", item.shortcode)
                 item.estado, item.mensaje = "error", f"Error inesperado: {type(e).__name__}"
@@ -123,6 +135,19 @@ class ImportService:
                 time.sleep(self.delay_s)
         job.estado = "cancelado" if job.cancelar else "terminado"
         job.terminado = now()
+        self._log_job(job)
+
+    def _log_job(self, job: Job) -> None:
+        """Persist a summary for the Estado panel (survives restarts)."""
+        errs = [{"shortcode": i.shortcode, "mensaje": i.mensaje, "code": i.code}
+                for i in job.items if i.estado in ("error", "incompleto")][:50]
+        try:
+            self.db.execute("INSERT OR REPLACE INTO job_log(id,kind,estado,created,finished,total,ok,errores) "
+                            "VALUES(?,?,?,?,?,?,?,?)",
+                            (job.id, "importacion", job.estado, job.creado, job.terminado, len(job.items),
+                             sum(1 for i in job.items if i.estado == "ok"), json.dumps(errs, ensure_ascii=False)))
+        except Exception:  # never break an import because of the log
+            log.exception("job_log")
 
     def _import_one(self, job: Job, item: JobItem) -> None:
         post = self.provider.post(item.shortcode)
@@ -143,22 +168,49 @@ class ImportService:
             media["foto"] = f"media/photos/{post.shortcode}.{ext}"
         draft, metodo = self.ai.extract_recipe(post.caption, autor=post.autor, video_url=post.url)
         draft.update(media, metodo=metodo, caption_original=post.caption[:5000])
+        res = check_recipe(draft, has_media=post.es_video)
+        if not res["ok"]:
+            item.code, item.reason_en, item.salvageable = res["code"], res["reason_en"], res["salvageable"]
+            if not res["salvageable"]:  # nothing useful: never create an empty draft/recipe
+                item.estado, item.mensaje = "error", res["reason_es"]
+                return
         cur = self.db.execute("INSERT INTO drafts(job_id,shortcode,data,created) VALUES(?,?,?,?)",
                               (job.id, post.shortcode, json.dumps(draft, ensure_ascii=False), now()))
         item.draft_id = cur.lastrowid
+        if not res["ok"]:
+            item.estado, item.mensaje = "incompleto", res["reason_es"] + " Guardado como borrador para completarlo a mano." + \
+                (f" · {', '.join(avisos)}" if avisos else "")
+            return
         item.estado = "ok"
         item.mensaje = ("Receta extraída con IA" if metodo == "ia" else "Receta extraída (heurística)") + \
             (f" · {', '.join(avisos)}" if avisos else "")
 
-    def import_url(self, url: str) -> dict:
-        """Synchronous single-post import used by the external API / MCP: saves directly."""
+    def import_url(self, url: str, save_as_draft: bool = False) -> dict:
+        """Synchronous single-post import used by the external API / MCP: saves directly.
+
+        Raises ImportValidationError with the structured result when the post can't become
+        a complete recipe. With ``save_as_draft`` a salvageable post is kept as a draft
+        (``details.draft_id``) instead of being discarded."""
         from ..db import shortcode_of
+        src = check_source(url)
+        if not src["ok"]:
+            raise ImportValidationError(src)
         sc = shortcode_of(url)
-        if not sc:
-            raise InstagramError("URL de Instagram no válida.")
         if sc in self.recipes.existing_shortcodes():
             raise DuplicateError(sc)
-        post = self.provider.post(sc)
+        try:
+            post = self.provider.post(sc)
+        except InstagramError as e:
+            raise ImportValidationError(classify_error(e)) from None
         draft, metodo = self.ai.extract_recipe(post.caption, autor=post.autor, video_url=post.url)
         draft["shortcode"] = sc
+        res = check_recipe({**draft, "caption_original": post.caption}, has_media=post.es_video)
+        if not res["ok"]:
+            res["details"]["shortcode"] = sc
+            if save_as_draft and res["salvageable"]:
+                draft.update(metodo=metodo, caption_original=post.caption[:5000])
+                cur = self.db.execute("INSERT INTO drafts(job_id,shortcode,data,created) VALUES(?,?,?,?)",
+                                      ("api", sc, json.dumps(draft, ensure_ascii=False), now()))
+                res["details"]["draft_id"] = cur.lastrowid
+            raise ImportValidationError(res)
         return self.recipes.create(draft, origen=f"api:{metodo}")

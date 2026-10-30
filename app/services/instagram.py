@@ -23,7 +23,11 @@ from urllib.parse import urlparse
 
 
 class InstagramError(Exception):
-    """Readable (Spanish) error shown in the UI."""
+    """Readable (Spanish) error shown in the UI. ``code`` is an import-validator code when known."""
+
+    def __init__(self, msg: str = "", code: str | None = None):
+        super().__init__(msg)
+        self.code = code
 
 
 @dataclass
@@ -123,6 +127,17 @@ MOCK_POSTS = {
     ],
 }
 
+# Posts only reachable via post()/import-url, to exercise every validator code in tests.
+MOCK_SPECIAL = {
+    "MOCKnosteps": ("@mockchef", True, "Ensalada rápida\nIngredientes:\n- 1 lechuga\n- 2 tomates\n- 1 cda de aceite"),
+    "MOCKempty01": ("@mockchef", False, ""),
+}
+MOCK_FAILURES = {
+    "MOCKprivate": ("La publicación es privada.", "PRIVATE"),
+    "MOCKratelim": ("Instagram está limitando las peticiones (429).", "RATE_LIMITED"),
+    "MOCKnetwork": ("Error de red al contactar con Instagram.", "NETWORK"),
+}
+
 
 class MockInstagramProvider:
     name = "mock"
@@ -192,7 +207,12 @@ class MockInstagramProvider:
             for t in v:
                 if t[0] == shortcode:
                     return self._mk(t)
-        raise InstagramError("Publicación no encontrada.")
+        if shortcode in MOCK_FAILURES:
+            raise InstagramError(*MOCK_FAILURES[shortcode])
+        if shortcode in MOCK_SPECIAL:
+            autor, video, caption = MOCK_SPECIAL[shortcode]
+            return self._mk((shortcode, autor, "", "#ccc", "#999", video, caption))
+        raise InstagramError("Publicación no encontrada.", "NOT_FOUND")
 
     def download(self, post: IGPost, kind: str, dest: Path) -> Path:
         dest.parent.mkdir(parents=True, exist_ok=True)
@@ -233,13 +253,13 @@ class InstaloaderProvider:
     def _restore(self) -> None:
         if self.session_file.exists() and self.user_file.exists():
             try:
-                self.L.load_session_from_file(self.user_file.read_text().strip(), str(self.session_file))
+                self.L.load_session_from_file(self.user_file.read_text(encoding="utf-8").strip(), str(self.session_file))
             except Exception:  # corrupted/expired session: user must reconnect
                 self.L = self._new()
 
     def _save(self, username: str) -> None:
         self.L.save_session_to_file(str(self.session_file))
-        self.user_file.write_text(username)
+        self.user_file.write_text(username, encoding="utf-8")
 
     def status(self) -> dict:
         return {"conectado": bool(self.L.context.is_logged_in), "usuario": self.L.context.username, "proveedor": self.name}
@@ -249,13 +269,20 @@ class InstaloaderProvider:
         if isinstance(e, il.exceptions.BadCredentialsException):
             return InstagramError("Usuario o contraseña incorrectos.")
         if isinstance(e, il.exceptions.TooManyRequestsException):
-            return InstagramError("Instagram está limitando las peticiones (429). Espera unos minutos y vuelve a intentarlo.")
+            return InstagramError("Instagram está limitando las peticiones (429). Espera unos minutos y vuelve a intentarlo.", "RATE_LIMITED")
+        if isinstance(e, getattr(il.exceptions, "PrivateProfileNotFollowedException", ())):
+            return InstagramError("La publicación es privada.", "PRIVATE")
+        if isinstance(e, getattr(il.exceptions, "BadResponseException", ())) or "not found" in str(e).lower():
+            return InstagramError("Publicación no encontrada.", "NOT_FOUND")
+        if isinstance(e, getattr(il.exceptions, "ConnectionException", ())) and "429" in str(e):
+            return InstagramError("Instagram está limitando las peticiones (429).", "RATE_LIMITED")
         if isinstance(e, il.exceptions.LoginRequiredException):
             return InstagramError("La sesión ha caducado: vuelve a conectar Instagram.")
         msg = str(e)
         if "checkpoint" in msg.lower() or "challenge" in msg.lower():
             return InstagramError("Instagram pide una verificación de seguridad (challenge). Ábrelo en la app/navegador, apruébalo y reintenta, o usa la opción de cookies.")
-        return InstagramError(f"Error de Instagram: {type(e).__name__}")
+        code = "NETWORK" if isinstance(e, (OSError, getattr(il.exceptions, "ConnectionException", OSError))) else None
+        return InstagramError(f"Error de Instagram: {type(e).__name__}", code)
 
     def login(self, username: str, password: str) -> LoginResult:
         self.L = self._new()

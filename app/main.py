@@ -26,6 +26,8 @@ from .services.exporter import build_export
 from .services.importer import ImportService
 from .services.instagram import InstagramError, InstagramProvider, is_cdn_url, make_provider
 from .services.recipes import DuplicateError, RecipeService
+from .services.validator import ImportValidationError, check_recipe, http_status
+from .services.auth import AuthService
 from .services.secrets import SecretBox
 from .services.tokens import TokenService
 
@@ -43,6 +45,10 @@ class Services:
     importer: ImportService
     tokens: TokenService
     prices: Optional["PriceCache"] = None
+    auth: Optional[AuthService] = None
+    shopping: Optional["ShoppingService"] = None
+    planner: Optional["PlannerService"] = None
+    thumbs: Optional["ThumbService"] = None
 
 
 def build_services(settings: Optional[Settings] = None, ig_provider: Optional[InstagramProvider] = None,
@@ -56,7 +62,14 @@ def build_services(settings: Optional[Settings] = None, ig_provider: Optional[In
     ig = ig_provider or make_provider(settings.ig_provider, settings.secret_dir)
     importer = ImportService(db, settings, recipes, ai, ig, delay_s=0 if settings.ig_provider == "mock" else import_delay)
     from .services.prices import PriceCache
-    return Services(settings, db, recipes, ai, ig, importer, TokenService(db), PriceCache(db))
+    from .services.planner import PlannerService
+    from .services.shopping import ShoppingService
+    from .services.thumbs import ThumbService
+    prices = PriceCache(db)
+    thumbs = ThumbService(settings)
+    recipes.thumbs = thumbs
+    return Services(settings, db, recipes, ai, ig, importer, TokenService(db), prices, AuthService(db),
+                    ShoppingService(db, prices), PlannerService(db, recipes), thumbs)
 
 
 # ---------------------------------------------------------------- request models
@@ -97,6 +110,7 @@ class AITransformIn(BaseModel):
 
 class ImportUrlIn(BaseModel):
     url: str = Field(max_length=500)
+    guardar_borrador: bool = False
 
 
 PHOTO_TYPES = {"jpg": "image/jpeg", "png": "image/png", "webp": "image/webp"}
@@ -141,6 +155,10 @@ def create_app(services: Optional[Services] = None) -> FastAPI:
     async def _ig_err(_r: Request, e: InstagramError):
         return JSONResponse({"detail": str(e)}, status_code=400)
 
+    @app.exception_handler(ImportValidationError)
+    async def _val_err(_r: Request, e: ImportValidationError):
+        return JSONResponse({"detail": e.result["reason_es"], "error": e.result}, status_code=http_status(e.code))
+
     @app.exception_handler(AIError)
     async def _ai_err(_r: Request, e: AIError):
         return JSONResponse({"detail": str(e)}, status_code=502)
@@ -156,6 +174,9 @@ def create_app(services: Optional[Services] = None) -> FastAPI:
         if not r:
             raise HTTPException(404, "Receta no encontrada")
         return r
+
+    from .web_auth import install_auth
+    install_auth(app, svc)
 
     # ------------------------------------------------------------ meta
     @app.get("/api/health", tags=["meta"])
@@ -457,12 +478,24 @@ def create_app(services: Optional[Services] = None) -> FastAPI:
 
     @app.post("/api/v1/recipes", status_code=201, tags=["api externa (token)"], dependencies=[write_dep])
     def v1_create(body: RecipeIn):
+        payload = body.model_dump(exclude_none=True)
+        if payload.get("tipo", "receta") != "solo_video":
+            res = check_recipe(payload)
+            if not res["ok"]:
+                raise ImportValidationError(res)
         return svc.recipes.create(body.model_dump(exclude_none=True), origen="api")
 
     @app.post("/api/v1/recipes/import-url", status_code=201, tags=["api externa (token)"], dependencies=[write_dep])
     def v1_import_url(body: ImportUrlIn):
         """Importa una publicación de Instagram por URL (requiere Instagram conectado en la web)."""
-        return svc.importer.import_url(body.url)
+        return svc.importer.import_url(body.url, save_as_draft=bool(getattr(body, "guardar_borrador", False)))
+
+    from .api_phase2 import register
+    register(app, svc, get_or_404)
+    from .api_access import register as register_access
+    register_access(app, svc)
+    from .api_prefs import register as register_prefs
+    register_prefs(app, svc)
 
     # ------------------------------------------------------------ static + media + MCP
     app.mount("/mcp", BearerAuthASGI(mcp_app, lambda t: svc.tokens.verify(t, "read")))

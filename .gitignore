@@ -2,12 +2,23 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .venv*/
-data/*.db
-data/*.db-*
+venv/
+env/
+# runtime data: database, backups, media, videos, sessions, secrets
+*.db
+*.db-*
+*.db.bak-*
+*.sqlite
 media/
 videos/
 *.session
+session-*
 secret.key
+secrets/
 .recetas-web/
+setup-code.txt
+.env
+.env.*
+!.env.example
 dist/
-dist/
+COMMIT
