@@ -4,6 +4,7 @@
    ic(name, "Etiqueta") -> standalone icon with role="img" and an accessible name. */
 const ICONS = {
   /* v2.1.3 view-picker icons (own drawings in the Lucide style): each depicts the layout it opens */
+  "more": `<circle cx="5" cy="12" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><circle cx="19" cy="12" r="1.6" fill="currentColor"/>`,
   "view-una": "<rect width=\"14\" height=\"10\" x=\"5\" y=\"3\" rx=\"1.5\"/> <path d=\"M5 17h14\"/> <path d=\"M5 21h9\"/>",
   "view-compacta": "<path d=\"M4 5h16\"/> <path d=\"M4 10h16\"/> <path d=\"M4 15h16\"/> <path d=\"M4 20h16\"/>",
   "view-miniatura": "<rect width=\"6\" height=\"6\" x=\"3\" y=\"3.5\" rx=\"1\"/> <rect width=\"6\" height=\"6\" x=\"3\" y=\"14.5\" rx=\"1\"/> <path d=\"M12 5h9\"/> <path d=\"M12 8.5h6\"/> <path d=\"M12 16h9\"/> <path d=\"M12 19.5h6\"/>",

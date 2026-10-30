@@ -92,57 +92,79 @@ async function viewList() {
   const [tags, meta] = await Promise.all([API.tags(), API.meta()]);
   main.innerHTML = `
   <div class="hero"><div><h1>${t("nav_recetas")}</h1>
-    <p class="muted" style="margin:0">${meta.recetas} completas · ${meta.solo_video} pendientes de transcribir</p></div>
-    <div class="row no-print hero-actions">
-      ${API.STATIC ? "" : `<a class="btn" href="#/nueva">${ic("plus")} ${t("new_recipe")}</a>`}
-      <button class="btn" id="selBtn" type="button" aria-pressed="${selecting}">${ic("list-checks")} ${t("select")}</button>
-      ${API.STATIC ? "" : `<button class="btn primary" id="expBtn" type="button">${ic("download")} ${t("export")}</button>`}
+    <p class="muted sub">${meta.recetas} completas · ${meta.solo_video} pendientes de transcribir</p></div>
+    <div class="no-print hero-actions">
+      ${API.STATIC ? "" : `<a class="btn primary new-d" href="#/nueva">${ic("plus")} ${t("new_recipe")}</a>`}
+      <div class="more-wrap"><button class="btn icon" id="moreBtn" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="moreMenu" aria-label="${t("more_actions")}" title="${t("more_actions")}">${ic("more")}</button>
+        <div class="moremenu" id="moreMenu" role="menu" hidden>
+          ${API.STATIC ? "" : `<a role="menuitem" class="mi" href="#/nueva">${ic("plus")} ${t("new_recipe")}</a>`}
+          <button role="menuitem" class="mi" id="selBtn" type="button" aria-pressed="${selecting}">${ic("list-checks")} ${t("select")}</button>
+          ${API.STATIC ? "" : `<button role="menuitem" class="mi" id="expBtn" type="button">${ic("download")} ${t("export")}</button>`}
+        </div></div>
     </div></div>
+  ${API.STATIC ? "" : `<a class="fab no-print" href="#/nueva" aria-label="${t("new_recipe")}" title="${t("new_recipe")}">${ic("plus")}<span>${t("new_short")}</span></a>`}
   <div class="toolbar">
     <div class="search"><label class="sr" for="q">Buscar</label><input id="q" class="input" type="search" placeholder="${t("search_ph")}" value="${esc(F.q)}" autocomplete="off"></div>
-    <div class="filters">
-      <div class="seg" role="group" aria-label="Estado">
-        ${[["", "all"], ["completa", "complete"], ["pendiente de transcribir", "pending"]].map(([v, k]) => `<button type="button" data-estado="${v}" aria-pressed="${F.estado === v}">${t(k)}</button>`).join("")}
-      </div>
-      <button class="chip" type="button" id="favF" aria-pressed="${F.favoritos}">${ic("star")} ${t("favorites")}</button>
       <div class="fpop-wrap">
-        <button class="btn" type="button" id="filtBtn" aria-haspopup="dialog" aria-expanded="false" aria-controls="filtPanel">${ic("sliders-horizontal")} Filtros<span class="fbadge" id="filtN" hidden></span></button>
+        <button class="btn" type="button" id="filtBtn" aria-haspopup="dialog" aria-expanded="false" aria-controls="filtPanel">${ic("sliders-horizontal")}<span class="blabel">Filtros</span><span class="fbadge" id="filtN" hidden></span></button>
         <div class="fpop" id="filtPanel" role="dialog" aria-modal="true" aria-labelledby="filtTitle" hidden>
           <div class="fpop-head"><h2 id="filtTitle">Filtros</h2><button class="btn ghost sm" type="button" id="filtX" aria-label="Cerrar filtros">${ic("x")}</button></div>
-          <label class="f" for="tmax">${t("time")}</label>
-          <select id="tmax" class="input"><option value="">${t("any")}</option>${[15, 30, 45, 60].map(m => `<option value="${m}" ${F.max_min == m ? "selected" : ""}>≤ ${m} min</option>`).join("")}</select>
-          <label class="f" for="pmax">${t("price")}</label>
-          <select id="pmax" class="input"><option value="">${t("any")}</option>${[1, 1.5, 2, 3].map(p => `<option value="${p}" ${F.max_precio == p ? "selected" : ""}>≤ ${eur(p)}</option>`).join("")}</select>
+          <div class="seg" role="group" aria-label="Estado">
+            ${[["", "all"], ["completa", "complete"], ["pendiente de transcribir", "pending"]].map(([v, k]) => `<button type="button" data-estado="${v}" aria-pressed="${F.estado === v}">${t(k)}</button>`).join("")}
+          </div>
+          <button class="chip favchip" type="button" id="favF" aria-pressed="${F.favoritos}">${ic("star")} ${t("favorites")}</button>
+          <span class="f">${t("tags")}</span>
+          <div class="chips" role="group" aria-label="${t("tags")}">${tags.map(x => `<button type="button" class="chip" data-tag="${esc(x.etiqueta)}" aria-pressed="${F.etiqueta === x.etiqueta}">${esc(x.etiqueta)} <span class="n">${x.total}</span></button>`).join("")}</div>
+          <div class="fgrid">
+          <label class="f" for="tmax">${t("time")}<select id="tmax" class="input"><option value="">${t("any")}</option>${[15, 30, 45, 60].map(m => `<option value="${m}" ${F.max_min == m ? "selected" : ""}>≤ ${m} min</option>`).join("")}</select></label>
+          <label class="f" for="pmax">${t("price")}<select id="pmax" class="input"><option value="">${t("any")}</option>${[1, 1.5, 2, 3].map(p => `<option value="${p}" ${F.max_precio == p ? "selected" : ""}>≤ ${eur(p)}</option>`).join("")}</select></label>
+          </div>
           <label class="f" for="ord">${t("sort")}</label>
           <select id="ord" class="input">${[["original", "sort_original"], ["rapidas", "sort_fast"], ["baratas", "sort_cheap"], ["az", "sort_az"], ["recientes", "sort_recent"], ["valoracion", "sort_rating"]].map(([v, k]) => `<option value="${v}" ${F.orden === v ? "selected" : ""}>${t(k)}</option>`).join("")}</select>
           <div class="row fpop-foot"><button class="btn ghost" type="button" id="filtReset">Restablecer</button><button class="btn primary" type="button" id="filtOk">Ver resultados</button></div>
         </div>
       </div>
-    </div>
-    <div class="scroller" role="group" aria-label="${t("tags")}">${tags.map(x => `<button type="button" class="chip" data-tag="${esc(x.etiqueta)}" aria-pressed="${F.etiqueta === x.etiqueta}">${esc(x.etiqueta)} <span class="n">${x.total}</span></button>`).join("")}</div>
   </div>
   <div class="listbar"><p class="muted small" id="count" aria-live="polite"></p>${viewPicker()}</div>
   <div id="results" class="grid"></div>
   <div id="selbar"></div>`;
   const reload = () => { sessionStorage.setItem("filtros", JSON.stringify(F)); loadResults(); };
   let deb; $("#q").oninput = e => { F.q = e.target.value; clearTimeout(deb); deb = setTimeout(reload, 180); };
-  $$("[data-estado]").forEach(b => b.onclick = () => { F.estado = b.dataset.estado; $$("[data-estado]").forEach(x => x.setAttribute("aria-pressed", x === b)); reload(); });
-  $("#favF").onclick = e => { F.favoritos = !F.favoritos; e.currentTarget.setAttribute("aria-pressed", F.favoritos); reload(); };
-  $$("[data-tag]").forEach(b => b.onclick = () => { F.etiqueta = F.etiqueta === b.dataset.tag ? "" : b.dataset.tag; $$("[data-tag]").forEach(x => x.setAttribute("aria-pressed", x.dataset.tag === F.etiqueta)); reload(); });
+  $$("[data-estado]").forEach(b => b.onclick = () => { F.estado = b.dataset.estado; $$("[data-estado]").forEach(x => x.setAttribute("aria-pressed", x === b)); badge(); reload(); });
+  $("#favF").onclick = e => { F.favoritos = !F.favoritos; e.currentTarget.setAttribute("aria-pressed", F.favoritos); badge(); reload(); };
+  $$("[data-tag]").forEach(b => b.onclick = () => { F.etiqueta = F.etiqueta === b.dataset.tag ? "" : b.dataset.tag; $$("[data-tag]").forEach(x => x.setAttribute("aria-pressed", x.dataset.tag === F.etiqueta)); badge(); reload(); });
   $("#tmax").onchange = e => { F.max_min = e.target.value; badge(); reload(); };
   $("#pmax").onchange = e => { F.max_precio = e.target.value; badge(); reload(); };
   $("#ord").onchange = e => { F.orden = e.target.value; badge(); reload(); };
-  const badge = () => { const n = [F.max_min, F.max_precio, F.orden !== "original"].filter(Boolean).length, b = $("#filtN");
+  const badge = () => { const n = [F.estado, F.favoritos, F.etiqueta, F.max_min, F.max_precio, F.orden !== "original"].filter(Boolean).length, b = $("#filtN");
     b.hidden = !n; b.textContent = n; $("#filtBtn").setAttribute("aria-label", n ? `Filtros, ${n} activo${n > 1 ? "s" : ""}` : "Filtros"); };
-  badge(); bindFilterPopover(() => { Object.assign(F, { max_min: "", max_precio: "", orden: "original" }); $("#tmax").value = ""; $("#pmax").value = ""; $("#ord").value = "original"; badge(); reload(); });
-  bindFade($(".toolbar .scroller"));
-  $("#selBtn").onclick = () => { selecting = !selecting; if (!selecting) selected.clear(); $("#selBtn").setAttribute("aria-pressed", selecting); renderResults(); };
-  $("#expBtn") && ($("#expBtn").onclick = () => exportDialog());
+  badge(); bindFilterPopover(() => { Object.assign(F, { estado: "", favoritos: false, etiqueta: "", max_min: "", max_precio: "", orden: "original" }); $("#tmax").value = ""; $("#pmax").value = ""; $("#ord").value = "original";
+    $$("[data-estado]").forEach(x => x.setAttribute("aria-pressed", x.dataset.estado === "")); $("#favF").setAttribute("aria-pressed", "false"); $$("[data-tag]").forEach(x => x.setAttribute("aria-pressed", "false")); badge(); reload(); });
+  bindMoreMenu();
+  $("#selBtn").onclick = () => { closeMore(); selecting = !selecting; if (!selecting) selected.clear(); $("#selBtn").setAttribute("aria-pressed", selecting); renderResults(); };
+  $("#expBtn") && ($("#expBtn").onclick = () => { closeMore(); exportDialog(); });
   bindViewPicker();
   await loadResults();
   API.prefsLista().then(applyServerPrefs).catch(() => {});
 }
 // 'Filtros' popover (desktop) / bottom sheet (mobile): focus trap, Esc and outside click close, focus returns to the button
+let closeMore = () => {};
+function bindMoreMenu() {
+  const btn = $("#moreBtn"), m = $("#moreMenu"), items = () => $$(".mi", m).filter(x => x.getClientRects().length);
+  const outside = e => { if (!btn.parentElement.contains(e.target)) closeMore(false); };
+  closeMore = (refocus = false) => { if (m.hidden) return; m.hidden = true; btn.setAttribute("aria-expanded", "false");
+    document.removeEventListener("pointerdown", outside, true); refocus && btn.focus(); };
+  btn.onclick = () => { if (!m.hidden) return closeMore(); m.hidden = false; btn.setAttribute("aria-expanded", "true");
+    document.addEventListener("pointerdown", outside, true); items()[0]?.focus(); };
+  btn.onkeydown = e => { if (e.key === "Escape") closeMore(true); };
+  m.addEventListener("keydown", e => {
+    const l = items(), i = l.indexOf(document.activeElement);
+    if (e.key === "Escape") { e.preventDefault(); closeMore(true); }
+    else if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); l[(i + (e.key === "ArrowDown" ? 1 : -1) + l.length) % l.length].focus(); }
+    else if (e.key === "Tab") closeMore();
+  });
+  window.addEventListener("hashchange", () => closeMore(), { once: true });
+}
 function bindFilterPopover(onReset) {
   const btn = $("#filtBtn"), pnl = $("#filtPanel"), wrap = pnl.parentElement;
   const focusables = () => $$("button,select,input,[tabindex]:not([tabindex='-1'])", pnl).filter(x => !x.disabled && x.offsetParent !== null);
@@ -183,25 +205,35 @@ const normView = v => { v = LEGACY_VIEW[v] || v; return VIEWS.some(x => x[0] ===
 let VIEW = (() => { try { const v = JSON.parse(localStorage.getItem("vistaLista") || "null"); const n = v && normView(v.vista);
   if (n) { const out = { vista: n, densidad: Math.min(8, Math.max(2, +v.densidad || 4)), local: true }; localStorage.setItem("vistaLista", JSON.stringify(out)); return out; } } catch {}
   return { vista: "cuadricula", densidad: 4, local: false }; })();
+/* UI density: "comoda" (default) or "compacta"; the device's own choice wins over the server default. */
+let UIDENS = localStorage.getItem("interfaz") === "compacta" ? "compacta" : "comoda";
+document.documentElement.dataset.density = UIDENS;
+function setUIDens(v, save = true) { UIDENS = v === "compacta" ? "compacta" : "comoda"; document.documentElement.dataset.density = UIDENS; if (save) localStorage.setItem("interfaz", UIDENS); }
 let THUMBS = localStorage.getItem("miniaturas") === "icono" ? "icono" : "portada";
 let viewSaveT;
+/* Phones get their own column count (2–3, default 2); the desktop density (2–8) is the one synced to the server. */
+const MOBILE = matchMedia("(max-width:640px)");
+let DENS_M = Math.min(3, Math.max(2, +localStorage.getItem("densidadMovil") || 2));
+function cols() { return MOBILE.matches ? DENS_M : VIEW.densidad; }
+MOBILE.addEventListener?.("change", () => { const r = $("#densR"); if (r) r.max = MOBILE.matches ? 3 : 8; setView({}, false); });
 function viewPicker() {
   return `<div class="viewpick"><div role="group" aria-label="${t("view_group")}" class="seg vseg">${VIEWS.map(([v, i]) =>
     `<button type="button" data-view="${v}" aria-pressed="${VIEW.vista === v}" aria-label="${t("view_" + v)}" title="${t("view_" + v)}">${ic(i)}<span class="vlabel">${t("view_" + v + "_s")}</span></button>`).join("")}</div>
-    <label class="dens" ${VIEW.vista === "cuadricula" ? "" : "hidden"}><span>Columnas</span><input id="densR" type="range" min="2" max="8" step="1" value="${VIEW.densidad}" aria-valuetext="${VIEW.densidad} columnas"><output id="densO">${VIEW.densidad}</output></label></div>`;
+    <label class="dens" ${VIEW.vista === "cuadricula" ? "" : "hidden"}><span>Columnas</span><input id="densR" type="range" min="2" max="${MOBILE.matches ? 3 : 8}" step="1" value="${cols()}" aria-valuetext="${cols()} columnas"><output id="densO">${cols()}</output></label></div>`;
 }
 function setView(p, save = true) {
   VIEW = { vista: normView(p.vista) || VIEW.vista, densidad: p.densidad ?? VIEW.densidad, local: save || VIEW.local };
   if (save) localStorage.setItem("vistaLista", JSON.stringify(VIEW));
   $$("[data-view]").forEach(b => b.setAttribute("aria-pressed", b.dataset.view === VIEW.vista));
   const d = $(".dens"); if (d) d.hidden = VIEW.vista !== "cuadricula";
-  const r = $("#densR"); if (r) { r.value = VIEW.densidad; r.setAttribute("aria-valuetext", VIEW.densidad + " columnas"); $("#densO").textContent = VIEW.densidad; }
+  const r = $("#densR"); if (r) { r.value = cols(); r.setAttribute("aria-valuetext", cols() + " columnas"); $("#densO").textContent = cols(); }
   renderResults();
   // the server keeps the default for devices that never chose one
   if (save) { clearTimeout(viewSaveT); viewSaveT = setTimeout(() => API.setPrefsLista({ vista: VIEW.vista, densidad: VIEW.densidad }).catch(() => {}), 300); }
 }
 function applyServerPrefs(p) {
   if (!p) return;
+  if (p.interfaz && !localStorage.getItem("interfaz")) setUIDens(p.interfaz, false);
   if (p.miniaturas && p.miniaturas !== THUMBS) { THUMBS = p.miniaturas; localStorage.setItem("miniaturas", THUMBS); renderResults(); }
   if (!VIEW.local && (normView(p.vista) !== VIEW.vista || p.densidad !== VIEW.densidad)) setView(p, false);
 }
@@ -215,7 +247,10 @@ function bindViewPicker() {
       if (j < 0) return; e.preventDefault(); btns[j].focus();
     };
   });
-  const r = $("#densR"); if (r) r.oninput = () => setView({ densidad: +r.value });
+  const r = $("#densR"); if (r) r.oninput = () => {
+    if (MOBILE.matches) { DENS_M = +r.value; localStorage.setItem("densidadMovil", DENS_M); setView({}, false); }
+    else setView({ densidad: +r.value });
+  };
 }
 const SRC_LABEL = { instagram: "Instagram", tiktok: "TikTok", youtube: "YouTube", pinterest: "Pinterest", facebook: "Facebook", x: "X", web: "la web" };
 const SRC_ICON = { instagram: "instagram", tiktok: "tiktok", youtube: "youtube", pinterest: "pinterest", facebook: "facebook", x: "x", web: "globe" };
@@ -299,7 +334,7 @@ function renderResults() {
       <button class="btn" type="button" id="clearF">${t("clear")}</button></div>`;
     $("#clearF").onclick = () => { Object.assign(F, { q: "", estado: "", favoritos: false, etiqueta: "", max_min: "", max_precio: "" }); sessionStorage.removeItem("filtros"); viewList(); };
   } else box.innerHTML = lastResults.map(card).join("");
-  box.className = `grid v-${VIEW.vista}`; box.style.setProperty("--cols", VIEW.densidad);
+  box.className = `grid v-${VIEW.vista}`; box.style.setProperty("--cols", cols());
   $$("[data-sel]").forEach(c => c.onchange = () => { const id = +c.dataset.sel; c.checked ? selected.add(id) : selected.delete(id); renderSelbar(); });
   renderSelbar();
 }
@@ -1175,6 +1210,11 @@ async function viewSettings() {
    <section class="panel" id="s-ap"><h2>${t("appearance")}</h2><div class="row">
      <button class="btn" type="button" id="tg">${ic("sun-moon")} ${t("theme")}</button>
      <label>${t("language")} <select class="input" id="lang" style="width:auto">${[["es", "Español"], ["en", "English"]].map(([v, l]) => `<option value="${v}" ${LANG === v ? "selected" : ""}>${l}</option>`).join("")}</select></label></div>
+     <fieldset class="cover-opts" id="densOpt"><legend class="f">${t("density")}</legend>
+       ${[["comoda", t("density_comfy")], ["compacta", t("density_compact")]].map(([v, l]) =>
+         `<label class="cover-opt"><input type="radio" name="interfaz" value="${v}" ${UIDENS === v ? "checked" : ""}><span><b>${l}</b></span></label>`).join("")}
+       <small class="muted">${t("density_note")}</small>
+     </fieldset>
      <fieldset class="cover-opts" id="thumbOpt" style="margin-top:1rem"><legend class="f">En las listas, mostrar</legend>
        ${[["portada", "Miniatura del vídeo o portada", "La imagen de cada receta (recomendado)"], ["icono", "Icono genérico", "Más ligera y uniforme; sin fotos"]].map(([v, l, n]) =>
          `<label class="cover-opt"><input type="radio" name="miniaturas" value="${v}" ${THUMBS === v ? "checked" : ""}><span><b>${l}</b><small class="muted">${n}</small></span></label>`).join("")}
@@ -1197,6 +1237,11 @@ FastAPI + uvicorn ──► SQLite (recetas como documentos JSON, migración sin
   </div></div>`;
   $$("[data-jump]").forEach(a => a.onclick = e => { e.preventDefault(); $(`#s-${a.dataset.jump}`).scrollIntoView({ behavior: "smooth" }); });
   $("#tg").onclick = () => $("#themeBtn").click();
+  $$("input[name=interfaz]").forEach(i => i.onchange = () => guard(async () => {
+    setUIDens(i.value);
+    if (!API.STATIC) await API.setPrefsLista({ interfaz: UIDENS });
+    toast("Preferencia guardada");
+  }));
   $$("input[name=miniaturas]").forEach(i => i.onchange = () => guard(async () => {
     THUMBS = i.value; localStorage.setItem("miniaturas", THUMBS);
     if (!API.STATIC) await API.setPrefsLista({ miniaturas: THUMBS });
