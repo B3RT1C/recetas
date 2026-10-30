@@ -2,6 +2,23 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versiones según [SemVer](https://semver.org/lang/es/).
 
+## [2.1.2] — 2026-10-30 — Portadas y cuadrícula
+
+### Añadido
+- **Selector de portada** en el editor: miniatura original (por defecto), fotograma del vídeo con deslizador y vista previa generada en el servidor con ffmpeg (avisa si es casi negro), foto subida (JPG/PNG/WebP, tamaño máximo validado, sin EXIF/XMP ni otros metadatos y con la orientación aplicada) o foto genérica libre de `data/sample/covers/` con su crédito.
+- **Ajustes → Portadas**: portada por defecto global (original, fotograma o genérica).
+- Migración `m3_cover_source`: columnas `cover_source` y `cover_param` en `recipes`.
+- API: `GET /api/portadas/biblioteca`, `GET|PUT /api/ajustes/portada`, `PUT /api/recipes/{id}/portada`, `GET /api/recipes/{id}/portada/fotograma`, `POST /api/recipes/{id}/portada/subir`; para agentes `GET /api/v1/covers/library` y `PUT /api/v1/recipes/{id}/cover`. MCP: `list_cover_library` y `set_recipe_cover`.
+- Reimportar (`reimportar: true` en la selección del importador) actualiza vídeo/foto/miniatura **sin pisar nunca** una portada subida, de fotograma o genérica.
+- Cuadrícula: línea de datos bajo el título (tiempo · €/ración) con altura fija; las tarjetas siguen igualadas.
+- Detalle: fecha en que se añadió la receta, en formato es-ES.
+
+### Cambiado
+- La portada automática prioriza la **miniatura original** de la publicación; el importador la guarda siempre (`media/originals/`), también en importaciones solo de vídeo.
+- El fotograma automático salta los fotogramas negros (prueba 1, 2, 3, 5, 8, 0,5 y 0 s; si todos son oscuros usa el menos oscuro).
+- Reels 9:16: **recorte centrado** (`object-fit: cover`) a la proporción de la tarjeta en todas las vistas. Se descartó el fondo desenfocado: en tarjetas 4:3 deja el plato en una franja estrecha, recarga la cuadrícula densa y duplica el trabajo de imagen; en los reels de recetas el plato suele estar centrado.
+- `scripts/screenshots.py`: contexto y Chromium en es-ES (también el `<input type=date>`), portadas solo de la biblioteca CC0 y nuevas capturas `editor-portada-*` y `detalle-fecha-*`. La captura del deslizador con un vídeo real es opcional (`--private-video`), se llama `*-private.png`, está en `.gitignore` y no se usa en la landing ni en la demo.
+
 ## [2.1.1] — 2026-10-30 — Correcciones visuales
 
 ### Cambiado
