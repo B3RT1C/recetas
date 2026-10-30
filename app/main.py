@@ -276,6 +276,11 @@ def create_app(services: Optional[Services] = None) -> FastAPI:
     # ------------------------------------------------------------ instagram
     ig = svc.instagram
 
+    @app.get("/api/sources", tags=["instagram"])
+    def sources():
+        from .services.sources import InstagramSource, list_sources
+        return list_sources([InstagramSource(ig)])
+
     @app.get("/api/instagram/status", tags=["instagram"])
     def ig_status():
         return ig.status()
