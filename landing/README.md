@@ -1,6 +1,6 @@
 # Landing de Recetario C
 
-Página de presentación estática (ES en `/`, EN en `/en/`). HTML y CSS escritos a mano, ~1 KB de JS (tema),
+Página de presentación estática (ES en `/`, EN en `/en/`). HTML y CSS escritos a mano, JS vanilla (tema, simuladores, carrusel),
 fuentes del sistema, sin frameworks ni CDN. Iconos Lucide (ISC), los mismos que la app.
 
 ## Cloudflare Pages
@@ -14,7 +14,17 @@ fuentes del sistema, sin frameworks ni CDN. Iconos Lucide (ISC), los mismos que 
 | Variables | ninguna |
 
 `_headers` define caché (HTML siempre revalida; `img/` 30 días; `assets/` 1 día) y cabeceras de seguridad (CSP estricta
-`'self'`, HSTS, nosniff, frame-ancestors none). Si se renombra un asset, cambiar su nombre (no hay hash).
+`'self'`, HSTS, nosniff, frame-ancestors none). No hay hash: si cambia un asset, se renombra con un número de versión (`landing.2.css`, `landing.2.js`) y se
+regenera el HTML. `/demo/*` tiene su propia CSP (solo `'self'`, `frame-ancestors 'self'`, `noindex`).
+
+## Simuladores (demo en vivo)
+
+Los marcos de navegador y móvil del hero incrustan `/demo/`: una copia **sin modificar** de `static/` (la app real)
+sobre una API simulada en memoria (`demo/assets/mock-api.js`) con respuestas grabadas de la app FastAPI real usando
+los datos de ejemplo (`demo/data/api.json`). Sin sesión, claves, IA ni vídeos de terceros; los cambios no se guardan.
+Un recorrido guiado navega solo (recetas → búsqueda → receta → raciones → planificador → compra → ajustes); se
+detiene 25 s al interactuar, con el botón de pausa, fuera de pantalla y con `prefers-reduced-motion`.
+
 
 ## Configuración
 
@@ -27,6 +37,7 @@ fuentes del sistema, sin frameworks ni CDN. Iconos Lucide (ISC), los mismos que 
 Tras cambiarlo, regenerar el HTML (el resultado se versiona; Pages no compila nada):
 
 ```bash
+python scripts/build_landing_demo.py     # demo/ (copia de static/ + API grabada; ffmpeg para las portadas)
 python scripts/build_landing.py          # index.html, en/index.html, creditos/, en/credits/
 sh scripts/landing_images.sh             # WebP y og.jpg desde docs/screenshots
 python scripts/check_landing.py          # sin URLs externas fuera de la lista permitida
