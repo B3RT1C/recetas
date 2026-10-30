@@ -91,7 +91,7 @@ async function viewList() {
   setTitle("");
   const [tags, meta] = await Promise.all([API.tags(), API.meta()]);
   main.innerHTML = `
-  <div class="hero"><div><h1>${t("nav_recetas")}</h1>
+  <div class="hero hero-rec"><div><h1>${t("nav_recetas")}</h1>
     ${meta.solo_video > 0 ? `<p class="muted sub">${meta.solo_video} pendiente${meta.solo_video === 1 ? "" : "s"} de transcribir</p>` : ""}</div>
     <div class="no-print hero-actions">
       ${API.STATIC ? "" : `<a class="btn primary new-d" href="#/nueva">${ic("plus")} ${t("new_recipe")}</a>`}
