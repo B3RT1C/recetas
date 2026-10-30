@@ -375,7 +375,7 @@ async function viewDetail(id) {
   $("#minus") && ($("#minus").onclick = () => { if (base * k > 1) { k = (base * k - 1) / base; rescale(); } });
   $("#toList") && ($("#toList").onclick = () => listPicker(`Añadir «${r.titulo}» a la lista`, Math.round(base * k * 100) / 100, async (lid, n) => {
     const l = await API.shop.addRecipe(lid, r.id, n); toast(`${l.añadidos} ingredientes añadidos a «${l.nombre}»`); }));
-  $("#toPlan") && ($("#toPlan").onclick = () => planDialog(r, Math.round(base * k)));
+  $("#toPlan") && ($("#toPlan").onclick = () => planDialog(r, k === 1 ? planServings(r) : Math.round(base * k)));
   $$("[data-timer]").forEach(b => b.onclick = () => startTimer(`${r.titulo.slice(0, 24)} · paso ${+b.dataset.timer + 1}`, r.pasos[b.dataset.timer].minutos));
   $("#cookBtn") && ($("#cookBtn").onclick = () => cookMode(r));
   $("#favBtn") && ($("#favBtn").onclick = () => guard(async () => { r.favorito = !r.favorito; await API.patch(r.id, { favorito: r.favorito }); $("#favBtn").innerHTML = ic("star", "", r.favorito ? "fill" : ""); $("#favBtn").setAttribute("aria-pressed", r.favorito); toast(r.favorito ? "Añadida a favoritas" : "Quitada de favoritas"); }));
@@ -691,6 +691,8 @@ async function listPicker(title, servings, onPick) {
     let id = sel.value; if (id === "new") id = (await API.shop.create($("#lpnn", d).value.trim())).id;
     d.close(); await onPick(+id, servings != null ? +$("#lpr", d).value : null); }); };
 }
+// mirrors app/services/planner.py default_servings: declared servings, else 2 (estimated values and batch yields fall back)
+function planServings(r) { const n = r.raciones; return !r.raciones_estimadas && typeof n === "number" && n > 0 && n <= 12 ? n : 2; }
 function planDialog(r, servings) {
   const d = dialog(`<form class="dlg" id="pdF"><h2>${ic("calendar-days")} Planificar «${esc(r.titulo)}»</h2>
     <div class="form-grid"><div><label class="f" for="pdd">Día</label><input id="pdd" type="date" class="input" required value="${isoToday()}"></div>

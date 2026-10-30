@@ -45,3 +45,23 @@ def test_scale_endpoint(client):
     ing = {i["nombre"]: i for i in s["ingredientes"]}
     assert ing["Huevos"]["cantidad"] == 2 and ing["Huevos"]["redondeado"]
     assert ing["Harina"]["texto"] == "½ taza" and ing["Azúcar"]["texto"] == "50 g"
+
+
+def test_plan_servings_default_from_recipe_with_fallback(client):
+    from app.services.planner import default_servings
+    assert default_servings({"raciones": 4}) == 4
+    assert default_servings({"raciones": 10, "raciones_estimadas": True}) == 2
+    assert default_servings({"raciones": 31}) == 2
+    assert default_servings({"raciones": None}) == 2
+    assert default_servings({"raciones": 0}) == 2
+    assert default_servings({}) == 2
+    r = mk(client)
+    p = client.post("/api/plan", json={"fecha": "2026-11-02", "comida": "cena", "receta_id": r["id"]}).json()
+    assert p["raciones"] == r["raciones"]
+    big = client.post("/api/recipes", json={**{k: v for k, v in r.items() if k in ("titulo", "ingredientes", "pasos")},
+                                             "titulo": "Brochetas", "raciones": 10, "raciones_estimadas": True})
+    assert big.status_code in (200, 201), big.text
+    p = client.post("/api/plan", json={"fecha": "2026-11-02", "comida": "comida", "receta_id": big.json()["id"]}).json()
+    assert p["raciones"] == 2
+    p = client.post("/api/plan", json={"fecha": "2026-11-03", "comida": "comida", "receta_id": big.json()["id"], "raciones": 6}).json()
+    assert p["raciones"] == 6
