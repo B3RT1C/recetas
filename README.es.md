@@ -8,7 +8,7 @@
   <img alt="Python" src="https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white">
   <img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white">
   <img alt="SQLite" src="https://img.shields.io/badge/SQLite-003B57?logo=sqlite&logoColor=white">
-  <img alt="tests" src="https://img.shields.io/badge/tests-190%20passing-2ea44f">
+  <img alt="tests" src="https://img.shields.io/badge/tests-192%20passing-2ea44f">
   <img alt="license" src="https://img.shields.io/badge/licencia-pendiente-lightgrey">
   <img alt="self-hosted" src="https://img.shields.io/badge/autoalojado-6d28d9">
   <img alt="local-first" src="https://img.shields.io/badge/local--first-0e7490">
