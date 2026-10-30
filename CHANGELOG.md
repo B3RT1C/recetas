@@ -2,6 +2,21 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versiones según [SemVer](https://semver.org/lang/es/).
 
+## [2.1.4] — 2026-10-30 — Más aire en móvil
+
+### Cambiado
+- Escala de espaciado de 8 px (variables CSS): márgenes laterales de 20 px en móvil y 32–48 px en escritorio, contenido centrado a ~1200 px, más separación entre secciones y dentro de las tarjetas.
+- Texto base de 16 px con interlineado 1,5 y jerarquía de títulos más clara.
+- Cabecera de Recetas agrupada: «Nueva receta», «Seleccionar» y «Exportar» en un menú «Más acciones», con botón flotante «Nueva» en móvil; estado, favoritas y etiquetas dentro del panel de Filtros, con contador de filtros activos. La primera receta sube de 491 px a 325 px en 360×800.
+- Cuadrícula: el selector de vista sigue en la fila del recuento y el control de columnas va debajo; en móvil 2–3 columnas (2 por defecto) y el número siempre coincide con lo que se ve; títulos en hasta 2 líneas.
+- Estrella de favorita con el color de acento en todas las vistas.
+- Botón de vista activo con fondo de acento (contraste ≥ 3:1 en claro y oscuro).
+- Áreas táctiles de al menos 44 px.
+
+### Añadido
+- Ajustes → Apariencia → Densidad: «Cómoda» (por defecto) o «Compacta»; se recuerda por dispositivo y se guarda en `/api/preferencias/lista` (`interfaz`).
+- Tests a 360 px: cabecera sin desbordes, áreas táctiles ≥ 44 px, columnas = control, títulos en 2 líneas, color de la estrella, contraste del botón activo, panel de filtros y densidad.
+
 ## [2.1.3] — 2026-10-30 — Selector de vistas
 
 ### Cambiado
