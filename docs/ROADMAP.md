@@ -10,6 +10,15 @@ con reproducción del vídeo local al abrir, filtros actuales reutilizados y nav
 **Estimación:** 1–1,5 días (componente de cuadrícula + carga diferida de portadas + tests de accesibilidad y capturas).
 No requiere cambios de esquema.
 
+## v2.1.3 — Selector de vistas
+
+Hecho: «una sola» más compacta; iconos y orden corregidos (una · compacta · miniatura · cuadrícula); vista recordada por dispositivo; ajuste de miniatura/icono en listas (API y MCP); comprobación a 360 px.
+
+Pendiente:
+- (a) Una foto CC0 distinta por receta de ejemplo. **Hecho**: las 12 recetas ya tenían foto propia; el duplicado (pasta) venía del emparejamiento por título del script de capturas, ahora usa la foto de cada receta. Test `test_sample_covers` impide duplicados y exige crédito en `ATTRIBUTION.md`. Si se añaden recetas, descargar más fotos de Wikimedia Commons y acreditarlas.
+- (b) *Opcional.* Tira de ~6 fotogramas automáticos para elegir portada; elección automática que descarte negros o borrosos (varianza del laplaciano) y penalice texto superpuesto.
+- (c) *Opcional.* Tarea única y limitada en ritmo con `yt-dlp --write-thumbnail --skip-download` sobre las URL guardadas: primero **sin cookies**; con cookies solo con aprobación expresa del usuario. Nunca sobrescribe portadas manuales.
+
 ## v2.1.2 — Portadas y cuadrícula (hecho)
 
 1. **Cuadrícula**: el hueco bajo el título se rellena con una línea de metadatos pequeña (tiempo · €/ración); si no hay datos,

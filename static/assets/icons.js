@@ -3,6 +3,10 @@
    ic(name)            -> decorative icon (aria-hidden); pair it with visible text.
    ic(name, "Etiqueta") -> standalone icon with role="img" and an accessible name. */
 const ICONS = {
+  /* v2.1.3 view-picker icons (own drawings in the Lucide style): each depicts the layout it opens */
+  "view-una": "<rect width=\"14\" height=\"10\" x=\"5\" y=\"3\" rx=\"1.5\"/> <path d=\"M5 17h14\"/> <path d=\"M5 21h9\"/>",
+  "view-compacta": "<path d=\"M4 5h16\"/> <path d=\"M4 10h16\"/> <path d=\"M4 15h16\"/> <path d=\"M4 20h16\"/>",
+  "view-miniatura": "<rect width=\"6\" height=\"6\" x=\"3\" y=\"3.5\" rx=\"1\"/> <rect width=\"6\" height=\"6\" x=\"3\" y=\"14.5\" rx=\"1\"/> <path d=\"M12 5h9\"/> <path d=\"M12 8.5h6\"/> <path d=\"M12 16h9\"/> <path d=\"M12 19.5h6\"/>",
   "chef-hat": "<path d=\"M17 21a1 1 0 0 0 1-1v-5.35c0-.457.316-.844.727-1.041a4 4 0 0 0-2.134-7.589 5 5 0 0 0-9.186 0 4 4 0 0 0-2.134 7.588c.411.198.727.585.727 1.041V20a1 1 0 0 0 1 1Z\"/> <path d=\"M6 17h12\"/>",
   "search": "<circle cx=\"11\" cy=\"11\" r=\"8\"/> <path d=\"m21 21-4.3-4.3\"/>",
   "book-open": "<path d=\"M12 7v14\"/> <path d=\"M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z\"/>",

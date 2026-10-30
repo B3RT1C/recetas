@@ -109,7 +109,7 @@ curl -H "Authorization: Bearer rct_..." "http://localhost:8088/api/v1/recipes?q=
 
 Portadas: `GET /api/v1/covers/library`, `PUT /api/v1/recipes/{id}/cover` (`{"fuente": "generic", "biblioteca": "paella"}`).
 
-MCP (herramientas `search_recipes`, `get_recipe`, `list_collections`, `import_recipe`, `list_cover_library`, `set_recipe_cover`):
+MCP (herramientas `search_recipes`, `get_recipe`, `list_collections`, `import_recipe`, `list_cover_library`, `set_recipe_cover`, `get_list_preferences`, `set_list_preferences`):
 
 ```jsonc
 // Cliente con streamable HTTP

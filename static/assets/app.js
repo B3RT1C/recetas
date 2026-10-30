@@ -140,7 +140,7 @@ async function viewList() {
   $("#expBtn") && ($("#expBtn").onclick = () => exportDialog());
   bindViewPicker();
   await loadResults();
-  API.prefsLista().then(p => { if (p && (p.vista !== VIEW.vista || p.densidad !== VIEW.densidad)) { setView(p, false); } }).catch(() => {});
+  API.prefsLista().then(applyServerPrefs).catch(() => {});
 }
 // 'Filtros' popover (desktop) / bottom sheet (mobile): focus trap, Esc and outside click close, focus returns to the button
 function bindFilterPopover(onReset) {
@@ -174,32 +174,45 @@ async function loadResults() {
   lastResults = await API.recipes(F);
   renderResults();
 }
-/* ---- list view modes: una | info | detalle | cuadricula (+ density 2..8 columns) */
-const VIEWS = [["una", "Una sola", "square"], ["info", "Con info", "list"], ["detalle", "Muy detallado", "layout-list"], ["cuadricula", "Cuadrícula", "layout-grid"]];
-let VIEW = (() => { try { const v = JSON.parse(localStorage.getItem("vistaLista") || "null"); if (v && VIEWS.some(x => x[0] === v.vista)) return { vista: v.vista, densidad: Math.min(8, Math.max(2, +v.densidad || 4)) }; } catch {} return { vista: "cuadricula", densidad: 4 }; })();
+/* ---- list view modes (v2.1.3): una | compacta | miniatura | cuadricula (+ density 2..8 columns).
+   Old stored values migrate: 'info' and 'detalle' -> 'miniatura'. The choice is remembered per device in
+   localStorage and wins over the server default; the server value is only used on a device with no choice. */
+const VIEWS = [["una", "view-una"], ["compacta", "view-compacta"], ["miniatura", "view-miniatura"], ["cuadricula", "layout-grid"]];
+const LEGACY_VIEW = { info: "miniatura", detalle: "miniatura" };
+const normView = v => { v = LEGACY_VIEW[v] || v; return VIEWS.some(x => x[0] === v) ? v : null; };
+let VIEW = (() => { try { const v = JSON.parse(localStorage.getItem("vistaLista") || "null"); const n = v && normView(v.vista);
+  if (n) { const out = { vista: n, densidad: Math.min(8, Math.max(2, +v.densidad || 4)), local: true }; localStorage.setItem("vistaLista", JSON.stringify(out)); return out; } } catch {}
+  return { vista: "cuadricula", densidad: 4, local: false }; })();
+let THUMBS = localStorage.getItem("miniaturas") === "icono" ? "icono" : "portada";
 let viewSaveT;
 function viewPicker() {
-  return `<div class="viewpick"><div role="radiogroup" aria-label="Vista de la lista" class="seg vseg">${VIEWS.map(([v, l, i]) =>
-    `<button type="button" role="radio" data-view="${v}" aria-checked="${VIEW.vista === v}" tabindex="${VIEW.vista === v ? 0 : -1}" title="${l}">${ic(i)}<span class="vlabel">${l}</span></button>`).join("")}</div>
+  return `<div class="viewpick"><div role="group" aria-label="${t("view_group")}" class="seg vseg">${VIEWS.map(([v, i]) =>
+    `<button type="button" data-view="${v}" aria-pressed="${VIEW.vista === v}" aria-label="${t("view_" + v)}" title="${t("view_" + v)}">${ic(i)}<span class="vlabel">${t("view_" + v + "_s")}</span></button>`).join("")}</div>
     <label class="dens" ${VIEW.vista === "cuadricula" ? "" : "hidden"}><span>Columnas</span><input id="densR" type="range" min="2" max="8" step="1" value="${VIEW.densidad}" aria-valuetext="${VIEW.densidad} columnas"><output id="densO">${VIEW.densidad}</output></label></div>`;
 }
 function setView(p, save = true) {
-  VIEW = { vista: p.vista ?? VIEW.vista, densidad: p.densidad ?? VIEW.densidad };
-  localStorage.setItem("vistaLista", JSON.stringify(VIEW));
-  $$("[data-view]").forEach(b => { const on = b.dataset.view === VIEW.vista; b.setAttribute("aria-checked", on); b.tabIndex = on ? 0 : -1; });
+  VIEW = { vista: normView(p.vista) || VIEW.vista, densidad: p.densidad ?? VIEW.densidad, local: save || VIEW.local };
+  if (save) localStorage.setItem("vistaLista", JSON.stringify(VIEW));
+  $$("[data-view]").forEach(b => b.setAttribute("aria-pressed", b.dataset.view === VIEW.vista));
   const d = $(".dens"); if (d) d.hidden = VIEW.vista !== "cuadricula";
   const r = $("#densR"); if (r) { r.value = VIEW.densidad; r.setAttribute("aria-valuetext", VIEW.densidad + " columnas"); $("#densO").textContent = VIEW.densidad; }
   renderResults();
-  if (save) { clearTimeout(viewSaveT); viewSaveT = setTimeout(() => API.setPrefsLista(VIEW).catch(() => {}), 300); }
+  // the server keeps the default for devices that never chose one
+  if (save) { clearTimeout(viewSaveT); viewSaveT = setTimeout(() => API.setPrefsLista({ vista: VIEW.vista, densidad: VIEW.densidad }).catch(() => {}), 300); }
+}
+function applyServerPrefs(p) {
+  if (!p) return;
+  if (p.miniaturas && p.miniaturas !== THUMBS) { THUMBS = p.miniaturas; localStorage.setItem("miniaturas", THUMBS); renderResults(); }
+  if (!VIEW.local && (normView(p.vista) !== VIEW.vista || p.densidad !== VIEW.densidad)) setView(p, false);
 }
 function bindViewPicker() {
   const btns = $$("[data-view]");
   btns.forEach((b, i) => {
-    b.onclick = () => setView({ vista: b.dataset.view });
+    b.onclick = () => setView({ vista: b.dataset.view });  // native <button>: Tab, Enter and Space work
     b.onkeydown = e => {
       const k = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
-      let j = k ? (i + k + btns.length) % btns.length : e.key === "Home" ? 0 : e.key === "End" ? btns.length - 1 : -1;
-      if (j < 0) return; e.preventDefault(); setView({ vista: btns[j].dataset.view }); btns[j].focus();
+      const j = k ? (i + k + btns.length) % btns.length : e.key === "Home" ? 0 : e.key === "End" ? btns.length - 1 : -1;
+      if (j < 0) return; e.preventDefault(); btns[j].focus();
     };
   });
   const r = $("#densR"); if (r) r.oninput = () => setView({ densidad: +r.value });
@@ -223,12 +236,12 @@ function mainIngredients(r, n = 5) {
 const fdate = s => { const d = s ? new Date(s) : null; return d && !isNaN(d) ? d.toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" }) : ""; };
 function card(r) {
   if (VIEW.vista === "una") return cardWide(r, false);
-  if (VIEW.vista === "info") return cardInfo(r);
-  if (VIEW.vista === "detalle") return cardWide(r, true);
+  if (VIEW.vista === "compacta") return cardCompact(r);
+  if (VIEW.vista === "miniatura") return cardInfo(r);
   return cardGrid(r);
 }
 function selBox(r) { return selecting ? `<input type="checkbox" class="sel" data-sel="${r.id}" aria-label="Seleccionar ${esc(r.titulo)}" ${selected.has(r.id) ? "checked" : ""}>` : ""; }
-function thumbHtml(r) { const src = r.portada || r.media?.foto; return `<div class="thumb" aria-hidden="true">${placeholder(r)}${src ? `<img src="${esc(src)}" alt="" loading="lazy" onerror="this.remove()">` : ""}</div>`; }
+function thumbHtml(r) { const src = THUMBS === "icono" ? "" : r.portada || r.media?.foto; return `<div class="thumb" aria-hidden="true">${placeholder(r)}${src ? `<img src="${esc(src)}" alt="" loading="lazy" onerror="this.remove()">` : ""}</div>`; }
 function cardGrid(r) {
   return `<article class="card vgrid ${r.estado !== "completa" ? "pending" : ""}">${selBox(r)}${r.favorito ? `<span class="fav">${ic("star", "Favorita", "fill")}</span>` : ""}
     <a href="#/receta/${r.id}" class="cardlink">${thumbHtml(r)}<div class="body"><h3>${esc(r.titulo)}</h3>${gridMeta(r)}</div></a></article>`;
@@ -239,6 +252,13 @@ function gridMeta(r) {
   const bits = [r.tiempo_total_min ? `${ic("timer")} ${r.tiempo_total_min} min` : "",
     r.precio_racion_eur != null ? `${eur(r.precio_racion_eur)}/ración` : ""].filter(Boolean);
   return `<p class="gmeta">${bits.length ? bits.join(` <span aria-hidden="true">·</span> `) : "&nbsp;"}</p>`;
+}
+/* Compact list: one text line per recipe (title + time · €/ración), a tiny cover or icon at most. */
+function cardCompact(r) {
+  const pend = r.estado !== "completa";
+  const meta = pend ? `<span class="badge pend">Pendiente</span>` : [r.tiempo_total_min ? `${r.tiempo_total_min} min` : "", r.precio_racion_eur != null ? `<span class="cprice"> · ${eur(r.precio_racion_eur)}/rac.</span>` : ""].join("");
+  return `<article class="card vcomp ${pend ? "pending" : ""}">${selBox(r)}
+    <a href="#/receta/${r.id}" class="cardlink">${thumbHtml(r)}<h3>${esc(r.titulo)}${r.favorito ? ` ${ic("star", "Favorita", "fill")}` : ""}</h3><span class="cmeta">${meta}</span></a></article>`;
 }
 function cardInfo(r) {
   const pend = r.estado !== "completa";
@@ -1154,7 +1174,11 @@ async function viewSettings() {
   <div>
    <section class="panel" id="s-ap"><h2>${t("appearance")}</h2><div class="row">
      <button class="btn" type="button" id="tg">${ic("sun-moon")} ${t("theme")}</button>
-     <label>${t("language")} <select class="input" id="lang" style="width:auto">${[["es", "Español"], ["en", "English"]].map(([v, l]) => `<option value="${v}" ${LANG === v ? "selected" : ""}>${l}</option>`).join("")}</select></label></div></section>
+     <label>${t("language")} <select class="input" id="lang" style="width:auto">${[["es", "Español"], ["en", "English"]].map(([v, l]) => `<option value="${v}" ${LANG === v ? "selected" : ""}>${l}</option>`).join("")}</select></label></div>
+     <fieldset class="cover-opts" id="thumbOpt" style="margin-top:1rem"><legend class="f">En las listas, mostrar</legend>
+       ${[["portada", "Miniatura del vídeo o portada", "La imagen de cada receta (recomendado)"], ["icono", "Icono genérico", "Más ligera y uniforme; sin fotos"]].map(([v, l, n]) =>
+         `<label class="cover-opt"><input type="radio" name="miniaturas" value="${v}" ${THUMBS === v ? "checked" : ""}><span><b>${l}</b><small class="muted">${n}</small></span></label>`).join("")}
+     </fieldset></section>
    ${API.STATIC ? "" : `<section class="panel" id="s-por"></section><section class="panel" id="s-ia"></section><section class="panel" id="s-tok"></section><section class="panel" id="s-ig"></section><section class="panel" id="s-acc"></section><section class="panel" id="s-estado"><h2>${ic("activity")} Estado</h2><p class="muted">Cargando…</p></section>
    <section class="panel" id="s-sesion"><h2>${ic("lock")} Sesión</h2><p>Has entrado como <b>${esc(AUTH.user)}</b>. Para cambiar la contraseña usa <code>python -m app.cli create-admin --replace</code> en el servidor.</p><button class="btn" type="button" id="logout">Cerrar sesión</button></section>`}
    <section class="panel" id="s-about"><h2>${t("about")}</h2>
@@ -1173,6 +1197,11 @@ FastAPI + uvicorn ──► SQLite (recetas como documentos JSON, migración sin
   </div></div>`;
   $$("[data-jump]").forEach(a => a.onclick = e => { e.preventDefault(); $(`#s-${a.dataset.jump}`).scrollIntoView({ behavior: "smooth" }); });
   $("#tg").onclick = () => $("#themeBtn").click();
+  $$("input[name=miniaturas]").forEach(i => i.onchange = () => guard(async () => {
+    THUMBS = i.value; localStorage.setItem("miniaturas", THUMBS);
+    if (!API.STATIC) await API.setPrefsLista({ miniaturas: THUMBS });
+    toast("Preferencia guardada");
+  }));
   $("#lang").onchange = e => { localStorage.setItem("lang", e.target.value); location.reload(); };
   if (API.STATIC) return;
   renderCoverDefault().catch(() => {}); renderAI(); renderTokens(); renderIG(); renderAcceso().catch(e => $("#s-acc").innerHTML = `<h2>${ic("wifi")} Acceso</h2><p class="muted">${esc(e.message)}</p>`); renderEstado().catch(e => $("#s-estado").innerHTML = `<h2>${ic("activity")} Estado</h2><p class="muted">${esc(e.message)}</p>`);
