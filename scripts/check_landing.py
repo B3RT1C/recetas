@@ -17,7 +17,12 @@ if cfg.get("repo_public"):
 def check():
     errors = []
     for f in L.rglob("*"):
-        if f.suffix not in {".html", ".css", ".js", ".xml", ".txt", ".svg"} or "docs" in f.relative_to(L).parts or f.name.startswith("LICENSE"):
+        rel = f.relative_to(L).parts
+        if f.suffix not in {".html", ".css", ".js", ".xml", ".txt", ".svg"} or "docs" in rel or f.name.startswith("LICENSE"):
+            continue
+        # demo/assets is a verbatim copy of the app's static/ (tested with the app); /demo/* has its own CSP
+        # in _headers, so the Instagram links it builds for imported recipes cannot load there.
+        if rel[:2] == ("demo", "assets"):
             continue
         text = f.read_text()
         for u in re.findall(r"https?://[^\s\"'<>)]+", text):
@@ -28,7 +33,7 @@ def check():
                 errors.append(f"{f.relative_to(L)}: remote font/import")
             for ref in re.findall(r'(?:src|href|srcset)="(/[^"#]*)', text):
                 for part in ref.split(","):
-                    p = part.strip().split(" ")[0]
+                    p = part.strip().split(" ")[0].split("?")[0]
                     t = L / p.lstrip("/")
                     if p.endswith("/"): t = t / "index.html"
                     if p and not t.exists():
