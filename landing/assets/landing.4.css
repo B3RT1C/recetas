@@ -107,4 +107,14 @@ figcaption{font-size:.9rem;color:var(--muted);margin-top:8px}
 .car-dot::before{content:"";position:absolute;left:50%;top:50%;width:10px;height:10px;margin:-5px 0 0 -5px;border-radius:50%;background:var(--line);transition:background .2s,transform .2s}
 .car-dot[aria-current=true]::before{background:var(--accent);transform:scale(1.3)}
 .car-dot:focus-visible,.car-btn:focus-visible,.tourbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.car-m{display:none}
+@media (max-width:720px){.car-d{display:none}.car-m{display:block}
+.car-m .car-track{gap:12px;padding:4px 17%;scroll-padding:0 17%}
+.car-m .car-s{flex:0 0 100%;align-items:center;padding:4px 0}
+.car-m .car-s>figure{width:100%}
+.car-m .car-s img{aspect-ratio:450/974;border-radius:18px;max-height:70vh;width:auto;max-width:100%;margin:0 auto}
+.car-m .car-wide{flex-basis:calc(100% + 34vw - 24px)}
+.car-m .car-wide img{aspect-ratio:8/5;border-radius:12px;width:100%;max-height:none}
+.car-m figcaption{font-size:.85rem}
+.car-m .car-ctl{gap:6px;flex-wrap:nowrap}.car-m .car-dots{gap:0;flex-wrap:nowrap}.car-m .car-dot{width:22px}.car-m .car-btn{width:36px;height:36px;flex:none}}
 @media (prefers-reduced-motion:reduce){.car-track{scroll-behavior:auto}.mtap.on{animation:none}}

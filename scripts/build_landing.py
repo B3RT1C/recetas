@@ -59,7 +59,12 @@ T = {
   gal_h="Capturas", gal_p="Capturas reales de la aplicación con recetas de ejemplo y fotos libres CC0.",
   gal=[("cuadricula","Cuadrícula de recetas (v2.1.2)"),("detalle","Detalle de receta con raciones y precios"),("planificador","Planificador semanal"),("compra","Lista de la compra"),
        ("filtros","Filtros por tiempo y precio"),("lista-una","Vista «Una sola»"),("lista-info","Vista «Con info»")],
-  mob=[("lista","Lista en el móvil"),("detalle","Detalle en el móvil"),("compra","Compra en el móvil")],
+  mob=[("lista","Recetas en el móvil: cuadrícula con fotos, búsqueda y filtros"),("detalle","Detalle de la paella en el móvil: tiempo, precio por ración y alérgenos"),
+       ("ingredientes","Ingredientes con selector de raciones y precio estimado de cada uno"),("cocina","Modo cocina: un paso a pantalla completa con temporizador"),
+       ("planificador","Planificador semanal en el móvil: comida y cena de cada día"),("compra","Lista de la compra en el móvil, agrupada por pasillos"),
+       ("importar","Importar recetas guardadas de Instagram, paso a paso"),("ajustes","Ajustes: tema, idioma y densidad de la lista")],
+  mob_d=[("lista","Lista en el móvil"),("detalle","Detalle en el móvil"),("compra","Compra en el móvil")],
+  mob_pc="cuadricula", mob_pc_cap="También en el ordenador: cuadrícula de recetas en el navegador",
   demo_h="Pruébalo", demo_p="La demo estática funciona en el navegador con recetas de ejemplo. Para usarla con tus recetas, se instala en tu propio equipo.",
   stack_h="Tecnología", stack_p="Sin frameworks de frontend ni servicios de terceros obligatorios.",
   stack=[("FastAPI + Uvicorn","API y servidor web en Python"),("SQLite","Base de datos en un único fichero, con migraciones"),
@@ -105,10 +110,15 @@ T = {
    ("activity","Statistics and “cheaper now”","Price history, most-cooked recipes and alerts when a recipe is cheaper than its average.",True),
    ("bot","AI and MCP","“Connect your AI” with OpenAI, OpenRouter or local Ollama (encrypted keys). REST API and MCP server with read or write tokens.",False),
   ],
-  gal_h="Screenshots", gal_p="Real screenshots of the app with sample recipes and free CC0 photos. The interface is in Spanish.",
+  gal_h="Screenshots", gal_p="Real screenshots of the app with sample recipes and free CC0 photos. The computer screenshots show the Spanish interface.",
   gal=[("cuadricula","Recipe grid (v2.1.2)"),("detalle","Recipe detail with servings and prices"),("planificador","Weekly planner"),("compra","Shopping list"),
        ("filtros","Filters by time and price"),("lista-una","“Single” view"),("lista-info","“With info” view")],
-  mob=[("lista","List on mobile"),("detalle","Detail on mobile"),("compra","Shopping on mobile")],
+  mob=[("lista","Recipes on mobile: photo grid, search and filters"),("detalle","Paella detail on mobile: time, price per serving and allergens"),
+       ("ingredientes","Ingredients with a servings picker and an estimated price for each"),("cocina","Cook mode: one full-screen step with a timer"),
+       ("planificador","Weekly planner on mobile: lunch and dinner for each day"),("compra","Shopping list on mobile, grouped by aisle"),
+       ("importar","Import recipes saved on Instagram, step by step"),("ajustes","Settings: theme, language and list density")],
+  mob_d=[("lista","List on mobile"),("detalle","Detail on mobile"),("compra","Shopping on mobile")],
+  mob_pc="cuadricula", mob_pc_cap="Also on your computer: the recipe grid in the browser (Spanish interface)",
   demo_h="Try it", demo_p="The static demo runs in your browser with sample recipes. To use it with your own recipes, install it on your own machine.",
   stack_h="Tech stack", stack_p="No frontend frameworks and no mandatory third-party services.",
   stack=[("FastAPI + Uvicorn","Python API and web server"),("SQLite","Single-file database with migrations"),
@@ -191,22 +201,27 @@ def page(k):
            f'<span class="badge b-part">{e(t["partial"])}</span>' if f[3] == "partial" else
            f'<span class="badge b-ok">{e(t["now"])}</span>') + "</li>" for n, f in enumerate(t["feats"]))
     slides = [f'<figure><button type="button" class="zoom" aria-label="{e(t["gal_open"])}: {e(c)}" data-full="/img/g-{n}-light.webp" data-full-dark="/img/g-{n}-dark.webp" data-cap="{e(c)}">{pic("g-"+n, c, 960, 600, sizes="(max-width: 1000px) 92vw, 900px", small=(480,))}</button><figcaption>{e(c)}</figcaption></figure>' for n, c in t["gal"]]
-    slides.append('<figure class="car-mob"><div>' + "".join(f'<figure>{pic("m-"+n, c, 300, 650)}<figcaption>{e(c)}</figcaption></figure>' for n, c in t["mob"]) + f'</div><figcaption class="sr">{e(t["mob_h"])}</figcaption></figure>')
-    nsl = len(slides)
-    gal = "\n".join(f'<li class="car-s" id="cs-{i}" role="group" aria-roledescription="{e(t["car_slide"])}" aria-label="{i+1} {e(t["car_of"])} {nsl}">{sl}</li>' for i, sl in enumerate(slides))
-    caps = [c for _, c in t["gal"]] + [t["mob_h"]]
-    dots = "".join(f'<button type="button" class="car-dot" aria-controls="cs-{i}" aria-label="{e(t["car_go"])} {i+1}: {e(c)}"{" aria-current=\"true\"" if i == 0 else ""}></button>' for i, c in enumerate(caps))
-    carousel = f'''<div class="car" role="region" aria-roledescription="carousel" aria-label="{e(t['car_label'])}">
-  <ul class="car-track" id="cartrack" tabindex="0" aria-label="{e(t['gal_h'])}">
-{gal}
+    slides.append('<figure class="car-mob"><div>' + "".join(f'<figure>{pic("m-"+n, c, 300, 650)}<figcaption>{e(c)}</figcaption></figure>' for n, c in t["mob_d"]) + f'</div><figcaption class="sr">{e(t["mob_h"])}</figcaption></figure>')
+    lang = "en" if k == "en" else "es"
+    mslides = [f'<figure>{pic(f"mc-{n}-{lang}", c, 450, 974, sizes="(max-width: 720px) 66vw, 300px")}<figcaption>{e(c)}</figcaption></figure>' for n, c in t["mob"]]
+    mslides.insert(1, f'<figure class="car-pc">{pic("g-"+t["mob_pc"], t["mob_pc_cap"], 960, 600, sizes="88vw", small=(480,))}<figcaption>{e(t["mob_pc_cap"])}</figcaption></figure>')
+    mcaps = [c for _, c in t["mob"]]; mcaps.insert(1, t["mob_pc_cap"])
+    def car(kind, slides, caps, sfx):
+        n = len(slides)
+        lis = "\n".join(f'<li class="car-s{" car-wide" if 'class="car-pc"' in sl else ""}" id="cs{sfx}-{i}" role="group" aria-roledescription="{e(t["car_slide"])}" aria-label="{i+1} {e(t["car_of"])} {n}">{sl}</li>' for i, sl in enumerate(slides))
+        dots = "".join(f'<button type="button" class="car-dot" aria-controls="cs{sfx}-{i}" aria-label="{e(t["car_go"])} {i+1}: {e(c)}"{" aria-current=\"true\"" if i == 0 else ""}></button>' for i, c in enumerate(caps))
+        return f'''<div class="car {kind}" role="region" aria-roledescription="carousel" aria-label="{e(t['car_label'])}">
+  <ul class="car-track" id="cartrack{sfx}" tabindex="0" aria-label="{e(t['gal_h'])}">
+{lis}
   </ul>
   <div class="car-ctl">
-    <button type="button" class="car-btn" id="carprev" aria-label="{e(t['gal_prev'])}">{ic('arrow-left')}</button>
+    <button type="button" class="car-btn car-prev" id="carprev{sfx}" aria-label="{e(t['gal_prev'])}">{ic('arrow-left')}</button>
     <div class="car-dots">{dots}</div>
-    <button type="button" class="car-btn" id="carnext" aria-label="{e(t['gal_next'])}">{ic('arrow-right')}</button>
-    <button type="button" class="car-btn car-play" id="carplay" aria-label="{e(t['car_pause'])}" data-pause="{e(t['car_pause'])}" data-play="{e(t['car_play'])}">{ic('pause', 'ic i-pause')}{ic('play', 'ic i-play')}</button>
+    <button type="button" class="car-btn car-next" id="carnext{sfx}" aria-label="{e(t['gal_next'])}">{ic('arrow-right')}</button>
+    <button type="button" class="car-btn car-play" id="carplay{sfx}" aria-label="{e(t['car_pause'])}" data-pause="{e(t['car_pause'])}" data-play="{e(t['car_play'])}">{ic('pause', 'ic i-pause')}{ic('play', 'ic i-play')}</button>
   </div>
 </div>'''
+    carousel = car("car-d", slides, [c for _, c in t["gal"]] + [t["mob_h"]], "") + "\n" + car("car-m", mslides, mcaps, "m")
     lightbox = f'''<dialog class="lb" id="lb" aria-label="{e(t['gal_h'])}"><figure><img id="lbimg" src="/img/g-cuadricula-light.webp" alt="" width="960" height="600"><figcaption id="lbcap"></figcaption></figure>
 <div class="lbnav"><button type="button" class="btn" id="lbprev">{ic('arrow-left')} {e(t['gal_prev'])}</button><button type="button" class="btn" id="lbclose">{e(t['gal_close'])}</button><button type="button" class="btn" id="lbnext">{e(t['gal_next'])} {ic('arrow-right')}</button></div></dialog>'''
     opts = "".join(f'<option value="{r["id"]}"{" selected" if slug(r) == "paella" else ""}>{e(r["titulo"])}</option>' for r in SAMPLE)
@@ -257,10 +272,10 @@ def page(k):
 <meta name="twitter:title" content="{e(t['title'])}">
 <meta name="twitter:description" content="{e(t['desc'])}">
 <meta name="twitter:image" content="{SITE}/img/og.jpg">
-<link rel="stylesheet" href="/assets/landing.3.css">
+<link rel="stylesheet" href="/assets/landing.4.css">
 <script src="/assets/theme.js"></script>
 <script src="/assets/demo-data.js" defer></script>
-<script src="/assets/landing.2.js" defer></script>
+<script src="/assets/landing.3.js" defer></script>
 </head>
 <body data-i18n="{e(json.dumps({x: t[x] for x in t if x.startswith('mk_')}, ensure_ascii=False))}" data-lang="{k}">
 <a class="skip" href="#main">{e(t['skip'])}</a>
@@ -343,7 +358,7 @@ def credits_page(k):
 <link rel="canonical" href="{SITE}{p}">
 <link rel="alternate" hreflang="es" href="{SITE}/creditos/"><link rel="alternate" hreflang="en" href="{SITE}/en/credits/"><link rel="alternate" hreflang="x-default" href="{SITE}/creditos/">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="icon" href="/favicon.ico" sizes="32x32">
-<link rel="stylesheet" href="/assets/landing.3.css"><script src="/assets/theme.js"></script>
+<link rel="stylesheet" href="/assets/landing.4.css"><script src="/assets/theme.js"></script>
 </head>
 <body><main id="main" class="wrap sec">
 <p><a href="{t['path']}">{ic('arrow-left')} {h[3]}</a></p>

@@ -80,28 +80,29 @@
   document.addEventListener("visibilitychange", resumeAll);
 
   /* ---- screenshot carousel: native scroll-snap (swipe/trackpad), arrows, dots, autoplay ---- */
-  var tr = $("#cartrack");
-  if (tr) {
-    var sl = $$(".car-s", tr), dots = $$(".car-dot"), cp = $("#carplay"), ci = 0, ct = 0, cOff = RM.matches, hov = false, cvis = false;
-    var idx = function () { return Math.max(0, Math.min(sl.length - 1, Math.round(tr.scrollLeft / tr.clientWidth))); };
-    function go(i, smooth) { ci = (i + sl.length) % sl.length; tr.scrollTo({ left: sl[ci].offsetLeft - tr.offsetLeft, behavior: smooth === false || RM.matches ? "auto" : "smooth" }); mark(); }
+  $$(".car").forEach(function (car) {
+    var tr = $(".car-track", car), sl = $$(".car-s", tr), dots = $$(".car-dot", car), cp = $(".car-play", car), ci = 0, ct = 0, cOff = RM.matches, hov = false, cvis = false;
+    var shown = function () { return tr.offsetParent !== null; };
+    var left = function (n) { return sl[n].offsetLeft - tr.offsetLeft - (tr.clientWidth - sl[n].offsetWidth) / 2; };
+    var idx = function () { var b = 0, d = Infinity; sl.forEach(function (s, n) { var x = Math.abs(left(n) - tr.scrollLeft); if (x < d) { d = x; b = n; } }); return b; };
+    function go(i, smooth) { ci = (i + sl.length) % sl.length; tr.scrollTo({ left: left(ci), behavior: smooth === false || RM.matches ? "auto" : "smooth" }); mark(); }
     function mark() { dots.forEach(function (d, n) { if (n === ci) d.setAttribute("aria-current", "true"); else d.removeAttribute("aria-current"); }); sl.forEach(function (s, n) { s.setAttribute("aria-hidden", n !== ci); $$("button", s).forEach(function (b) { b.tabIndex = n === ci ? 0 : -1; }); }); }
-    function plan() { clearTimeout(ct); if (!cOff && !hov && cvis && !document.hidden) ct = setTimeout(function () { go(ci + 1); plan(); }, 5500); }
+    function plan() { clearTimeout(ct); if (!cOff && !hov && cvis && shown() && !document.hidden) ct = setTimeout(function () { go(ci + 1); plan(); }, 5500); }
     function setP() { cp.classList.toggle("off", cOff); cp.setAttribute("aria-label", cp.getAttribute(cOff ? "data-play" : "data-pause")); }
     var st; tr.addEventListener("scroll", function () { clearTimeout(st); st = setTimeout(function () { var n = idx(); if (n !== ci) { ci = n; mark(); plan(); } }, 90); }, { passive: true });
-    $("#carprev").addEventListener("click", function () { go(ci - 1); plan(); });
-    $("#carnext").addEventListener("click", function () { go(ci + 1); plan(); });
+    $(".car-prev", car).addEventListener("click", function () { go(ci - 1); plan(); });
+    $(".car-next", car).addEventListener("click", function () { go(ci + 1); plan(); });
     dots.forEach(function (d, n) { d.addEventListener("click", function () { go(n); plan(); }); });
     tr.addEventListener("keydown", function (e) { var k = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0; if (k) { e.preventDefault(); go(ci + k); plan(); } });
-    var car = tr.parentNode;
     car.addEventListener("mouseenter", function () { hov = true; plan(); }); car.addEventListener("mouseleave", function () { hov = false; plan(); });
     car.addEventListener("focusin", function () { hov = true; plan(); }); car.addEventListener("focusout", function (e) { if (!car.contains(e.relatedTarget)) { hov = false; plan(); } });
     tr.addEventListener("touchstart", function () { hov = true; plan(); }, { passive: true }); tr.addEventListener("touchend", function () { setTimeout(function () { hov = false; plan(); }, 4000); }, { passive: true });
     cp.addEventListener("click", function () { cOff = !cOff; setP(); plan(); });
     document.addEventListener("visibilitychange", plan);
+    addEventListener("resize", function () { go(ci, false); plan(); });
     if ("IntersectionObserver" in window) new IntersectionObserver(function (es) { cvis = es[0].isIntersecting; plan(); }, { threshold: .4 }).observe(tr); else { cvis = true; }
     setP(); mark(); plan();
-  }
+  });
 
   /* ---- feature cards ---- */
   $$(".card .more").forEach(function (b) {
@@ -113,7 +114,7 @@
   });
 
   /* ---- lightbox ---- */
-  var lb = $("#lb"), zs = $$(".zoom"), cur = 0, opener = null;
+  var lb = $("#lb"), zs = $$(".car-d .zoom"), cur = 0, opener = null;
   function dark() { var t = document.documentElement.getAttribute("data-theme"); return t ? t === "dark" : matchMedia("(prefers-color-scheme: dark)").matches; }
   function show(i) { cur = (i + zs.length) % zs.length; var z = zs[cur]; $("#lbimg").src = z.getAttribute(dark() ? "data-full-dark" : "data-full"); $("#lbimg").alt = z.getAttribute("data-cap"); $("#lbcap").textContent = z.getAttribute("data-cap"); }
   if (lb && lb.showModal) {

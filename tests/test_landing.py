@@ -35,11 +35,20 @@ def test_live_demo_and_carousel_strict_csp_and_sample_data_only():
         t = (ROOT / p).read_text()
         assert t.count(f'src="/demo/{q}#/recetas"') == 2 and 'data-tour="desk"' in t and 'data-tour="phone"' in t
         assert 'id="cartrack"' in t and 'id="carprev"' in t and 'id="carnext"' in t and 'id="carplay"' in t
+        lang = "en" if q else "es"
+        assert 'class="car car-d"' in t and 'class="car car-m"' in t and 'id="cartrackm"' in t
+        mob = t[t.index('class="car car-m"'):]
+        mob = mob[:mob.index("</ul>")]
+        assert mob.count('class="car-s') == 9 and mob.count('car-s car-wide') == 1
+        assert set(re.findall(r"/img/(g-[a-z-]+?)-(?:light|dark)", mob)) == {"g-cuadricula"}, "exactly one desktop shot on mobile"
+        for n in ("lista", "detalle", "ingredientes", "cocina", "planificador", "compra", "importar", "ajustes"):
+            for th in ("light", "dark"):
+                assert f"/img/mc-{n}-{lang}-{th}.webp" in mob and (ROOT / f"landing/img/mc-{n}-{lang}-{th}.webp").exists()
         assert 'aria-roledescription=' in t and 'id="lb"' in t and 'id="cr"' in t and 'loading="lazy"' in t
         assert not re.search(r"<script(?![^>]*\bsrc=)", t), "inline script"
         assert " style=" not in t and "<style" not in t, "inline style"
-        assert 'src="/assets/landing.2.js" defer' in t
-    js = (ROOT / "landing/assets/landing.2.js").read_text()
+        assert 'src="/assets/landing.3.js" defer' in t
+    js = (ROOT / "landing/assets/landing.3.js").read_text()
     assert "fetch(" not in js and "XMLHttpRequest" not in js
     data = (ROOT / "landing/assets/demo-data.js").read_text()
     assert data.count('"s":') == 12

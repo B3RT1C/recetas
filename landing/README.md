@@ -14,7 +14,7 @@ fuentes del sistema, sin frameworks ni CDN. Iconos Lucide (ISC), los mismos que 
 | Variables | ninguna |
 
 `_headers` define caché (HTML siempre revalida; `img/` 30 días; `assets/` 1 día) y cabeceras de seguridad (CSP estricta
-`'self'`, HSTS, nosniff, frame-ancestors none). No hay hash: si cambia un asset, se renombra con un número de versión (`landing.3.css`, `landing.2.js`) y se
+`'self'`, HSTS, nosniff, frame-ancestors none). No hay hash: si cambia un asset, se renombra con un número de versión (`landing.4.css`, `landing.3.js`) y se
 regenera el HTML. `/demo/*` tiene su propia CSP (solo `'self'`, `frame-ancestors 'self'`, `noindex`).
 
 ## Simuladores (demo en vivo)
@@ -42,7 +42,10 @@ python scripts/build_landing.py          # index.html, en/index.html, creditos/,
 sh scripts/landing_images.sh             # WebP y og.jpg desde docs/screenshots
 python scripts/check_landing.py          # sin URLs externas fuera de la lista permitida
 python scripts/landing_screenshots.py    # capturas en landing/docs/screenshots
+node scripts/landing_mobile_shots.js URL  # capturas móviles img/mc-* desde la demo servida en URL (ES/EN, claro/oscuro)
 ```
 
 Las imágenes son capturas reales con los datos de ejemplo y las fotos CC0 de `data/sample/covers/` (créditos en `/creditos/`).
+En pantallas ≤720 px el carrusel muestra capturas móviles (`mc-*`, con la interfaz en el idioma de la página) y una
+sola de ordenador; en escritorio, el carrusel de siempre. Cada móvil solo descarga su juego de imágenes.
 `docs/` contiene capturas de la propia landing (no se indexan).
