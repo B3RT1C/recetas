@@ -253,13 +253,13 @@ class InstaloaderProvider:
     def _restore(self) -> None:
         if self.session_file.exists() and self.user_file.exists():
             try:
-                self.L.load_session_from_file(self.user_file.read_text().strip(), str(self.session_file))
+                self.L.load_session_from_file(self.user_file.read_text(encoding="utf-8").strip(), str(self.session_file))
             except Exception:  # corrupted/expired session: user must reconnect
                 self.L = self._new()
 
     def _save(self, username: str) -> None:
         self.L.save_session_to_file(str(self.session_file))
-        self.user_file.write_text(username)
+        self.user_file.write_text(username, encoding="utf-8")
 
     def status(self) -> dict:
         return {"conectado": bool(self.L.context.is_logged_in), "usuario": self.L.context.username, "proveedor": self.name}

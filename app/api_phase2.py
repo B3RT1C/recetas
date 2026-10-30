@@ -95,7 +95,7 @@ def app_commit() -> Optional[str]:
         if not c:
             f = ROOT / "COMMIT"
             if f.exists():
-                c = f.read_text().strip()[:40]
+                c = f.read_text(encoding="utf-8").strip()[:40]
         if not c and shutil.which("git") and (ROOT / ".git").exists():
             try:
                 r = subprocess.run(["git", "-C", str(ROOT), "rev-parse", "--short", "HEAD"],
