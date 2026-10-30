@@ -51,7 +51,7 @@ def main():
                 # filters popover (desktop) / sheet (mobile) with one active filter so the badge shows
                 pg.click("#filtBtn"); pg.select_option("#tmax", "45"); pg.wait_for_timeout(400); shot("filtros")
                 pg.click("#filtReset"); pg.keyboard.press("Escape"); pg.wait_for_timeout(300)
-                for mode in ("una", "info", "detalle", "cuadricula"):
+                for mode in ("una", "compacta", "miniatura", "cuadricula"):
                     pg.click(f'[data-view="{mode}"]'); pg.wait_for_timeout(500); shot(f"lista-{mode}")
                 pg.fill("#densR", "6"); pg.dispatch_event("#densR", "input"); pg.wait_for_timeout(500); shot("lista-cuadricula-densa")
                 pg.fill("#densR", "4"); pg.dispatch_event("#densR", "input"); pg.wait_for_timeout(500)
@@ -91,11 +91,10 @@ def use_library_covers(pg, base, H):
     ids = [x["id"] for x in lib]
     recs = pg.request.get(f"{base}/api/recipes?limit=500").json()
     items = recs.get("items", recs) if isinstance(recs, dict) else recs
-    import unicodedata
-    norm = lambda t: unicodedata.normalize("NFKD", t.lower()).encode("ascii", "ignore").decode()
+    # every sample recipe ships its own distinct CC0 photo (data/sample/recetas-demo.json "foto"); use exactly that one
     for i, r in enumerate(items):
-        title = norm(r.get("titulo", "")).replace(" ", "-")
-        pick = next((x for x in ids if x in title or title.startswith(x.split("-")[0])), ids[i % len(ids)])
+        stem = Path((r.get("media") or {}).get("foto") or "").stem
+        pick = stem if stem in ids else ids[i % len(ids)]
         pg.request.put(f"{base}/api/recipes/{r['id']}/portada", headers=H,
                        data={"fuente": "generic", "biblioteca": pick})
     pg.request.put(f"{base}/api/ajustes/portada", headers=H, data={"predeterminada": "generic"})
