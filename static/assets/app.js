@@ -231,7 +231,14 @@ function selBox(r) { return selecting ? `<input type="checkbox" class="sel" data
 function thumbHtml(r) { const src = r.portada || r.media?.foto; return `<div class="thumb" aria-hidden="true">${placeholder(r)}${src ? `<img src="${esc(src)}" alt="" loading="lazy" onerror="this.remove()">` : ""}</div>`; }
 function cardGrid(r) {
   return `<article class="card vgrid ${r.estado !== "completa" ? "pending" : ""}">${selBox(r)}${r.favorito ? `<span class="fav">${ic("star", "Favorita", "fill")}</span>` : ""}
-    <a href="#/receta/${r.id}" class="cardlink">${thumbHtml(r)}<div class="body"><h3>${esc(r.titulo)}</h3></div></a></article>`;
+    <a href="#/receta/${r.id}" class="cardlink">${thumbHtml(r)}<div class="body"><h3>${esc(r.titulo)}</h3>${gridMeta(r)}</div></a></article>`;
+}
+/* One fixed-height line under the title so every grid card keeps the same height. */
+function gridMeta(r) {
+  if (r.estado !== "completa") return `<p class="gmeta">${ic("film")} Pendiente de transcribir</p>`;
+  const bits = [r.tiempo_total_min ? `${ic("timer")} ${r.tiempo_total_min} min` : "",
+    r.precio_racion_eur != null ? `${eur(r.precio_racion_eur)}/ración` : ""].filter(Boolean);
+  return `<p class="gmeta">${bits.length ? bits.join(` <span aria-hidden="true">·</span> `) : "&nbsp;"}</p>`;
 }
 function cardInfo(r) {
   const pend = r.estado !== "completa";
@@ -348,7 +355,7 @@ async function viewDetail(id) {
           <h1 class="grow">${esc(r.titulo)}</h1>
           ${API.STATIC ? "" : `<button class="icon-btn no-print" id="favBtn" type="button" aria-pressed="${!!r.favorito}" aria-label="Favorita">${ic("star", "", r.favorito ? "fill" : "")}</button>`}
         </div>
-        <p class="muted" style="margin:0">${r.autor ? `de <b>${esc(r.autor)}</b>` : ""} </p>
+        <p class="muted" style="margin:0">${[r.autor ? `de <b>${esc(r.autor)}</b>` : "", fdate(r.creado) ? `<span id="dDate">añadida el ${fdate(r.creado)}</span>` : ""].filter(Boolean).join(" · ")} </p>
         ${API.STATIC ? "" : `<div class="row no-print" style="margin-top:.5rem"><span class="small muted">Tu valoración</span><span class="stars" role="group" aria-label="Valoración">${[1, 2, 3, 4, 5].map(n => `<button type="button" data-star="${n}" class="${(r.valoracion || 0) >= n ? "on" : ""}" aria-label="${n} estrellas">${ic("star")}</button>`).join("")}</span></div>`}
         ${pend ? `<div class="banner"><span>${ic("film")} ${t("pending_banner")}</span>${API.STATIC ? "" : `<a class="btn sm" href="#/editar/${r.id}">${ic("pen-line")} ${t("transcribe")}</a>`}</div>` : `
         <div class="facts">
@@ -508,6 +515,7 @@ async function viewEditor(id, mode) {
     ${id && !isDraft ? `<h2 style="margin-top:1.5rem">Foto y vídeo</h2>
       <div class="form-grid"><div class="drop"><label class="f" for="upF">Foto (JPG, PNG, WebP · máx. 10 MB)</label><input id="upF" type="file" accept="image/jpeg,image/png,image/webp">${r.media?.foto ? `<p class="small">Actual: <a href="${esc(r.media.foto)}" target="_blank">ver</a> · <button class="btn sm ghost" type="button" data-delm="foto">quitar</button></p>` : ""}</div>
       <div class="drop"><label class="f" for="upV">Vídeo (MP4, WebM, MOV · máx. 300 MB)</label><input id="upV" type="file" accept="video/mp4,video/webm,video/quicktime">${r.media?.video ? `<p class="small">Actual: <a href="${esc(r.media.video)}" target="_blank">ver</a> · <button class="btn sm ghost" type="button" data-delm="video">quitar</button></p>` : ""}</div></div>` : !isDraft ? `<p class="muted small">Podrás subir foto y vídeo después de guardar.</p>` : ""}
+    ${id && !isDraft && !API.STATIC ? coverPickerHtml(r) : ""}
     <div class="row" style="justify-content:flex-end;margin-top:1.5rem">
       ${isDraft ? `<button class="btn ghost danger" type="button" id="discard">Descartar</button><button class="btn" type="button" id="saveDraft">Guardar borrador</button><button class="btn primary" type="submit">${ic("check")} Añadir al recetario</button>`
       : `<a class="btn" href="${id ? `#/receta/${id}` : "#/recetas"}">${t("cancel")}</a><button class="btn primary" type="submit">${t("save")}</button>`}
@@ -553,6 +561,78 @@ async function viewEditor(id, mode) {
   for (const [inp, kind] of [["#upF", "foto"], ["#upV", "video"]]) $(inp) && ($(inp).onchange = e => guard(async () => {
     const f = e.target.files[0]; if (!f) return; toast("Subiendo…"); await API.upload(id, kind, f); toast("Archivo subido"); viewEditor(id, mode); }));
   $$("[data-delm]").forEach(b => b.onclick = () => guard(async () => { await API.delMedia(id, b.dataset.delm); viewEditor(id, mode); }));
+  if (id && !isDraft && !API.STATIC) wireCoverPicker(r, () => viewEditor(id, mode));
+}
+
+/* ---------------------------------------------------------- cover picker (v2.1.2) */
+const COVER_LABEL = { original: "Miniatura original", frame: "Fotograma del vídeo", upload: "Foto subida", generic: "Foto genérica" };
+function coverPickerHtml(r) {
+  const cur = r.portada_fuente || "";
+  const hasOrig = !!(r.media?.miniatura || r.media?.foto), hasVideo = !!r.media?.video;
+  const opt = (v, label, note, dis) => `<label class="cover-opt ${dis ? "off" : ""}"><input type="radio" name="cover" value="${v}" ${cur === v ? "checked" : ""} ${dis ? "disabled" : ""}><span><b>${label}</b><small class="muted">${note}</small></span></label>`;
+  return `<section class="cover-picker" id="coverPicker" aria-labelledby="cpH">
+    <h2 id="cpH" style="margin-top:1.5rem">Portada</h2>
+    <div class="cover-wrap">
+      <figure class="cover-now"><div class="thumb">${placeholder(r)}${r.portada ? `<img src="${esc(r.portada)}" alt="">` : ""}</div>
+        <figcaption class="small muted">Ahora: ${r.portada_efectiva ? COVER_LABEL[r.portada_efectiva] : "sin imagen"}${cur ? "" : " (ajuste global)"}</figcaption></figure>
+      <fieldset class="cover-opts"><legend class="f">Origen de la portada</legend>
+        ${opt("", "Ajuste global", "La que indiques en Ajustes", false)}
+        ${opt("original", COVER_LABEL.original, hasOrig ? "La que muestra la publicación" : "Esta receta no tiene miniatura", !hasOrig)}
+        ${opt("frame", COVER_LABEL.frame, hasVideo ? "Elige el momento con el deslizador" : "Necesita un vídeo local", !hasVideo)}
+        ${opt("upload", COVER_LABEL.upload, "JPG, PNG o WebP · se eliminan los datos EXIF", false)}
+        ${opt("generic", COVER_LABEL.generic, "Fotos libres con crédito", false)}
+      </fieldset>
+    </div>
+    <div class="cover-pane" data-pane="frame" hidden>
+      <video id="cpVid" src="${esc(r.media?.video || "")}" preload="metadata" muted hidden></video>
+      <div class="frame-prev thumb"><img id="cpFrame" alt="Vista previa del fotograma"></div>
+      <label class="f" for="cpT">Segundo <output id="cpTo">${esc(r.portada_fuente === "frame" ? r.portada_param : "1")}</output> s</label>
+      <input id="cpT" type="range" min="0" max="60" step="0.1" value="${esc(r.portada_fuente === "frame" ? r.portada_param : "1")}">
+      <p class="small warn" id="cpBlack" hidden>${ic("triangle-alert")} Este fotograma es casi negro.</p>
+      <button class="btn sm primary" type="button" id="cpUseFrame">${ic("check")} Usar este fotograma</button>
+    </div>
+    <div class="cover-pane" data-pane="upload" hidden>
+      <label class="f" for="cpUp">Foto de portada (máx. 10 MB)</label><input id="cpUp" type="file" accept="image/jpeg,image/png,image/webp">
+      ${r.portada_fuente === "upload" ? `<p class="small muted">Ya tienes una foto subida; elige otra para cambiarla.</p>` : ""}
+    </div>
+    <div class="cover-pane" data-pane="generic" hidden><div class="cover-lib" id="cpLib"><p class="muted small">Cargando…</p></div></div>
+  </section>`;
+}
+function wireCoverPicker(r, reload) {
+  const box = $("#coverPicker"); if (!box) return;
+  const show = v => $$(".cover-pane", box).forEach(p => p.hidden = p.dataset.pane !== v);
+  const save = body => guard(async () => { await API.setCover(r.id, body); toast("Portada actualizada"); reload(); });
+  let libLoaded = false;
+  const onPick = v => {
+    show(v);
+    if (v === "" || v === "original") return save({ fuente: v || null });
+    if (v === "generic" && !libLoaded) { libLoaded = true; API.coverLibrary().then(lib => {
+      $("#cpLib").innerHTML = lib.map(x => `<button type="button" class="lib-item ${r.portada_fuente === "generic" && r.portada_param === x.id ? "on" : ""}" data-lib="${esc(x.id)}">
+        <img src="${esc(x.url)}" alt="" loading="lazy"><span>${esc(x.titulo)}</span><small class="muted">${esc(x.credito || "")}</small></button>`).join("");
+      $$("[data-lib]", box).forEach(b => b.onclick = () => save({ fuente: "generic", biblioteca: b.dataset.lib }));
+    }).catch(e => toast(e.message)); }
+    if (v === "frame") paintFrame();
+  };
+  $$("input[name=cover]", box).forEach(i => i.onchange = () => onPick(i.value));
+  const vid = $("#cpVid"), rng = $("#cpT"), out = $("#cpTo"), img = $("#cpFrame");
+  vid && vid.addEventListener("loadedmetadata", () => { if (isFinite(vid.duration)) rng.max = Math.max(0.1, vid.duration - 0.1).toFixed(1); });
+  let tmr = 0;
+  async function paintFrame() {
+    const tt = Number(rng.value); out.textContent = tt.toFixed(1).replace(".", ",");
+    clearTimeout(tmr); tmr = setTimeout(async () => {
+      try { const res = await fetch(API.frameUrl(r.id, tt), { credentials: "same-origin" });
+        if (!res.ok) throw new Error((await res.json()).detail || "No se pudo extraer el fotograma");
+        $("#cpBlack").hidden = res.headers.get("X-Fotograma-Negro") !== "1";
+        const old = img.src; img.src = URL.createObjectURL(await res.blob()); if (old.startsWith("blob:")) URL.revokeObjectURL(old);
+      } catch (e) { toast(e.message); }
+    }, 180);
+  }
+  rng && (rng.oninput = paintFrame);
+  $("#cpUseFrame") && ($("#cpUseFrame").onclick = () => save({ fuente: "frame", segundo: Number(rng.value) }));
+  $("#cpUp") && ($("#cpUp").onchange = e => guard(async () => { const f = e.target.files[0]; if (!f) return;
+    if (f.size > 10 * 1024 * 1024) throw new Error("La foto supera 10 MB");
+    toast("Subiendo…"); await API.uploadCover(r.id, f); toast("Portada actualizada"); reload(); }));
+  if (["frame", "upload", "generic"].includes(r.portada_fuente)) onPick(r.portada_fuente);
 }
 
 /* =========================================================== IMPORT WIZARD (source-agnostic) */
@@ -1070,12 +1150,12 @@ async function viewSettings() {
   setTitle(t("nav_ajustes"));
   const meta = await API.meta();
   main.innerHTML = `<h1>${t("nav_ajustes")}</h1><div class="settings">
-  <nav class="side" aria-label="Apartados">${[["ap", t("appearance")], ...(API.STATIC ? [] : [["ia", "Conectar tu IA"], ["tok", "Acceso para agentes"], ["ig", "Instagram"], ["estado", "Estado"], ["acc", "Acceso"], ["sesion", "Sesión"]]), ["about", t("about")]].map(([id, l]) => `<a href="#/ajustes" data-jump="${id}">${l}</a>`).join("")}</nav>
+  <nav class="side" aria-label="Apartados">${[["ap", t("appearance")], ...(API.STATIC ? [] : [["por", "Portadas"], ["ia", "Conectar tu IA"], ["tok", "Acceso para agentes"], ["ig", "Instagram"], ["estado", "Estado"], ["acc", "Acceso"], ["sesion", "Sesión"]]), ["about", t("about")]].map(([id, l]) => `<a href="#/ajustes" data-jump="${id}">${l}</a>`).join("")}</nav>
   <div>
    <section class="panel" id="s-ap"><h2>${t("appearance")}</h2><div class="row">
      <button class="btn" type="button" id="tg">${ic("sun-moon")} ${t("theme")}</button>
      <label>${t("language")} <select class="input" id="lang" style="width:auto">${[["es", "Español"], ["en", "English"]].map(([v, l]) => `<option value="${v}" ${LANG === v ? "selected" : ""}>${l}</option>`).join("")}</select></label></div></section>
-   ${API.STATIC ? "" : `<section class="panel" id="s-ia"></section><section class="panel" id="s-tok"></section><section class="panel" id="s-ig"></section><section class="panel" id="s-acc"></section><section class="panel" id="s-estado"><h2>${ic("activity")} Estado</h2><p class="muted">Cargando…</p></section>
+   ${API.STATIC ? "" : `<section class="panel" id="s-por"></section><section class="panel" id="s-ia"></section><section class="panel" id="s-tok"></section><section class="panel" id="s-ig"></section><section class="panel" id="s-acc"></section><section class="panel" id="s-estado"><h2>${ic("activity")} Estado</h2><p class="muted">Cargando…</p></section>
    <section class="panel" id="s-sesion"><h2>${ic("lock")} Sesión</h2><p>Has entrado como <b>${esc(AUTH.user)}</b>. Para cambiar la contraseña usa <code>python -m app.cli create-admin --replace</code> en el servidor.</p><button class="btn" type="button" id="logout">Cerrar sesión</button></section>`}
    <section class="panel" id="s-about"><h2>${t("about")}</h2>
      <p>Recetario personal que convierte vídeos de recetas guardados en Instagram en recetas escalables, con precios <b>estimados</b> y modo cocina. Versión ${esc(meta.version || "2")}.</p>
@@ -1095,8 +1175,18 @@ FastAPI + uvicorn ──► SQLite (recetas como documentos JSON, migración sin
   $("#tg").onclick = () => $("#themeBtn").click();
   $("#lang").onchange = e => { localStorage.setItem("lang", e.target.value); location.reload(); };
   if (API.STATIC) return;
-  renderAI(); renderTokens(); renderIG(); renderAcceso().catch(e => $("#s-acc").innerHTML = `<h2>${ic("wifi")} Acceso</h2><p class="muted">${esc(e.message)}</p>`); renderEstado().catch(e => $("#s-estado").innerHTML = `<h2>${ic("activity")} Estado</h2><p class="muted">${esc(e.message)}</p>`);
+  renderCoverDefault().catch(() => {}); renderAI(); renderTokens(); renderIG(); renderAcceso().catch(e => $("#s-acc").innerHTML = `<h2>${ic("wifi")} Acceso</h2><p class="muted">${esc(e.message)}</p>`); renderEstado().catch(e => $("#s-estado").innerHTML = `<h2>${ic("activity")} Estado</h2><p class="muted">${esc(e.message)}</p>`);
   $("#logout").onclick = () => guard(async () => { await API.auth.logout(); AUTH.ok = false; location.hash = "#/login"; viewLogin(); });
+}
+async function renderCoverDefault() {
+  const box = $("#s-por"), c = await API.coverDefault();
+  const opts = [["original", "Miniatura original", "La imagen que muestra la publicación; si no hay, un fotograma del vídeo."],
+    ["frame", "Fotograma del vídeo", "Hacia el segundo 1, saltando fotogramas negros." + (c.ffmpeg ? "" : " Necesita ffmpeg.")],
+    ["generic", "Foto genérica", "Una foto libre de la biblioteca, con su crédito."]];
+  box.innerHTML = `<h2>${ic("film")} Portadas</h2>
+  <p class="muted small">Portada que usan las recetas en las que no has elegido una. Lo que elijas en cada receta (fotograma, foto subida o genérica) no se cambia al reimportar.</p>
+  <fieldset class="cover-opts"><legend class="f">Portada por defecto</legend>${opts.map(([v, l, n]) => `<label class="cover-opt"><input type="radio" name="covdef" value="${v}" ${c.predeterminada === v ? "checked" : ""}><span><b>${l}</b><small class="muted">${n}</small></span></label>`).join("")}</fieldset>`;
+  $$("input[name=covdef]", box).forEach(i => i.onchange = () => guard(async () => { await API.setCoverDefault(i.value); toast("Portada por defecto guardada"); }));
 }
 async function renderAI() {
   const box = $("#s-ia"), c = await API.ai.config(), P = c.presets;

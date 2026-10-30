@@ -58,6 +58,12 @@
     delCooked: (id, i) => req("DELETE", `/api/recipes/${id}/cocinado/${i}`),
     upload: (id, kind, file) => { const f = new FormData(); f.append("file", file); return req("POST", `/api/recipes/${id}/media/${kind}`, f); },
     delMedia: (id, kind) => req("DELETE", `/api/recipes/${id}/media/${kind}`),
+    setCover: (id, body) => req("PUT", `/api/recipes/${id}/portada`, body),
+    uploadCover: (id, file) => { const f = new FormData(); f.append("file", file); return req("POST", `/api/recipes/${id}/portada/subir`, f); },
+    frameUrl: (id, t) => `/api/recipes/${id}/portada/fotograma?t=${t.toFixed(1)}`,
+    coverLibrary: () => req("GET", "/api/portadas/biblioteca"),
+    coverDefault: () => req("GET", "/api/ajustes/portada"),
+    setCoverDefault: v => req("PUT", "/api/ajustes/portada", { predeterminada: v }),
     exportFile: b => req("POST", "/api/export", b, { raw: true }),
     ig: {
       status: () => req("GET", "/api/instagram/status"),
