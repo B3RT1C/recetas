@@ -64,7 +64,7 @@ T = {
        ("planificador","Planificador semanal en el móvil: comida y cena de cada día"),("compra","Lista de la compra en el móvil, agrupada por pasillos"),
        ("importar","Importar recetas guardadas de Instagram, paso a paso"),("ajustes","Ajustes: tema, idioma y densidad de la lista")],
   mob_d=[("lista","Lista en el móvil"),("detalle","Detalle en el móvil"),("compra","Compra en el móvil")],
-  mob_pc="cuadricula", mob_pc_cap="También en el ordenador: cuadrícula de recetas en el navegador",
+  mob_pc="cuadricula", mob_pc_cap="En el ordenador: cuadrícula de recetas en el navegador",
   demo_h="Pruébalo", demo_p="La demo estática funciona en el navegador con recetas de ejemplo. Para usarla con tus recetas, se instala en tu propio equipo.",
   stack_h="Tecnología", stack_p="Sin frameworks de frontend ni servicios de terceros obligatorios.",
   stack=[("FastAPI + Uvicorn","API y servidor web en Python"),("SQLite","Base de datos en un único fichero, con migraciones"),
@@ -118,7 +118,7 @@ T = {
        ("planificador","Weekly planner on mobile: lunch and dinner for each day"),("compra","Shopping list on mobile, grouped by aisle"),
        ("importar","Import recipes saved on Instagram, step by step"),("ajustes","Settings: theme, language and list density")],
   mob_d=[("lista","List on mobile"),("detalle","Detail on mobile"),("compra","Shopping on mobile")],
-  mob_pc="cuadricula", mob_pc_cap="Also on your computer: the recipe grid in the browser (Spanish interface)",
+  mob_pc="cuadricula", mob_pc_cap="On your computer: the recipe grid in the browser (Spanish interface)",
   demo_h="Try it", demo_p="The static demo runs in your browser with sample recipes. To use it with your own recipes, install it on your own machine.",
   stack_h="Tech stack", stack_p="No frontend frameworks and no mandatory third-party services.",
   stack=[("FastAPI + Uvicorn","Python API and web server"),("SQLite","Single-file database with migrations"),
@@ -204,8 +204,8 @@ def page(k):
     slides.append('<figure class="car-mob"><div>' + "".join(f'<figure>{pic("m-"+n, c, 300, 650)}<figcaption>{e(c)}</figcaption></figure>' for n, c in t["mob_d"]) + f'</div><figcaption class="sr">{e(t["mob_h"])}</figcaption></figure>')
     lang = "en" if k == "en" else "es"
     mslides = [f'<figure>{pic(f"mc-{n}-{lang}", c, 450, 974, sizes="(max-width: 720px) 66vw, 300px")}<figcaption>{e(c)}</figcaption></figure>' for n, c in t["mob"]]
-    mslides.insert(1, f'<figure class="car-pc">{pic("g-"+t["mob_pc"], t["mob_pc_cap"], 960, 600, sizes="88vw", small=(480,))}<figcaption>{e(t["mob_pc_cap"])}</figcaption></figure>')
-    mcaps = [c for _, c in t["mob"]]; mcaps.insert(1, t["mob_pc_cap"])
+    mslides.insert(0, f'<figure class="car-pc">{pic("g-"+t["mob_pc"], t["mob_pc_cap"], 960, 600, sizes="88vw", small=(480,))}<figcaption>{e(t["mob_pc_cap"])}</figcaption></figure>')
+    mcaps = [c for _, c in t["mob"]]; mcaps.insert(0, t["mob_pc_cap"])
     def car(kind, slides, caps, sfx):
         n = len(slides)
         lis = "\n".join(f'<li class="car-s{" car-wide" if 'class="car-pc"' in sl else ""}" id="cs{sfx}-{i}" role="group" aria-roledescription="{e(t["car_slide"])}" aria-label="{i+1} {e(t["car_of"])} {n}">{sl}</li>' for i, sl in enumerate(slides))
@@ -272,7 +272,7 @@ def page(k):
 <meta name="twitter:title" content="{e(t['title'])}">
 <meta name="twitter:description" content="{e(t['desc'])}">
 <meta name="twitter:image" content="{SITE}/img/og.jpg">
-<link rel="stylesheet" href="/assets/landing.4.css">
+<link rel="stylesheet" href="/assets/landing.5.css">
 <script src="/assets/theme.js"></script>
 <script src="/assets/demo-data.js" defer></script>
 <script src="/assets/landing.3.js" defer></script>
@@ -358,7 +358,7 @@ def credits_page(k):
 <link rel="canonical" href="{SITE}{p}">
 <link rel="alternate" hreflang="es" href="{SITE}/creditos/"><link rel="alternate" hreflang="en" href="{SITE}/en/credits/"><link rel="alternate" hreflang="x-default" href="{SITE}/creditos/">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="icon" href="/favicon.ico" sizes="32x32">
-<link rel="stylesheet" href="/assets/landing.4.css"><script src="/assets/theme.js"></script>
+<link rel="stylesheet" href="/assets/landing.5.css"><script src="/assets/theme.js"></script>
 </head>
 <body><main id="main" class="wrap sec">
 <p><a href="{t['path']}">{ic('arrow-left')} {h[3]}</a></p>
