@@ -64,6 +64,12 @@ const routes = {
 };
 async function router() {
   const [, name = "recetas", arg] = location.hash.split("/");
+  if (!AUTH.ok) {
+    let me; try { me = await API.auth.me(); } catch (e) { me = { autenticado: false }; }
+    if (!me.autenticado) return viewLogin();
+    AUTH.ok = true; AUTH.user = me.usuario || "";
+  }
+  if (name === "login") { location.hash = "#/recetas"; return; }
   const sec = { receta: "recetas", editar: "recetas", nueva: "recetas", borrador: "importar" }[name] || name;
   renderNav(sec); themeIcon();
   const fn = routes[name] || viewList;
@@ -85,7 +91,7 @@ async function viewList() {
   main.innerHTML = `
   <div class="hero"><div><h1>${t("nav_recetas")}</h1>
     <p class="muted" style="margin:0">${meta.recetas} completas · ${meta.solo_video} pendientes de transcribir</p></div>
-    <div class="row no-print">
+    <div class="row no-print hero-actions">
       ${API.STATIC ? "" : `<a class="btn" href="#/nueva">＋ ${t("new_recipe")}</a>`}
       <button class="btn" id="selBtn" type="button" aria-pressed="${selecting}">☑︎ ${t("select")}</button>
       ${API.STATIC ? "" : `<button class="btn primary" id="expBtn" type="button">⬇ ${t("export")}</button>`}
@@ -126,13 +132,14 @@ async function loadResults() {
   renderResults();
 }
 function card(r) {
-  const img = r.media?.foto ? `<img src="${esc(r.media.foto)}" alt="" loading="lazy">` : "";
+  const src = r.portada || r.media?.foto;
+  const img = src ? `<img src="${esc(src)}" alt="" loading="lazy" onerror="this.remove()">` : "";
   const pend = r.estado !== "completa";
   return `<article class="card ${pend ? "pending" : ""}">
     ${selecting ? `<input type="checkbox" class="sel" data-sel="${r.id}" aria-label="Seleccionar ${esc(r.titulo)}" ${selected.has(r.id) ? "checked" : ""}>` : ""}
     ${r.favorito ? `<span class="fav" aria-label="Favorita">★</span>` : ""}
     <a href="#/receta/${r.id}" style="color:inherit;text-decoration:none;display:flex;flex-direction:column;flex:1">
-      <div class="thumb" aria-hidden="true">${img || emojiFor(r)}</div>
+      <div class="thumb" aria-hidden="true"><span>${emojiFor(r)}</span>${img}</div>
       <div class="body">
         <h3>${esc(r.titulo)}</h3>
         <div class="meta">${pend ? `<span class="badge pend">Pendiente de transcribir</span>` : `
@@ -198,12 +205,16 @@ function exportDialog(pre) {
 
 /* =========================================================== DETAIL */
 function videoFrame(r) {
-  if (r.media?.video) return `<div class="vf"><video src="${esc(r.media.video)}" controls playsinline preload="metadata"></video></div>`;
+  const ig = r.video_url || (r.shortcode ? `https://www.instagram.com/reel/${r.shortcode}/` : "");
+  const link = ig ? `<p class="iglink"><a href="${esc(ig)}" target="_blank" rel="noopener">Ver publicación original en Instagram ↗</a></p>` : "";
+  if (r.media?.video) return `<div class="vf"><video src="${esc(r.media.video)}" controls playsinline preload="metadata" ${r.portada ? `poster="${esc(r.portada)}"` : ""}></video></div>${link}`;
   const code = r.shortcode;
-  if (!code || API.STATIC) return r.media?.foto ? `<img class="photo" src="${esc(r.media.foto)}" alt="">` : "";
+  if (!code || API.STATIC) return (r.media?.foto ? `<img class="photo" src="${esc(r.media.foto)}" alt="">` : "") + link;
   // Fallback kept from v1: cropped Instagram embed scaled to fit
-  return `<div class="emb"><div class="embi"><iframe title="Vídeo de Instagram" src="https://www.instagram.com/reel/${esc(code)}/embed/" loading="lazy" allowfullscreen scrolling="no"></iframe></div></div>`;
+  return `<div class="emb"><div class="embi"><iframe title="Vídeo de Instagram" src="https://www.instagram.com/reel/${esc(code)}/embed/" loading="lazy" allowfullscreen scrolling="no"></iframe></div></div>${link}`;
 }
+function fitVideo() { $$(".vf video").forEach(v => { const set = () => { if (v.videoWidth) { v.parentElement.style.aspectRatio = `${v.videoWidth} / ${v.videoHeight}`; v.parentElement.classList.toggle("wide", v.videoWidth > v.videoHeight); } };
+  v.readyState >= 1 ? set() : v.addEventListener("loadedmetadata", set, { once: true }); }); }
 function fitEmb() { $$(".emb").forEach(e => { const k = Math.min(1, e.clientWidth / 358); e.firstElementChild.style.transform = `scale(${k})`; e.style.height = (431 * k) + "px"; }); }
 addEventListener("resize", fitEmb);
 
@@ -221,7 +232,7 @@ async function viewDetail(id) {
           <h1 class="grow">${esc(r.titulo)}</h1>
           ${API.STATIC ? "" : `<button class="icon-btn no-print" id="favBtn" type="button" aria-pressed="${!!r.favorito}" aria-label="Favorita">${r.favorito ? "★" : "☆"}</button>`}
         </div>
-        <p class="muted" style="margin:0">${r.autor ? `de <b>${esc(r.autor)}</b>` : ""} ${r.video_url ? `· <a href="${esc(r.video_url)}" target="_blank" rel="noopener">ver en Instagram ↗</a>` : ""}</p>
+        <p class="muted" style="margin:0">${r.autor ? `de <b>${esc(r.autor)}</b>` : ""} </p>
         ${API.STATIC ? "" : `<div class="row no-print" style="margin-top:.5rem"><span class="small muted">Tu valoración</span><span class="stars" role="group" aria-label="Valoración">${[1, 2, 3, 4, 5].map(n => `<button type="button" data-star="${n}" class="${(r.valoracion || 0) >= n ? "on" : ""}" aria-label="${n} estrellas">★</button>`).join("")}</span></div>`}
         ${pend ? `<div class="banner"><span>🎬 ${t("pending_banner")}</span>${API.STATIC ? "" : `<a class="btn sm" href="#/editar/${r.id}">✍️ ${t("transcribe")}</a>`}</div>` : `
         <div class="facts">
@@ -234,6 +245,7 @@ async function viewDetail(id) {
         ${(r.alergenos || []).length ? `<p class="small" style="margin:.6rem 0 0"><b>Alérgenos (orientativo):</b> ${(r.alergenos).map(a => `<span class="badge alg">${esc(a)}</span>`).join(" ")}</p>` : ""}
         <div class="actions no-print">
           ${pend || !r.pasos?.length ? "" : `<button class="btn primary" id="cookBtn" type="button">👩‍🍳 ${t("cook_mode")}</button>`}
+          ${API.STATIC || pend ? "" : `<button class="btn" id="toList" type="button">🛒 Añadir a la lista</button><button class="btn" id="toPlan" type="button">🗓️ Planificar</button>`}
           <button class="btn" type="button" onclick="print()">🖨 ${t("print")}</button>
           ${API.STATIC ? "" : `<a class="btn" href="#/editar/${r.id}">✏️ ${t("edit")}</a>
           <button class="btn" id="trBtn" type="button">🌐 ${t("translate")}</button>
@@ -263,20 +275,30 @@ async function viewDetail(id) {
           <label class="sr" for="cn">Notas</label><input id="cn" class="input grow" placeholder="Notas (opcional)" maxlength="500"><button class="btn" type="submit">Añadir</button></form></section>`}
     </aside>
   </div>`;
-  setTimeout(fitEmb, 50);
+  setTimeout(fitEmb, 50); fitVideo();
   $$("[data-gotag]").forEach(a => a.onclick = () => { F.etiqueta = a.dataset.gotag; sessionStorage.setItem("filtros", JSON.stringify(F)); });
   const ings = $("#ings");
+  let scaled = null, seq = 0;
+  async function rescale() {
+    if (API.STATIC || k === 1) { scaled = null; return paint(); }
+    const my = ++seq; paint();
+    try { const s = await API.scale(r.id, base * k); if (my === seq) { scaled = s; paint(); } } catch { }
+  }
   function paint() {
     if (!ings) return;
     $("#srv").textContent = fmtQty(base * k);
-    ings.innerHTML = (r.ingredientes || []).map((i, n) => { const s = scaleIng(i, k);
+    const S = scaled && Math.abs(scaled.raciones - base * k) < 1e-9 ? scaled.ingredientes : null;
+    ings.innerHTML = (r.ingredientes || []).map((i, n) => { const v = S?.[n]; const s = v ? { q: v.texto, approx: v.redondeado } : scaleIng(i, k);
       return `<li><input type="checkbox" id="i${n}"><label for="i${n}"><span class="q">${esc(s.q)}</span> ${esc(i.nombre)}${s.approx ? ` <span class="small muted">(redondeado)</span>` : ""}${i.estimada ? ` <span class="badge est" title="Cantidad estimada">≈</span>` : ""}</label>
       <span class="p">${i.precio_eur != null ? eur(i.precio_eur * k) + " " + priceBadge(i) : ""}</span></li>`; }).join("");
     $("#ptot").textContent = r.precio_total_eur != null ? `Total ≈ ${eur(r.precio_total_eur * k)}` : "";
   }
   paint();
-  $("#plus") && ($("#plus").onclick = () => { k = (base * k + 1) / base; paint(); });
-  $("#minus") && ($("#minus").onclick = () => { if (base * k > 1) { k = (base * k - 1) / base; paint(); } });
+  $("#plus") && ($("#plus").onclick = () => { k = (base * k + 1) / base; rescale(); });
+  $("#minus") && ($("#minus").onclick = () => { if (base * k > 1) { k = (base * k - 1) / base; rescale(); } });
+  $("#toList") && ($("#toList").onclick = () => listPicker(`Añadir «${r.titulo}» a la lista`, Math.round(base * k * 100) / 100, async (lid, n) => {
+    const l = await API.shop.addRecipe(lid, r.id, n); toast(`${l.añadidos} ingredientes añadidos a «${l.nombre}»`); }));
+  $("#toPlan") && ($("#toPlan").onclick = () => planDialog(r, Math.round(base * k)));
   $$("[data-timer]").forEach(b => b.onclick = () => startTimer(`${r.titulo.slice(0, 24)} · paso ${+b.dataset.timer + 1}`, r.pasos[b.dataset.timer].minutos));
   $("#cookBtn") && ($("#cookBtn").onclick = () => cookMode(r));
   $("#favBtn") && ($("#favBtn").onclick = () => guard(async () => { r.favorito = !r.favorito; await API.patch(r.id, { favorito: r.favorito }); $("#favBtn").textContent = r.favorito ? "★" : "☆"; $("#favBtn").setAttribute("aria-pressed", r.favorito); toast(r.favorito ? "Añadida a favoritas" : "Quitada de favoritas"); }));
@@ -523,19 +545,347 @@ function wizReview(wz, drafts) {
   $("#again").onclick = () => { W.step = 1; W.job = null; viewImport(); };
 }
 
-/* =========================================================== PLANNER / SHOPPING (skeletons) */
-function viewPlanner() {
-  setTitle(t("nav_plan"));
-  main.innerHTML = `<h1>${t("nav_plan")}</h1><div class="empty"><div class="big">🗓️</div><h2>${t("soon")}</h2>
-  <p>Arrastra recetas a los días de la semana y genera la lista de la compra con las cantidades sumadas.</p></div>`;
+/* =========================================================== LOGIN */
+const AUTH = { ok: API.STATIC, user: "" };
+async function viewLogin() {
+  setTitle("Entrar");
+  renderNav(""); $("#nav").innerHTML = ""; $("#tabbar").innerHTML = "";
+  let me = {}; try { me = await API.auth.me(); } catch { }
+  const setup = !!me.necesita_configuracion;
+  main.innerHTML = `<div class="login"><div class="panel">
+    <div class="login-logo" aria-hidden="true">🍳</div>
+    <h1>${setup ? "Crea tu acceso" : "Entrar"}</h1>
+    <p class="muted">${setup ? "Primera vez: elige usuario y contraseña de administrador (mínimo 10 caracteres). También puedes crearlo con <code>python -m app.cli create-admin</code>." : "Tu recetario es privado. Entra para continuar."}</p>
+    <form id="lf" autocomplete="on">
+      <label class="f" for="lu">Usuario</label><input id="lu" class="input" name="username" autocomplete="username" required maxlength="60" value="${setup ? "admin" : ""}">
+      <label class="f" for="lp">Contraseña</label><input id="lp" class="input" name="password" type="password" autocomplete="${setup ? "new-password" : "current-password"}" required ${setup ? 'minlength="10"' : ""}>
+      ${setup ? `<label class="f" for="lc">Código de configuración <span class="muted small">(solo si no estás en el propio servidor; aparece en el registro y en <code>setup-code.txt</code>)</span></label><input id="lc" class="input" autocomplete="off" maxlength="64">` : ""}
+      <p id="lerr" class="lerr" role="alert" aria-live="assertive"></p>
+      <button class="btn primary wide" type="submit">${setup ? "Crear y entrar" : "Entrar"}</button>
+    </form></div>
+    <p class="small muted" style="text-align:center">🔒 Sesión segura · la contraseña se guarda cifrada (argon2)</p></div>`;
+  $("#lu").focus();
+  $("#lf").onsubmit = async e => {
+    e.preventDefault(); const btn = $("#lf button[type=submit]"); btn.disabled = true; $("#lerr").textContent = "";
+    try {
+      const m = setup ? await API.auth.setup($("#lu").value.trim(), $("#lp").value, $("#lc")?.value || "")
+        : await API.auth.login($("#lu").value.trim(), $("#lp").value);
+      AUTH.ok = true; AUTH.user = m.usuario;
+      if (!location.hash || location.hash === "#/login") location.hash = "#/recetas"; else router();
+    } catch (err) { $("#lerr").textContent = err.message; $("#lp").select(); }
+    finally { btn.disabled = false; }
+  };
 }
-function viewShopping() {
+addEventListener("auth-required", () => { if (AUTH.ok) { AUTH.ok = false; toast("Tu sesión ha caducado", true); } viewLogin(); });
+
+/* ---------- shared pickers ---------- */
+const COMIDAS = [["comida", "Comida"], ["cena", "Cena"]];
+const DIAS = ["lun", "mar", "mié", "jue", "vie", "sáb", "dom"];
+const fmtDay = (iso, long) => new Date(iso + "T12:00").toLocaleDateString("es-ES", long ? { weekday: "long", day: "numeric", month: "long" } : { day: "numeric", month: "short" });
+const isoToday = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); };
+let recipeCache = null;
+async function allRecipes() { return recipeCache ??= (await API.recipes({})).filter(r => r.tipo === "receta"); }
+function recipePicker(title, onPick) {
+  const d = dialog(`<div class="dlg picker"><h2>${esc(title)}</h2>
+    <label class="sr" for="pq">Buscar receta</label><input id="pq" class="input" type="search" placeholder="Buscar receta…" autocomplete="off">
+    <ul class="pick" id="pl" role="listbox" aria-label="Recetas"></ul>
+    <form method="dialog" class="row" style="justify-content:flex-end"><button class="btn">${t("cancel")}</button></form></div>`);
+  allRecipes().then(all => {
+    const paint = () => { const q = norm($("#pq", d).value); $("#pl", d).innerHTML = all.filter(r => !q || norm(r.titulo).includes(q)).slice(0, 60)
+      .map(r => `<li><button type="button" class="pickbtn" data-pick="${r.id}"><span aria-hidden="true">${emojiFor(r)}</span><span class="grow">${esc(r.titulo)}</span><span class="small muted">${r.raciones || ""} rac.</span></button></li>`).join("") || `<li class="muted small">Sin resultados</li>`;
+      $$("[data-pick]", d).forEach(b => b.onclick = () => { d.close(); onPick(all.find(r => r.id == b.dataset.pick)); }); };
+    $("#pq", d).oninput = paint; paint(); $("#pq", d).focus();
+  });
+}
+async function listPicker(title, servings, onPick) {
+  const lists = await API.shop.lists();
+  const d = dialog(`<form class="dlg" id="lpF"><h2>${esc(title)}</h2>
+    <label class="f" for="lps">Lista</label><select id="lps" class="input">${lists.map(l => `<option value="${l.id}">${esc(l.nombre)}</option>`).join("")}<option value="new">＋ Nueva lista…</option></select>
+    <div id="lpn" hidden><label class="f" for="lpnn">Nombre de la nueva lista</label><input id="lpnn" class="input" value="Lista de la compra" maxlength="80"></div>
+    ${servings != null ? `<label class="f" for="lpr">Raciones</label><input id="lpr" class="input" type="number" min="0.5" max="200" step="any" value="${servings}" style="width:8rem">` : ""}
+    <div class="row" style="justify-content:flex-end;margin-top:1rem"><button class="btn" type="button" value="cancel" id="lpc">${t("cancel")}</button><button class="btn primary" type="submit">🛒 Añadir</button></div></form>`);
+  const sel = $("#lps", d); const syncNew = () => $("#lpn", d).hidden = sel.value !== "new";
+  if (!lists.length) sel.value = "new"; syncNew(); sel.onchange = syncNew;
+  $("#lpc", d).onclick = () => d.close();
+  $("#lpF", d).onsubmit = e => { e.preventDefault(); guard(async () => {
+    let id = sel.value; if (id === "new") id = (await API.shop.create($("#lpnn", d).value.trim())).id;
+    d.close(); await onPick(+id, servings != null ? +$("#lpr", d).value : null); }); };
+}
+function planDialog(r, servings) {
+  const d = dialog(`<form class="dlg" id="pdF"><h2>🗓️ Planificar «${esc(r.titulo)}»</h2>
+    <div class="form-grid"><div><label class="f" for="pdd">Día</label><input id="pdd" type="date" class="input" required value="${isoToday()}"></div>
+    <div><label class="f" for="pdc">Comida</label><select id="pdc" class="input">${COMIDAS.map(([v, l]) => `<option value="${v}">${l}</option>`).join("")}</select></div></div>
+    <label class="f" for="pdr">Raciones</label><input id="pdr" class="input" type="number" min="1" max="200" value="${servings}" style="width:8rem">
+    <div class="row" style="justify-content:flex-end;margin-top:1rem"><button class="btn" type="button" id="pdx">${t("cancel")}</button><button class="btn primary" type="submit">Añadir al plan</button></div></form>`);
+  $("#pdx", d).onclick = () => d.close();
+  $("#pdF", d).onsubmit = e => { e.preventDefault(); guard(async () => { await API.plan.add({ fecha: $("#pdd", d).value, comida: $("#pdc", d).value, receta_id: r.id, raciones: +$("#pdr", d).value }); d.close(); toast("Añadida al planificador"); }); };
+}
+
+/* =========================================================== PLANNER */
+const PLAN = { inicio: null };
+async function viewPlanner() {
+  setTitle(t("nav_plan"));
+  if (API.STATIC) { main.innerHTML = `<h1>${t("nav_plan")}</h1><div class="empty"><div class="big">🗓️</div><h2>Disponible en tu servidor</h2><p>El planificador semanal guarda datos, así que no está en la demo de solo lectura.</p></div>`; return; }
+  const wk = await API.plan.week(PLAN.inicio);
+  PLAN.inicio = wk.inicio;
+  const today = isoToday();
+  const bySlot = {}; wk.items.forEach(p => (bySlot[p.fecha + "|" + p.comida] ??= []).push(p));
+  const totalRac = wk.items.reduce((a, p) => a + p.raciones, 0);
+  main.innerHTML = `
+  <div class="hero"><div><h1>${t("nav_plan")}</h1><p class="muted" style="margin:0">${wk.items.length ? `${wk.items.length} platos · ${fmtQty(totalRac)} raciones esta semana` : "Organiza tus comidas y cenas de la semana"}</p></div>
+    <div class="row no-print hero-actions">
+      <button class="btn" type="button" id="wPrev" aria-label="Semana anterior">←</button>
+      <button class="btn" type="button" id="wToday">Esta semana</button>
+      <button class="btn" type="button" id="wNext" aria-label="Semana siguiente">→</button>
+      <button class="btn primary full-m" type="button" id="wList" ${wk.items.length ? "" : "disabled"}>🛒 Añadir a la lista</button>
+    </div></div>
+  <p class="weeklabel"><b>Semana del ${fmtDay(wk.inicio)} al ${fmtDay(wk.fin)}</b> <span class="muted small">· Arrastra los platos entre huecos o usa «Mover».</span></p>
+  <div class="week" id="week">${wk.dias.map((d, i) => `
+    <section class="day ${d === today ? "today" : ""}" aria-label="${fmtDay(d, true)}">
+      <h2><span>${DIAS[i]}</span> <span class="muted">${fmtDay(d)}</span>${d === today ? ` <span class="badge pend">hoy</span>` : ""}</h2>
+      ${COMIDAS.map(([c, lbl]) => `<div class="slot" data-slot="${d}|${c}"><h3>${lbl}</h3>
+        <ul>${(bySlot[d + "|" + c] || []).map(planChip).join("")}</ul>
+        <button class="btn sm ghost addslot" type="button" data-add="${d}|${c}" aria-label="Añadir receta a ${lbl.toLowerCase()} del ${fmtDay(d, true)}">＋ Añadir</button></div>`).join("")}
+    </section>`).join("")}</div>`;
+  $("#wPrev").onclick = () => { PLAN.inicio = wk.anterior; viewPlanner(); };
+  $("#wNext").onclick = () => { PLAN.inicio = wk.siguiente; viewPlanner(); };
+  $("#wToday").onclick = () => { PLAN.inicio = null; viewPlanner(); };
+  $("#wList").onclick = () => listPicker("Añadir la semana a la lista", null, async id => {
+    const l = await API.plan.toList({ lista_id: id, inicio: wk.inicio, fin: wk.fin });
+    toast(`${l.recetas_añadidas} recetas añadidas a «${l.nombre}»`); SHOP.id = id; location.hash = "#/compra"; });
+  $$("[data-add]").forEach(b => b.onclick = () => { const [fecha, comida] = b.dataset.add.split("|");
+    recipePicker(`Añadir a ${comida} · ${fmtDay(fecha, true)}`, r => guard(async () => { await API.plan.add({ fecha, comida, receta_id: r.id }); viewPlanner(); })); });
+  $$("[data-srv]").forEach(b => b.onclick = () => guard(async () => { const p = wk.items.find(x => x.id == b.dataset.id);
+    const n = Math.max(1, p.raciones + +b.dataset.srv); await API.plan.update(p.id, { raciones: n }); viewPlanner(); }));
+  $$("[data-del]").forEach(b => b.onclick = () => guard(async () => { await API.plan.remove(b.dataset.del); viewPlanner(); }));
+  $$("[data-move]").forEach(b => b.onclick = () => moveDialog(wk, wk.items.find(x => x.id == b.dataset.move)));
+  // drag & drop (mouse); keyboard/touch use the «Mover» button
+  let dragId = null;
+  $$(".pchip[draggable]").forEach(el => {
+    el.ondragstart = e => { dragId = el.dataset.id; e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", dragId); el.classList.add("dragging"); };
+    el.ondragend = () => { el.classList.remove("dragging"); $$(".slot.over").forEach(s => s.classList.remove("over")); };
+  });
+  $$(".slot").forEach(s => {
+    s.ondragover = e => { if (dragId) { e.preventDefault(); s.classList.add("over"); } };
+    s.ondragleave = () => s.classList.remove("over");
+    s.ondrop = e => { e.preventDefault(); s.classList.remove("over"); const id = dragId; dragId = null; if (!id) return;
+      const [fecha, comida] = s.dataset.slot.split("|");
+      const after = [...s.querySelectorAll(".pchip")].filter(c => c.dataset.id !== id && e.clientY > c.getBoundingClientRect().top + c.offsetHeight / 2).length;
+      guard(async () => { await API.plan.update(id, { fecha, comida, posicion: after }); viewPlanner(); }); };
+  });
+}
+function planChip(p) {
+  return `<li class="pchip" draggable="true" data-id="${p.id}">
+    <a href="#/receta/${p.receta_id}" class="pt">${p.portada ? `<img src="${esc(p.portada)}" alt="" loading="lazy">` : `<span aria-hidden="true">${p.emoji || "🍽️"}</span>`}<span>${esc(p.titulo)}</span></a>
+    <div class="pc"><span class="stepper" role="group" aria-label="Raciones de ${esc(p.titulo)}">
+      <button type="button" data-srv="-1" data-id="${p.id}" aria-label="Menos raciones">−</button><output>${fmtQty(p.raciones)}</output><button type="button" data-srv="1" data-id="${p.id}" aria-label="Más raciones">＋</button></span>
+      <span class="small muted">rac.</span><span class="grow"></span>
+      <button type="button" class="btn sm ghost" data-move="${p.id}" aria-label="Mover ${esc(p.titulo)}">⇄ Mover</button>
+      <button type="button" class="btn sm ghost danger" data-del="${p.id}" aria-label="Quitar ${esc(p.titulo)}">✕</button></div></li>`;
+}
+function moveDialog(wk, p) {
+  const d = dialog(`<form class="dlg" id="mvF"><h2>Mover «${esc(p.titulo)}»</h2>
+    <div class="form-grid"><div><label class="f" for="mvd">Día</label><select id="mvd" class="input">${wk.dias.map((x, i) => `<option value="${x}" ${x === p.fecha ? "selected" : ""}>${fmtDay(x, true)}</option>`).join("")}<option value="other">Otro día…</option></select>
+      <input id="mvo" class="input" type="date" hidden value="${p.fecha}" aria-label="Otro día"></div>
+    <div><label class="f" for="mvc">Comida</label><select id="mvc" class="input">${COMIDAS.map(([v, l]) => `<option value="${v}" ${v === p.comida ? "selected" : ""}>${l}</option>`).join("")}</select></div></div>
+    <div class="row" style="justify-content:flex-end;margin-top:1rem"><button class="btn" type="button" id="mvx">${t("cancel")}</button><button class="btn primary" type="submit">Mover</button></div></form>`);
+  $("#mvd", d).onchange = e => $("#mvo", d).hidden = e.target.value !== "other";
+  $("#mvx", d).onclick = () => d.close();
+  $("#mvF", d).onsubmit = e => { e.preventDefault(); guard(async () => { const f = $("#mvd", d).value === "other" ? $("#mvo", d).value : $("#mvd", d).value;
+    await API.plan.update(p.id, { fecha: f, comida: $("#mvc", d).value }); d.close(); viewPlanner(); }); };
+}
+
+/* =========================================================== SHOPPING */
+const SHOP = { id: +localStorage.getItem("lista") || null, showDone: true };
+const SHOP_UNITS = ["", "g", "kg", "ml", "l", "ud", "cda", "cdta", "taza", "vaso", "diente", "lata", "paquete", "bote", "manojo"];
+async function viewShopping() {
   setTitle(t("nav_compra"));
-  main.innerHTML = `<h1>${t("nav_compra")}</h1><div class="soon">
-   <div class="panel"><h2>📝 Tus listas</h2><p class="muted">Varias listas personales, no ligadas a ningún supermercado. Añade cosas a mano o desde recetas, con cantidades sumadas y unidades convertidas.</p></div>
-   <div class="panel"><h2>🗂️ Pasillos a tu manera</h2><p class="muted">Categorías propias que puedes reordenar. Marca «ya lo tengo» o «comprado», añade notas y artículos recurrentes.</p></div>
-   <div class="panel"><h2>📤 Compartir</h2><p class="muted">Como texto o por WhatsApp, o imprímela. Precio orientativo opcional.</p></div>
-  </div><p class="muted small" style="margin-top:1rem">${t("soon")}.</p>`;
+  if (API.STATIC) { main.innerHTML = `<h1>${t("nav_compra")}</h1><div class="empty"><div class="big">🛒</div><h2>Disponible en tu servidor</h2><p>Las listas de la compra son personales, así que no están en la demo de solo lectura.</p></div>`; return; }
+  const lists = await API.shop.lists();
+  if (!lists.length) {
+    main.innerHTML = `<h1>${t("nav_compra")}</h1><div class="empty"><div class="big">🛒</div><h2>Aún no tienes listas</h2><p>Crea una y añade cosas a mano, desde una receta o desde el planificador. Las cantidades se suman solas.</p><button class="btn primary" id="nl" type="button">＋ Crear mi primera lista</button></div>`;
+    $("#nl").onclick = () => guard(async () => { SHOP.id = (await API.shop.create("Lista de la compra")).id; viewShopping(); });
+    return;
+  }
+  if (!lists.some(l => l.id === SHOP.id)) SHOP.id = lists[0].id;
+  localStorage.setItem("lista", SHOP.id);
+  const L = await API.shop.get(SHOP.id);
+  const cats = L.categorias, catName = id => cats.find(c => c.id === id)?.nombre || "Sin pasillo";
+  const pend = L.items.filter(i => i.estado === "pendiente"), have = L.items.filter(i => i.estado === "ya_lo_tengo"), done = L.items.filter(i => i.estado === "comprado");
+  const groups = []; pend.forEach(i => { const g = groups.find(g => g.id === i.categoria_id); g ? g.items.push(i) : groups.push({ id: i.categoria_id, items: [i] }); });
+  main.innerHTML = `
+  <div class="hero"><div><h1>${t("nav_compra")}</h1><p class="muted" style="margin:0">${pend.length} por comprar${done.length ? ` · ${done.length} comprados` : ""}${have.length ? ` · ${have.length} ya en casa` : ""}</p></div>
+    <div class="row no-print hero-actions">
+      <button class="btn" type="button" id="shShare">📤 Compartir</button>
+      <button class="btn" type="button" onclick="print()">🖨 Imprimir</button>
+      <button class="btn" type="button" id="shMore" aria-haspopup="dialog">⋯ Más</button>
+    </div></div>
+  <div class="scroller lists no-print" role="tablist" aria-label="Tus listas">${lists.map(l => `<button type="button" role="tab" class="chip" aria-selected="${l.id === L.id}" aria-pressed="${l.id === L.id}" data-list="${l.id}">${esc(l.nombre)} <span class="n">${l.pendientes}</span></button>`).join("")}
+    <button type="button" class="chip" id="shNew">＋ Nueva lista</button></div>
+  <h2 class="print-only">${esc(L.nombre)}</h2>
+  <form id="addF" class="panel addform no-print" autocomplete="off">
+    <label class="sr" for="an">Artículo</label><input id="an" class="input nm" placeholder="Añadir artículo (p. ej. leche)" required maxlength="120" list="pantryNames">
+    <label class="sr" for="aq">Cantidad</label><input id="aq" class="input" type="number" min="0" step="any" placeholder="Cant.">
+    <label class="sr" for="au">Unidad</label><select id="au" class="input">${SHOP_UNITS.map(u => `<option value="${u}">${u || "unidad"}</option>`).join("")}</select>
+    <button class="btn primary" type="submit">Añadir</button>
+    <details class="more"><summary class="small">Más opciones</summary><div class="row" style="margin-top:.5rem">
+      <label class="sr" for="ac">Pasillo</label><select id="ac" class="input" style="width:auto"><option value="">Pasillo automático</option>${cats.map(c => `<option value="${c.id}">${esc(c.nombre)}</option>`).join("")}</select>
+      <label class="sr" for="ano">Nota</label><input id="ano" class="input grow" placeholder="Nota (marca, tamaño…)" maxlength="300">
+      <label class="chip"><input type="checkbox" id="ar"> 🔁 Recurrente</label></div></details>
+  </form>
+  <div class="shop">
+    ${groups.length ? groups.map(g => `<section class="aisle" data-cat="${g.id ?? ""}"><h3>${esc(catName(g.id))} <span class="muted small">${g.items.length}</span></h3><ul class="items">${g.items.map(shopItem).join("")}</ul></section>`).join("")
+      : `<div class="empty small-empty"><div class="big">✅</div><p>${L.items.length ? "¡Todo listo! No queda nada por comprar." : "Lista vacía. Añade artículos arriba, o desde una receta (botón 🛒) o el planificador."}</p></div>`}
+    ${have.length ? `<section class="aisle muted-sec"><h3>🏠 Ya lo tengo <span class="muted small">${have.length}</span></h3><ul class="items">${have.map(shopItem).join("")}</ul></section>` : ""}
+    ${done.length ? `<section class="aisle muted-sec no-print"><h3>✔ Comprado <span class="muted small">${done.length}</span> <button class="btn sm ghost" type="button" id="shClear">Limpiar comprados</button></h3><ul class="items">${done.map(shopItem).join("")}</ul></section>` : ""}
+  </div>
+  <div class="panel shopfoot">
+    ${L.mostrar_precios ? `<p style="margin:0"><b>Total orientativo: ${L.precio_estimado_eur != null ? eur(L.precio_estimado_eur) : "—"}</b> <span class="badge est" title="Calculado con precios estimados, no reales">${t("est")}</span>${L.precio_parcial ? ` <span class="small muted">(sin precio para algunos artículos)</span>` : ""}</p>` : ""}
+    <label class="row small no-print" style="margin-top:.4rem"><input type="checkbox" id="shPr" ${L.mostrar_precios ? "checked" : ""}> Mostrar precio orientativo</label>
+    ${L.notas ? `<p class="small" style="white-space:pre-line">${esc(L.notas)}</p>` : ""}
+  </div>
+  <datalist id="pantryNames"></datalist>`;
+  const reload = () => viewShopping();
+  $$("[data-list]").forEach(b => b.onclick = () => { SHOP.id = +b.dataset.list; reload(); });
+  $("#shNew").onclick = () => { const n = prompt("Nombre de la nueva lista", "Lista de la compra"); if (n) guard(async () => { SHOP.id = (await API.shop.create(n)).id; reload(); }); };
+  $("#addF").onsubmit = e => { e.preventDefault(); guard(async () => {
+    const q = $("#aq").value; await API.shop.addItem(L.id, { nombre: $("#an").value.trim(), cantidad: q === "" ? null : +q, unidad: $("#au").value,
+      categoria_id: $("#ac").value ? +$("#ac").value : null, nota: $("#ano").value.trim(), recurrente: $("#ar").checked });
+    await reload(); $("#an").focus(); }); };
+  $("#shPr").onchange = e => guard(async () => { await API.shop.update(L.id, { mostrar_precios: e.target.checked }); reload(); });
+  $("#shClear") && ($("#shClear").onclick = () => guard(async () => { await API.shop.clear(L.id); toast("Comprados retirados (los recurrentes vuelven a pendiente)"); reload(); }));
+  $("#shShare").onclick = () => shareDialog(L);
+  $("#shMore").onclick = () => listMenu(L, lists);
+  $$("[data-buy]").forEach(c => c.onchange = () => guard(async () => { await API.shop.updateItem(c.dataset.buy, { estado: c.checked ? "comprado" : "pendiente" }); reload(); }));
+  $$("[data-have]").forEach(b => b.onclick = () => guard(async () => { const it = L.items.find(i => i.id == b.dataset.have); await API.shop.updateItem(it.id, { estado: it.estado === "ya_lo_tengo" ? "pendiente" : "ya_lo_tengo" }); reload(); }));
+  $$("[data-edit]").forEach(b => b.onclick = () => itemDialog(L, L.items.find(i => i.id == b.dataset.edit)));
+  // drag to reorder inside an aisle or move to another aisle
+  let drag = null;
+  $$(".items li[draggable]").forEach(li => { li.ondragstart = e => { drag = li; e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", li.dataset.id); li.classList.add("dragging"); };
+    li.ondragend = () => li.classList.remove("dragging"); });
+  $$(".aisle[data-cat]").forEach(sec => { const ul = $("ul", sec);
+    ul.ondragover = e => { if (!drag) return; e.preventDefault(); const after = [...ul.children].find(c => c !== drag && e.clientY < c.getBoundingClientRect().top + c.offsetHeight / 2); ul.insertBefore(drag, after || null); };
+    ul.ondrop = e => { e.preventDefault(); if (!drag) return; drag = null; const cat = sec.dataset.cat === "" ? null : +sec.dataset.cat;
+      guard(async () => { await API.shop.order(L.id, [...ul.children].map(li => +li.dataset.id), cat); reload(); }); }; });
+  API.shop.pantry().then(p => { const dl = $("#pantryNames"); if (dl) dl.innerHTML = p.map(x => `<option value="${esc(x.nombre)}">`).join(""); });
+}
+function shopItem(i) {
+  const src = i.origenes.filter(o => o.titulo).map(o => o.titulo);
+  return `<li draggable="${i.estado === "pendiente"}" data-id="${i.id}" class="st-${i.estado}">
+    <input type="checkbox" id="b${i.id}" data-buy="${i.id}" ${i.estado === "comprado" ? "checked" : ""} aria-label="Comprado: ${esc(i.nombre)}">
+    <label for="b${i.id}" class="grow"><span class="q">${esc(i.texto_cantidad)}</span> ${esc(i.nombre)}${i.recurrente ? ` <span title="Recurrente" aria-label="recurrente">🔁</span>` : ""}
+      ${i.nota ? `<span class="small muted"> · ${esc(i.nota)}</span>` : ""}
+      ${src.length ? `<span class="src small muted">${[...new Set(src)].map(esc).join(", ")}</span>` : ""}</label>
+    ${i.precio_eur != null ? `<span class="p small">${eur(i.precio_eur)}</span>` : ""}
+    <button type="button" class="icon-btn sm no-print" data-have="${i.id}" aria-pressed="${i.estado === "ya_lo_tengo"}" title="Ya lo tengo" aria-label="Ya lo tengo: ${esc(i.nombre)}">🏠</button>
+    <button type="button" class="icon-btn sm no-print" data-edit="${i.id}" aria-label="Editar ${esc(i.nombre)}">✏️</button></li>`;
+}
+function itemDialog(L, it) {
+  const d = dialog(`<form class="dlg" id="itF"><h2>Editar artículo</h2>
+    <label class="f" for="in">Nombre</label><input id="in" class="input" value="${esc(it.nombre)}" required maxlength="120">
+    <div class="form-grid"><div><label class="f" for="iq">Cantidad</label><input id="iq" class="input" type="number" min="0" step="any" value="${it.cantidad ?? ""}"></div>
+      <div><label class="f" for="iu">Unidad</label><select id="iu" class="input">${[...new Set([it.unidad, ...SHOP_UNITS])].map(u => `<option value="${esc(u)}" ${u === it.unidad ? "selected" : ""}>${esc(u || "unidad")}</option>`).join("")}</select></div></div>
+    <p class="small muted" style="margin:.3rem 0 0">Las tazas y cucharadas se guardan en g o ml para poder sumarlas.</p>
+    <label class="f" for="ic">Pasillo</label><select id="ic" class="input"><option value="">Sin pasillo</option>${L.categorias.map(c => `<option value="${c.id}" ${c.id === it.categoria_id ? "selected" : ""}>${esc(c.nombre)}</option>`).join("")}</select>
+    <label class="f" for="ino">Nota</label><input id="ino" class="input" value="${esc(it.nota)}" maxlength="300">
+    <label class="f" for="ie">Estado</label><select id="ie" class="input">${[["pendiente", "Pendiente"], ["ya_lo_tengo", "Ya lo tengo"], ["comprado", "Comprado"]].map(([v, l]) => `<option value="${v}" ${v === it.estado ? "selected" : ""}>${l}</option>`).join("")}</select>
+    <label class="row" style="margin-top:.6rem"><input type="checkbox" id="ir" ${it.recurrente ? "checked" : ""}> 🔁 Recurrente (vuelve a «pendiente» al limpiar comprados)</label>
+    ${it.origenes.some(o => o.titulo) ? `<p class="small muted">De: ${it.origenes.filter(o => o.titulo).map(o => `${esc(o.titulo)} (${fmtQty(o.raciones)} rac.)`).join(" · ")}</p>` : ""}
+    <div class="row" style="justify-content:space-between;margin-top:1rem"><button class="btn ghost danger" type="button" id="idel">🗑 Quitar</button>
+      <span class="row"><button class="btn" type="button" id="ix">${t("cancel")}</button><button class="btn primary" type="submit">${t("save")}</button></span></div></form>`);
+  $("#ix", d).onclick = () => d.close();
+  $("#idel", d).onclick = () => guard(async () => { await API.shop.removeItem(it.id); d.close(); viewShopping(); });
+  $("#itF", d).onsubmit = e => { e.preventDefault(); guard(async () => { const q = $("#iq", d).value;
+    await API.shop.updateItem(it.id, { nombre: $("#in", d).value.trim(), cantidad: q === "" ? null : +q, unidad: $("#iu", d).value, nota: $("#ino", d).value,
+      categoria_id: $("#ic", d).value ? +$("#ic", d).value : null, estado: $("#ie", d).value, recurrente: $("#ir", d).checked });
+    d.close(); viewShopping(); }); };
+}
+async function shareDialog(L) {
+  const s = await API.shop.share(L.id);
+  const d = dialog(`<div class="dlg"><h2>📤 Compartir «${esc(L.nombre)}»</h2>
+    <label class="f" for="stx">Texto</label><textarea id="stx" class="input" rows="10" readonly>${esc(s.texto)}</textarea>
+    <label class="row small"><input type="checkbox" id="sinc"> Incluir lo que ya tengo</label>
+    <div class="row" style="margin-top:1rem"><button class="btn" type="button" id="scp">📋 Copiar</button>
+      <a class="btn primary" id="swa" href="${esc(s.whatsapp)}" target="_blank" rel="noopener">WhatsApp ↗</a>
+      ${navigator.share ? `<button class="btn" type="button" id="sns">Compartir…</button>` : ""}
+      <span class="grow"></span><form method="dialog"><button class="btn">${t("close")}</button></form></div></div>`);
+  $("#sinc", d).onchange = async e => { const n = await API.shop.share(L.id, e.target.checked); $("#stx", d).value = n.texto; $("#swa", d).href = n.whatsapp; };
+  $("#scp", d).onclick = () => navigator.clipboard.writeText($("#stx", d).value).then(() => toast("Copiado"));
+  $("#sns", d) && ($("#sns", d).onclick = () => navigator.share({ title: L.nombre, text: $("#stx", d).value }).catch(() => { }));
+}
+function listMenu(L, lists) {
+  const d = dialog(`<div class="dlg"><h2>Lista «${esc(L.nombre)}»</h2>
+    <div class="menu">
+      <button class="btn" type="button" id="mRen">✏️ Renombrar</button>
+      <button class="btn" type="button" id="mNotes">📝 Notas de la lista</button>
+      <button class="btn" type="button" id="mCats">🗂️ Pasillos y orden</button>
+      <button class="btn" type="button" id="mPan">🏠 Despensa (lo que siempre tienes)</button>
+      <button class="btn" type="button" id="mRec">📖 Añadir una receta…</button>
+      <button class="btn ghost danger" type="button" id="mDel">🗑 Borrar lista</button></div>
+    <form method="dialog" class="row" style="justify-content:flex-end;margin-top:1rem"><button class="btn">${t("close")}</button></form></div>`);
+  $("#mRen", d).onclick = () => { const n = prompt("Nuevo nombre", L.nombre); if (n) guard(async () => { await API.shop.update(L.id, { nombre: n }); d.close(); viewShopping(); }); };
+  $("#mNotes", d).onclick = () => { const n = prompt("Notas de la lista", L.notas); if (n != null) guard(async () => { await API.shop.update(L.id, { notas: n }); d.close(); viewShopping(); }); };
+  $("#mCats", d).onclick = () => catsDialog();
+  $("#mPan", d).onclick = () => pantryDialog();
+  $("#mRec", d).onclick = () => recipePicker("Añadir ingredientes de…", r => guard(async () => { const l = await API.shop.addRecipe(L.id, r.id, null); toast(`${l.añadidos} ingredientes añadidos`); viewShopping(); }));
+  $("#mDel", d).onclick = () => confirm(`¿Borrar la lista «${L.nombre}»?`) && guard(async () => { await API.shop.remove(L.id); SHOP.id = null; d.close(); viewShopping(); });
+}
+async function catsDialog() {
+  let cats = await API.shop.cats();
+  const d = dialog(`<div class="dlg"><h2>🗂️ Pasillos</h2><p class="small muted">Ordénalos como recorres tu tienda. Usa ↑ ↓ o arrastra.</p><ol class="cats" id="cl"></ol>
+    <form id="caF" class="row"><label class="sr" for="can">Nuevo pasillo</label><input id="can" class="input grow" placeholder="Nuevo pasillo" maxlength="80" required><button class="btn" type="submit">Añadir</button></form>
+    <form method="dialog" class="row" style="justify-content:flex-end;margin-top:1rem"><button class="btn primary">Hecho</button></form></div>`);
+  d.onclose = () => location.hash.startsWith("#/compra") && viewShopping();
+  const save = async () => { cats = await API.shop.orderCats(cats.map(c => c.id)); paint(); };
+  function paint() {
+    $("#cl", d).innerHTML = cats.map((c, i) => `<li draggable="true" data-c="${c.id}"><span class="grip" aria-hidden="true">⋮⋮</span><span class="grow">${esc(c.nombre)}</span>
+      <button class="icon-btn sm" type="button" data-up="${i}" ${i ? "" : "disabled"} aria-label="Subir ${esc(c.nombre)}">↑</button><button class="icon-btn sm" type="button" data-dn="${i}" ${i < cats.length - 1 ? "" : "disabled"} aria-label="Bajar ${esc(c.nombre)}">↓</button>
+      <button class="icon-btn sm" type="button" data-rn="${c.id}" aria-label="Renombrar ${esc(c.nombre)}">✏️</button><button class="icon-btn sm" type="button" data-rm="${c.id}" aria-label="Borrar ${esc(c.nombre)}">✕</button></li>`).join("");
+    $$("[data-up]", d).forEach(b => b.onclick = () => guard(async () => { const i = +b.dataset.up; [cats[i - 1], cats[i]] = [cats[i], cats[i - 1]]; await save(); $(`[data-up="${i - 1}"]`, d)?.focus() || $(`[data-dn="${i - 1}"]`, d)?.focus(); }));
+    $$("[data-dn]", d).forEach(b => b.onclick = () => guard(async () => { const i = +b.dataset.dn; [cats[i + 1], cats[i]] = [cats[i], cats[i + 1]]; await save(); $(`[data-dn="${i + 1}"]`, d)?.focus() || $(`[data-up="${i + 1}"]`, d)?.focus(); }));
+    $$("[data-rn]", d).forEach(b => b.onclick = () => { const c = cats.find(x => x.id == b.dataset.rn), n = prompt("Nuevo nombre", c.nombre); if (n) guard(async () => { await API.shop.renameCat(c.id, n); cats = await API.shop.cats(); paint(); }); });
+    $$("[data-rm]", d).forEach(b => b.onclick = () => confirm("¿Borrar este pasillo? Sus artículos quedarán sin pasillo.") && guard(async () => { await API.shop.removeCat(b.dataset.rm); cats = await API.shop.cats(); paint(); }));
+    let dragEl = null;
+    $$("#cl li", d).forEach(li => { li.ondragstart = () => { dragEl = li; li.classList.add("dragging"); }; li.ondragend = () => { li.classList.remove("dragging"); };
+      li.ondragover = e => { e.preventDefault(); if (dragEl && dragEl !== li) { const r = li.getBoundingClientRect(); li.parentNode.insertBefore(dragEl, e.clientY < r.top + r.height / 2 ? li : li.nextSibling); } };
+      li.ondrop = e => { e.preventDefault(); const ids = $$("#cl li", d).map(x => +x.dataset.c); cats = ids.map(id => cats.find(c => c.id === id)); guard(save); }; });
+  }
+  paint();
+  $("#caF", d).onsubmit = e => { e.preventDefault(); guard(async () => { await API.shop.addCat($("#can", d).value.trim()); $("#can", d).value = ""; cats = await API.shop.cats(); paint(); }); };
+}
+async function pantryDialog() {
+  const d = dialog(`<div class="dlg"><h2>🏠 Despensa</h2><p class="small muted">Lo que siempre tienes en casa (sal, aceite…). Al añadir recetas, estos ingredientes aparecen como «ya lo tengo».</p>
+    <ul class="pantry" id="pl"></ul><form id="paF" class="row"><label class="sr" for="pan">Ingrediente</label><input id="pan" class="input grow" placeholder="p. ej. aceite de oliva" maxlength="80" required><button class="btn" type="submit">Añadir</button></form>
+    <form method="dialog" class="row" style="justify-content:flex-end;margin-top:1rem"><button class="btn primary">Hecho</button></form></div>`);
+  const paint = async () => { const p = await API.shop.pantry();
+    $("#pl", d).innerHTML = p.map(x => `<li class="chip">${esc(x.nombre)} <button type="button" class="x" data-prm="${x.id}" aria-label="Quitar ${esc(x.nombre)}">✕</button></li>`).join("") || `<li class="muted small">Vacía</li>`;
+    $$("[data-prm]", d).forEach(b => b.onclick = () => guard(async () => { await API.shop.removePantry(b.dataset.prm); paint(); })); };
+  paint();
+  $("#paF", d).onsubmit = e => { e.preventDefault(); guard(async () => { await API.shop.addPantry($("#pan", d).value.trim()); $("#pan", d).value = ""; paint(); }); };
+}
+
+/* =========================================================== ESTADO (settings) */
+const fmtBytes = b => b == null ? "—" : b < 1024 ** 2 ? `${Math.round(b / 1024)} KB` : b < 1024 ** 3 ? `${(b / 1024 ** 2).toFixed(1).replace(".", ",")} MB` : `${(b / 1024 ** 3).toFixed(2).replace(".", ",")} GB`;
+async function renderEstado(refresh) {
+  const box = $("#s-estado"); if (!box) return;
+  const e = await API.estado(refresh), v = e.videos, k = e.disco, th = e.cola.portadas;
+  const pct = v.recetas_con_publicacion ? Math.round(100 * v.con_video_local / v.recetas_con_publicacion) : 0;
+  box.innerHTML = `<div class="row" style="justify-content:space-between"><h2>🩺 Estado</h2><button class="btn sm" type="button" id="eR">↻ Actualizar</button></div>
+  <div class="stats">
+    <div class="stat"><span class="muted small">Versión</span><b>${esc(e.version)}</b><span class="small muted">commit ${esc(e.commit || "desconocido")} · esquema v${e.esquema}</span></div>
+    <div class="stat"><span class="muted small">Vídeos locales</span><b>${v.con_video_local} / ${v.recetas_con_publicacion}</b><span class="bar" role="img" aria-label="${pct}%"><i style="width:${pct}%"></i></span></div>
+    <div class="stat"><span class="muted small">Espacio de vídeos</span><b>${fmtBytes(k.videos.bytes)}</b><span class="small muted">${k.videos.archivos} archivos</span></div>
+    <div class="stat"><span class="muted small">Fotos y portadas</span><b>${fmtBytes(k.media.bytes)}</b><span class="small muted">${k.media.archivos} archivos · BD ${fmtBytes(k.base_de_datos.bytes)}</span></div>
+    <div class="stat"><span class="muted small">Disco libre</span><b>${fmtBytes(k.libre_bytes)}</b><span class="small muted">de ${fmtBytes(k.total_bytes)}</span></div>
+    <div class="stat"><span class="muted small">Portadas (ffmpeg)</span><b>${th.disponible ? `${th.en_cache} en caché` : "ffmpeg no encontrado"}</b><span class="small muted">${th.disponible ? `${th.en_cola} en cola · ${th.fallidas} fallidas` : "Se usan miniaturas o emojis"}</span></div>
+  </div>
+  ${th.disponible ? "" : `<p class="small banner" style="display:block">Para portadas reales desde tus vídeos instala ffmpeg (<code>winget install Gyan.FFmpeg</code> en Windows) y reinicia, o indica la ruta con <code>RECETAS_FFMPEG</code>.</p>`}
+  ${v.sin_video ? `<details><summary class="small">${v.sin_video} recetas sin vídeo local</summary><ul class="small">${v.faltan.map(x => `<li><a href="#/receta/${x.id}">${esc(x.titulo || x.shortcode)}</a> <code>${esc(x.shortcode)}</code></li>`).join("")}${v.sin_video > v.faltan.length ? `<li class="muted">…y ${v.sin_video - v.faltan.length} más</li>` : ""}</ul></details>` : ""}
+  <h3 style="margin-top:1rem">Últimas importaciones</h3>
+  ${e.cola.importaciones_activas.length ? `<p class="small"><span class="badge pend">en curso</span> ${e.cola.importaciones_activas.map(j => `${j.hechos}/${j.total}`).join(", ")}</p>` : ""}
+  ${e.importaciones.length ? `<ul class="joblist">${e.importaciones.map(j => `<li><b>${esc((j.creado || "").slice(0, 16).replace("T", " "))}</b> <span class="grow">${j.ok}/${j.total} importadas${j.estado === "cancelado" ? " · cancelada" : ""}</span>${j.errores.length ? `<span class="badge est" title="${esc(j.errores.map(x => x.shortcode + ": " + x.mensaje).join("\n"))}">${j.errores.length} errores</span>` : `<span class="badge real">ok</span>`}</li>`).join("")}</ul>` : `<p class="muted small">Aún no hay importaciones registradas.</p>`}
+  ${th.errores.length ? `<details><summary class="small">Errores de portadas</summary><ul class="small">${th.errores.map(x => `<li><code>${esc(x.clave)}</code> ${esc(x.error)}</li>`).join("")}</ul></details>` : ""}`;
+  $("#eR").onclick = () => guard(() => renderEstado(true));
 }
 
 /* =========================================================== SETTINGS */
@@ -543,12 +893,13 @@ async function viewSettings() {
   setTitle(t("nav_ajustes"));
   const meta = await API.meta();
   main.innerHTML = `<h1>${t("nav_ajustes")}</h1><div class="settings">
-  <nav class="side" aria-label="Apartados">${[["ap", t("appearance")], ...(API.STATIC ? [] : [["ia", "Conectar tu IA"], ["tok", "Acceso para agentes"], ["ig", "Instagram"]]), ["about", t("about")]].map(([id, l]) => `<a href="#/ajustes" data-jump="${id}">${l}</a>`).join("")}</nav>
+  <nav class="side" aria-label="Apartados">${[["ap", t("appearance")], ...(API.STATIC ? [] : [["ia", "Conectar tu IA"], ["tok", "Acceso para agentes"], ["ig", "Instagram"], ["estado", "Estado"], ["sesion", "Sesión"]]), ["about", t("about")]].map(([id, l]) => `<a href="#/ajustes" data-jump="${id}">${l}</a>`).join("")}</nav>
   <div>
    <section class="panel" id="s-ap"><h2>${t("appearance")}</h2><div class="row">
      <button class="btn" type="button" id="tg">🌓 ${t("theme")}</button>
      <label>${t("language")} <select class="input" id="lang" style="width:auto">${[["es", "Español"], ["en", "English"]].map(([v, l]) => `<option value="${v}" ${LANG === v ? "selected" : ""}>${l}</option>`).join("")}</select></label></div></section>
-   ${API.STATIC ? "" : `<section class="panel" id="s-ia"></section><section class="panel" id="s-tok"></section><section class="panel" id="s-ig"></section>`}
+   ${API.STATIC ? "" : `<section class="panel" id="s-ia"></section><section class="panel" id="s-tok"></section><section class="panel" id="s-ig"></section><section class="panel" id="s-estado"><h2>🩺 Estado</h2><p class="muted">Cargando…</p></section>
+   <section class="panel" id="s-sesion"><h2>🔒 Sesión</h2><p>Has entrado como <b>${esc(AUTH.user)}</b>. Para cambiar la contraseña usa <code>python -m app.cli create-admin --replace</code> en el servidor.</p><button class="btn" type="button" id="logout">Cerrar sesión</button></section>`}
    <section class="panel" id="s-about"><h2>${t("about")}</h2>
      <p>Recetario personal que convierte vídeos de recetas guardados en Instagram en recetas escalables, con precios <b>estimados</b> y modo cocina. Versión ${esc(meta.version || "2")}.</p>
      <pre class="arch" aria-label="Arquitectura">Navegador (SPA vanilla JS, sin build)
@@ -567,7 +918,8 @@ FastAPI + uvicorn ──► SQLite (recetas como documentos JSON, migración sin
   $("#tg").onclick = () => $("#themeBtn").click();
   $("#lang").onchange = e => { localStorage.setItem("lang", e.target.value); location.reload(); };
   if (API.STATIC) return;
-  renderAI(); renderTokens(); renderIG();
+  renderAI(); renderTokens(); renderIG(); renderEstado().catch(e => $("#s-estado").innerHTML = `<h2>🩺 Estado</h2><p class="muted">${esc(e.message)}</p>`);
+  $("#logout").onclick = () => guard(async () => { await API.auth.logout(); AUTH.ok = false; location.hash = "#/login"; viewLogin(); });
 }
 async function renderAI() {
   const box = $("#s-ia"), c = await API.ai.config(), P = c.presets;
