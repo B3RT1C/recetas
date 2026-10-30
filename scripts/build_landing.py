@@ -19,6 +19,11 @@ def load_icons():
     out = {m.group(1): m.group(2).replace('\\"', '"') for m in re.finditer(r'^  "([a-z0-9-]+)": "(.*)",?$', src, re.M)}
     # Lucide "smartphone" (ISC), not in the app set.
     out["smartphone"] = '<rect width="14" height="20" x="5" y="2" rx="2" ry="2"/> <path d="M12 18h.01"/>'
+    # Lucide brand/extra icons (ISC), not in the app set.
+    out["github"] = '<path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/> <path d="M9 18c-4.51 2-5-2-7-2"/>'
+    out["linkedin"] = '<path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/> <rect width="4" height="12" x="2" y="9"/> <circle cx="4" cy="4" r="2"/>'
+    out["monitor"] = '<rect width="20" height="14" x="2" y="3" rx="2"/> <line x1="8" x2="16" y1="21" y2="21"/> <line x1="12" x2="12" y1="17" y2="21"/>'
+    out["container"] = '<path d="M22 7.7c0-.6-.4-1.2-.8-1.5l-6.3-3.9a1.72 1.72 0 0 0-1.7 0l-10.3 6c-.5.2-.9.8-.9 1.4v6.6c0 .5.4 1.2.8 1.5l6.3 3.9a1.72 1.72 0 0 0 1.7 0l10.3-6c.5-.3.9-1 .9-1.5Z"/> <path d="M10 21.9V14L2.1 9.1"/> <path d="m10 14 11.9-6.9"/> <path d="M14 19.8v-8.1"/> <path d="M18 17.5V9.4"/>'
     return out
 ICONS = load_icons()
 
@@ -62,7 +67,8 @@ T = {
   repo="Código fuente", repo_soon="El repositorio será público próximamente.",
   app_h="App: próximamente", app_p="Una app para el móvil con tus recetas sin conexión, la lista de la compra en el súper y el plan de la semana. Aún en diseño.",
   foot_credits="Créditos de las fotos", foot_credits_p="Fotos de comida libres (CC0 y dominio público) de Wikimedia Commons.",
-  foot_icons="Iconos: Lucide (licencia ISC).", foot_made="",
+  foot_icons="Iconos: Lucide (licencia ISC).",
+  about_h="Sobre el proyecto", about_p="Enlaces al código y a mi perfil.", dl_h="Descargas", dl=[("windows","monitor","Instalador de Windows"),("docker","container","Docker"),("app","smartphone","App")],
  ),
  "en": dict(
   lang="en", path="/en/", other="es", other_path="/", other_label="Español", other_short="ES",
@@ -99,7 +105,8 @@ T = {
   repo="Source code", repo_soon="The repository will be public soon.",
   app_h="App: coming soon", app_p="A mobile app with your recipes offline, the shopping list at the supermarket and the week's plan. Still being designed.",
   foot_credits="Photo credits", foot_credits_p="Free food photos (CC0 and public domain) from Wikimedia Commons.",
-  foot_icons="Icons: Lucide (ISC licence).", foot_made="",
+  foot_icons="Icons: Lucide (ISC licence).",
+  about_h="About the project", about_p="Links to the code and my profile.", dl_h="Downloads", dl=[("windows","monitor","Windows installer"),("docker","container","Docker"),("app","smartphone","App")],
  ),
 }
 
@@ -126,6 +133,14 @@ def page(k):
     stack = "\n".join(f"<li><strong>{e(a)}</strong><span>{e(b)}</span></li>" for a, b in t["stack"])
     repo = (f'<a class="btn" href="{e(CFG["repo_url"])}" rel="noopener">{e(t["repo"])} {ic("external-link")}</a>'
             if CFG["repo_public"] else f'<p class="muted">{ic("lock")} {e(t["repo_soon"])}</p>')
+    links = [("linkedin", "LinkedIn", CFG["profiles"]["linkedin"]), ("github", "GitHub", CFG["profiles"]["github"])]
+    if CFG["repo_public"]: links.append(("github", t["repo"], CFG["repo_url"]))
+    about = " ".join(f'<a class="btn" href="{e(u)}" rel="noopener">{ic(i)} {e(n)}</a>' for i, n, u in links)
+    dls = " ".join(
+        (f'<a class="btn" href="{e(CFG["downloads"][key])}" rel="noopener">{ic(i)} {e(n)} {ic("download")}</a>' if CFG.get("downloads", {}).get(key)
+         else f'<span class="btn dis" aria-disabled="true">{ic(i)} {e(n)} <span class="badge b-soon">{e(t["soon"])}</span></span>')
+        for key, i, n in t["dl"])
+    demo1 = f'<a class="btn primary" href="{e(CFG["demo_url"])}" rel="noopener">{e(t["cta_demo"])} {ic("arrow-right")}</a>' if CFG["demo_url"] else ""
     url = SITE + t["path"]; credits = "/creditos/" if k == "es" else "/en/credits/"
     return f"""<!doctype html>
 <html lang="{t['lang']}">
@@ -179,8 +194,8 @@ def page(k):
     <p class="kicker">v{VERSION} · self-hosted</p>
     <h1>{e(t['claim'])}</h1>
     <p class="lead">{e(t['sub'])}</p>
-    <p class="ctas"><a class="btn primary" href="{e(CFG['demo_url'])}" rel="noopener">{e(t['cta_demo'])} {ic('arrow-right')}</a><a class="btn" href="#funciones">{e(t['cta_feat'])}</a></p>
-    <p class="muted small">{e(t['demo_note'])}</p>
+    <p class="ctas">{demo1}<a class="btn" href="#funciones">{e(t['cta_feat'])}</a></p>
+    {f'<p class="muted small">{e(t["demo_note"])}</p>' if CFG['demo_url'] else ''}
   </div>
   <div class="shots">
     <div class="frame desk">{pic('hero', t['hero_alt'], 1200, 750, eager=True, sizes='(max-width: 900px) 92vw, 720px', small=(720,))}</div>
@@ -202,11 +217,11 @@ def page(k):
 {mob}
   </div>
 </section>
-<section id="demo" class="wrap sec band">
+{f'''<section id="demo" class="wrap sec band">
   <div><h2>{e(t['demo_h'])}</h2><p>{e(t['demo_p'])}</p></div>
   <p class="ctas"><a class="btn primary" href="{e(CFG['demo_url'])}" rel="noopener">{e(t['cta_demo'])} {ic('external-link')}</a></p>
 </section>
-<section id="stack" class="wrap sec">
+''' if CFG['demo_url'] else ''}<section id="stack" class="wrap sec">
   <h2>{e(t['stack_h'])}</h2><p class="muted">{e(t['stack_p'])}</p>
   <ul class="stack">
 {stack}
@@ -218,8 +233,10 @@ def page(k):
 </section>
 </main>
 <footer class="foot"><div class="wrap">
+  <div class="foot-cols"><div><h2 class="h3">{e(t['about_h'])}</h2><p class="links">{about}</p></div>
+  <div><h2 class="h3">{e(t['dl_h'])}</h2><p class="links">{dls}</p></div></div>
   <p><a href="{credits}">{ic('camera')} {e(t['foot_credits'])}</a> — {e(t['foot_credits_p'])}</p>
-  <p class="muted small">{e(t['foot_icons'])}{e(t['foot_made'])} · <a href="{t['other_path']}" hreflang="{t['other']}" lang="{o['lang']}">{e(t['other_label'])}</a></p>
+  <p class="muted small">{e(t['foot_icons'])} · <a href="{t['other_path']}" hreflang="{t['other']}" lang="{o['lang']}">{e(t['other_label'])}</a></p>
 </div></footer>
 </body>
 </html>

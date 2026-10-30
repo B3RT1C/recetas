@@ -1,6 +1,15 @@
 {
   "site_url": "https://recetario-c.pages.dev",
-  "demo_url": "https://recetario-c-demo.pages.dev/",
-  "repo_public": false,
-  "repo_url": "https://github.com/OWNER/recetas-web-v2"
+  "demo_url": "",
+  "repo_public": true,
+  "repo_url": "https://github.com/B3RT1C/recetas-web",
+  "profiles": {
+    "linkedin": "https://www.linkedin.com/in/albertopn",
+    "github": "https://github.com/B3RT1C"
+  },
+  "downloads": {
+    "windows": "",
+    "docker": "",
+    "app": ""
+  }
 }
