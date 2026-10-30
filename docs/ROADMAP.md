@@ -1,6 +1,6 @@
 # Hoja de ruta
 
-Estado: la **Fase 2** (v2.1.0) está cerrada. Lo de abajo es especificación, **no está implementado**.
+Estado: la **Fase 2** está cerrada (v2.1.0, correcciones en v2.1.1) y la **landing** está hecha. Lo de abajo es especificación, **no está implementado**, salvo donde se indique.
 
 ## Backlog sin fase
 
@@ -9,6 +9,61 @@ Vista alternativa del recetario en cuadrícula de portadas (foto o fotograma del
 con reproducción del vídeo local al abrir, filtros actuales reutilizados y navegación con teclado.
 **Estimación:** 1–1,5 días (componente de cuadrícula + carga diferida de portadas + tests de accesibilidad y capturas).
 No requiere cambios de esquema.
+
+## v2.1.2 — Portadas y cuadrícula
+
+1. **Cuadrícula**: el hueco bajo el título se rellena con una línea de metadatos pequeña (tiempo · €/ración); si no hay datos,
+   la tarjeta ajusta su altura al título.
+2. **Portadas con datos reales**
+   - Por defecto, la miniatura original del post/reel si la fuente la ofrece; si no, un fotograma de ffmpeg hacia el segundo 1,
+     saltando fotogramas negros.
+   - `object-fit: cover`; los reels 9:16 se recortan centrados o se muestran sobre un fondo desenfocado.
+3. **Selector de portada** en el editor de la receta:
+   - miniatura original (por defecto);
+   - fotograma del vídeo elegido con un deslizador;
+   - foto propia subida;
+   - foto genérica de la biblioteca libre CC0.
+
+   Valor por defecto global en **Ajustes** (original, fotograma o genérica). Se guarda `cover_source` por receta y una
+   portada elegida a mano **nunca** se sobrescribe al reimportar.
+
+## Landing — aprobada y hecha
+
+Página de presentación estática bilingüe en `landing/` (ES en `/`, EN en `/en/`), lista para Cloudflare Pages sin paso de
+compilación. Ver `landing/README.md`.
+
+## Fase 4 — Versión pública *local-first* (aprobada, en este orden)
+
+| Paso | Contenido | Estimación |
+|---|---|---|
+| **L0** | Capa de datos abstracta: un único frontend y compilaciones para pública, local y app. | 3 días |
+| **L1** | SQLite WASM sobre OPFS con el mismo esquema y migraciones; alternativa IndexedDB. | 4 días |
+| **L2** | BYOK: clave cifrada en local con frase de paso; Ollama/LM Studio en localhost (documentar `OLLAMA_ORIGINS`); WebLLM más adelante. | 3 días |
+| **L3** | Importar pegando texto o subiendo un vídeo; proxy opcional en un Worker con lista de dominios permitidos y límite de peticiones. | 2 días |
+| **L4** | Banner persistente «Descarga la versión local» (descartable por sesión); guías de instalación para Windows y Docker (Dockerfile y compose); hueco para la app. | 2 días |
+| **L5** | Exportar/importar en un clic con el formato v2; duplicados por `source_url` o, si no, por título + ingredientes normalizados; vista previa y nada de sobrescrituras silenciosas. | 3 días |
+| **L6** | Transferencia directa: `fetch` a localhost (CORS + cabecera Private Network Access) y, en la LAN, `window.open` de `http://IP:8088/importar` con `postMessage` y código de emparejamiento de 6 dígitos; alternativa con fichero. | 3 días |
+| **L7** | Registro central `features.json` (función → pública/local/app), una insignia reutilizable «Local» con candado y un aviso («Disponible en la versión local / app» con *Descargar* y *Exportar mis datos*). Contador opcional, solo local, de clics en funciones bloqueadas; sin telemetría. | 2 días |
+
+### Extras
+
+| Paso | Contenido | Estimación |
+|---|---|---|
+| **L8** | Copias de seguridad: recordatorio configurable cada N días para exportar, `navigator.storage.persist()` y escritura automática en un fichero o carpeta elegidos con la File System Access API cuando el navegador la admita. | 2 días |
+| **L9** | Recetas de ejemplo 100 % funcionales (planificador, compra, precios, estadísticas) con las fotos CC0; marca `is_sample`; «Quitar recetas de ejemplo» y restaurar en un clic desde Ajustes; fuera de las estadísticas reales salvo que el usuario las use; la exportación pregunta si incluirlas. | 2 días |
+| **L10** | Recorrido inicial breve y omitible (3–4 pasos) y enlace `?demo=1` desde la landing que abre la versión pública con el recorrido. | 1 día |
+
+**Total aproximado:** 27 días (L0–L7: 22; extras: 5).
+
+### Riesgos
+
+- **OPFS y Safari**: soporte y cuotas desiguales (sobre todo en iOS y en ventanas privadas); hace falta la alternativa
+  IndexedDB y probar en Safari real antes de dar L1 por cerrado.
+- **Private Network Access**: Chrome está cambiando cómo se permiten las peticiones de una web pública a localhost/LAN
+  (preflight, permisos); L6 debe tener siempre la alternativa con fichero y revisarse con cada versión de Chrome.
+- **XSS y la clave BYOK**: cualquier XSS en la versión pública podría leer la clave descifrada en memoria. Mitigar con CSP
+  estricta sin `unsafe-inline`, sin HTML de terceros sin sanear, descifrado solo en el momento de usarla y opción de no
+  recordarla.
 
 ## Fase 3 — Precios
 
