@@ -22,3 +22,4 @@ setup-code.txt
 !.env.example
 dist/
 COMMIT
+docs/screenshots/*-private.png
