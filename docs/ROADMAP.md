@@ -27,6 +27,22 @@ No requiere cambios de esquema.
    Valor por defecto global en **Ajustes** (original, fotograma o genérica). Se guarda `cover_source` por receta y una
    portada elegida a mano **nunca** se sobrescribe al reimportar.
 
+## v2.2 — Pasos en paralelo
+
+- Cada paso tiene `depends_on[]` (ids de pasos anteriores): los pasos forman un **grafo acíclico (DAG)**. Sin dependencias
+  explícitas, la receta es una **cadena lineal** (cada paso depende del anterior), como ahora.
+- **Dos vistas**: lista ordenada (por defecto, orden topológico estable) y **árbol/grafo** para el trabajo en paralelo,
+  p. ej. «cuece la pasta» ∥ «haz la salsa» → «mezcla».
+- La **IA infiere** las dependencias al importar o transcribir; se **editan a mano** en el editor (casillas «después de…»),
+  con validación de ciclos.
+- Ideas: resaltar la **ruta crítica** y el **tiempo total estimado** (suma por la ruta más larga, no de todos los pasos);
+  **modo cocina** paso a paso con **temporizadores por rama**.
+- **Migración**: los pasos existentes pasan a cadena lineal (`depends_on = [paso anterior]`); nada cambia para el usuario.
+- **API y MCP**: `depends_on` en lectura/escritura de recetas (`GET/PUT /api/v1/recipes/{id}`), validación de DAG en el servidor
+  y herramienta MCP `recipe_step_graph` (orden, ramas, ruta crítica y tiempo total).
+- **Estimación aproximada:** 5–7 días (modelo + migración 1; validación, ruta crítica y API/MCP 1; inferencia con IA 1–1,5;
+  editor 1–1,5; vista de grafo accesible 1–1,5; modo cocina por ramas 1).
+
 ## Landing — aprobada y hecha
 
 Página de presentación estática bilingüe en `landing/` (ES en `/`, EN en `/en/`), lista para Cloudflare Pages sin paso de
