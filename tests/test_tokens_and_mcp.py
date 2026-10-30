@@ -13,6 +13,10 @@ from mcp.client.streamable_http import streamable_http_client
 from app.main import create_app
 
 
+GAZPACHO = {"titulo": "Gazpacho MCP", "ingredientes": [{"nombre": "tomate", "cantidad_normal": "1 kg"}],
+            "pasos": [{"texto": "Tritura todo."}]}
+
+
 def mk_token(client, scopes=("read", "write")):
     r = client.post("/api/tokens", json={"name": "agente", "scopes": list(scopes)})
     assert r.status_code == 201
@@ -39,14 +43,14 @@ def test_v1_requires_token_and_scopes(client):
     assert client.get("/api/v1/recipes/1", headers=h).json()["id"] == 1
     assert client.post("/api/v1/recipes", json={"titulo": "x"}, headers=h).status_code == 401
     rw = {"Authorization": f"Bearer {mk_token(client)['token']}"}
-    assert client.post("/api/v1/recipes", json={"titulo": "Desde un agente"}, headers=rw).status_code == 201
+    assert client.post("/api/v1/recipes", json={**GAZPACHO, "titulo": "Desde un agente"}, headers=rw).status_code == 201
     assert "etiquetas" in client.get("/api/v1/collections", headers=rw).json()
 
 
 def test_v1_import_url(client):
     rw = {"Authorization": f"Bearer {mk_token(client)['token']}"}
     url = "https://www.instagram.com/reel/MOCKtorti02/"
-    assert client.post("/api/v1/recipes/import-url", json={"url": "https://example.com/x"}, headers=rw).status_code == 400
+    assert client.post("/api/v1/recipes/import-url", json={"url": "https://example.com/x"}, headers=rw).status_code == 422
     r = client.post("/api/v1/recipes/import-url", json={"url": url}, headers=rw)
     assert r.status_code == 201 and r.json()["titulo"].startswith("Tortilla de patatas")
     assert client.post("/api/v1/recipes/import-url", json={"url": url}, headers=rw).status_code == 409
@@ -109,7 +113,7 @@ def test_mcp_tools_with_sdk_client(server, services):
         assert rec["titulo"] == "Brochetas de kebab con tortillas"
         cols = _payload(await c.call_tool("list_collections", {}))
         assert cols["tipos"]["solo_video"] == 73
-        new = _payload(await c.call_tool("import_recipe", {"recipe_json": json.dumps({"titulo": "Gazpacho MCP"})}))
+        new = _payload(await c.call_tool("import_recipe", {"recipe_json": json.dumps(GAZPACHO)}))
         return new
 
     new = anyio.run(_mcp, server, rw, flow)

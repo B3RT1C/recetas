@@ -16,6 +16,7 @@ from mcp.server.mcpserver import Context, MCPServer
 from .models import RecipeIn
 from .services.instagram import InstagramError
 from .services.recipes import DuplicateError
+from .services.validator import ImportValidationError, check_recipe, classify_error
 
 
 def _summary(r: dict) -> dict:
@@ -72,22 +73,30 @@ def build_mcp(services: Any, stdio_token: Optional[dict] = None) -> MCPServer:
                 "etiquetas": services.recipes.tags()}
 
     @mcp.tool()
-    def import_recipe(ctx: Context, recipe_json: str = "", instagram_url: str = "") -> dict:
+    def import_recipe(ctx: Context, recipe_json: str = "", instagram_url: str = "", save_as_draft: bool = False) -> dict:
         """Importa una receta: o bien un JSON con el esquema del recetario (titulo, ingredientes, pasos...),
-        o bien la URL de una publicación de Instagram (requiere Instagram conectado en la web). Necesita scope 'write'."""
+        o bien la URL de una publicación de Instagram (requiere Instagram conectado en la web). Necesita scope 'write'.
+        Si falla, el error es un JSON {ok, code, reason_es, reason_en, details, salvageable}; con save_as_draft
+        una publicación aprovechable se guarda como borrador (details.draft_id)."""
         require(ctx, "write")
         try:
             if instagram_url:
-                r = services.importer.import_url(instagram_url)
+                r = services.importer.import_url(instagram_url, save_as_draft=save_as_draft)
             elif recipe_json:
                 payload = RecipeIn.model_validate(json.loads(recipe_json)).model_dump(exclude_none=True)
+                if payload.get("tipo", "receta") != "solo_video":
+                    res = check_recipe(payload)
+                    if not res["ok"]:
+                        raise ImportValidationError(res)
                 r = services.recipes.create(payload, origen="mcp")
             else:
                 raise ValueError("Indica recipe_json o instagram_url")
         except DuplicateError as e:
             raise ValueError(f"Ya existe una receta con el código {e}") from None
+        except ImportValidationError as e:
+            raise ToolError(json.dumps(e.result, ensure_ascii=False)) from None
         except InstagramError as e:
-            raise ValueError(str(e)) from None
+            raise ToolError(json.dumps(classify_error(e), ensure_ascii=False)) from None
         return _summary(r)
 
     return mcp
