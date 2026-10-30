@@ -494,6 +494,8 @@ def create_app(services: Optional[Services] = None) -> FastAPI:
     register(app, svc, get_or_404)
     from .api_access import register as register_access
     register_access(app, svc)
+    from .api_prefs import register as register_prefs
+    register_prefs(app, svc)
 
     # ------------------------------------------------------------ static + media + MCP
     app.mount("/mcp", BearerAuthASGI(mcp_app, lambda t: svc.tokens.verify(t, "read")))
