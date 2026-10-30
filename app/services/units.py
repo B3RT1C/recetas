@@ -47,6 +47,17 @@ def strip_accents(s: str) -> str:
     return "".join(c for c in unicodedata.normalize("NFD", s) if unicodedata.category(c) != "Mn")
 
 
+SIZE_WORDS = {"l", "m", "s", "xl", "xxl", "grande", "grandes", "mediano", "mediana", "medianos", "medianas",
+              "pequeno", "pequena", "pequenos", "pequenas", "pequeño", "pequeña", "pequeños", "pequeñas"}
+
+# count units that read better pluralised ("2 dientes", not "2 diente")
+COUNT_PLURALS = {"diente": "dientes", "loncha": "lonchas", "pizca": "pizcas", "lamina": "láminas",
+                 "lámina": "láminas", "hoja": "hojas", "rodaja": "rodajas", "rama": "ramas", "ramita": "ramitas",
+                 "puñado": "puñados", "punado": "puñados", "taza": "tazas", "vaso": "vasos", "lata": "latas",
+                 "sobre": "sobres", "filete": "filetes", "trozo": "trozos", "cabeza": "cabezas", "chorrito": "chorritos",
+                 "hebra": "hebras", "bola": "bolas", "paquete": "paquetes", "tarro": "tarros", "manojo": "manojos"}
+
+
 def norm_name(name: str) -> str:
     """Aggregation key: lowercase, no accents, no prep words or parentheses, simple singular."""
     s = strip_accents((name or "").lower())
@@ -55,6 +66,8 @@ def norm_name(name: str) -> str:
     s = re.sub(r"[^a-z0-9ñ ]+", " ", s)
     words = []
     for w in s.split():
+        if w in SIZE_WORDS:  # "huevo L" and "huevo grande" are the same item
+            continue
         if len(w) > 4 and w.endswith("es") and w[-3] in "lnrdjy":
             w = w[:-2]
         elif len(w) > 3 and w.endswith("s") and not w.endswith("ss"):
@@ -184,7 +197,11 @@ def display(qty: Optional[float], unit: str) -> str:
     elif u == "ml" and qty >= 1000:
         qty, u = qty / 1000, "l"
     num = (f"{qty:.2f}".rstrip("0").rstrip(".").replace(".", ",")) if u in ("kg", "l") else fmt_number(qty)
-    return num if u == "ud" else f"{num} {u}"
+    if u == "ud":
+        return num
+    if qty > 1 and u in COUNT_PLURALS:
+        u = COUNT_PLURALS[u]
+    return f"{num} {u}"
 
 
 def scale_ingredient(ing: dict, factor: float) -> dict:

@@ -36,7 +36,8 @@ CATEGORY_HINTS: list[tuple[str, str]] = [
 def guess_category_name(name: str) -> str:
     n = U.strip_accents(name.lower())
     for cat, rx in CATEGORY_HINTS:
-        if re.search(rx, n):
+        # word-start boundary: "repollo" must not hit "pollo", "salmorejo" not "sal"
+        if re.search(rf"\b(?:{rx})", n):
             return cat
     return "Otros"
 
