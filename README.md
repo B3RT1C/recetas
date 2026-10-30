@@ -4,11 +4,11 @@
 <h1 align="center">Recetario C</h1>
 <p align="center"><b>Your saved Instagram recipes, turned into a self-hosted, local-first cookbook.</b></p>
 <p align="center">
-  <img alt="version" src="https://img.shields.io/badge/version-v2.1.3-c2410c">
+  <img alt="version" src="https://img.shields.io/badge/version-v2.1.4-c2410c">
   <img alt="Python" src="https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white">
   <img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white">
   <img alt="SQLite" src="https://img.shields.io/badge/SQLite-003B57?logo=sqlite&logoColor=white">
-  <img alt="tests" src="https://img.shields.io/badge/tests-178%20passing-2ea44f">
+  <img alt="tests" src="https://img.shields.io/badge/tests-190%20passing-2ea44f">
   <img alt="license" src="https://img.shields.io/badge/license-pending-lightgrey">
   <img alt="self-hosted" src="https://img.shields.io/badge/self--hosted-6d28d9">
   <img alt="local-first" src="https://img.shields.io/badge/local--first-0e7490">
@@ -74,6 +74,7 @@ Environment variables, first admin, agents/MCP setup, security notes: **[docs/CO
 
 - [x] v2.1.2 – covers and grid view
 - [x] v2.1.3 – view selector
+- [x] v2.1.4 – roomier interface (8 px spacing, grouped header, density option)
 - [x] Bilingual landing page
 - [ ] v2.2 – parallel recipe steps (`depends_on` DAG)
 - [ ] Phase 4 – public local-first edition (SQLite WASM/OPFS, BYOK, export/import, LAN transfer)
