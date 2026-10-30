@@ -10,7 +10,9 @@
     status = status || 200;
     return new Response(status === 204 ? null : JSON.stringify(body), { status: status, headers: { "Content-Type": "application/json" } });
   }
-  var RO = { detail: "Demo: los cambios no se guardan. Instálalo en tu equipo para usarlo de verdad." };
+  var EN = (function () { try { return localStorage.getItem("lang") === "en"; } catch (e) { return false; } })();
+  var RO = { detail: EN ? "Demo: changes are not saved. Install it on your own computer to use it for real."
+                        : "Demo: los cambios no se guardan. Instálalo en tu equipo para usarlo de verdad." };
 
   // shift every YYYY-MM-DD in the recorded week so the planner always shows the current (or requested) week
   function iso(d) { return d.toISOString().slice(0, 10); }
@@ -50,7 +52,7 @@
         return res(G[path + "?raciones=" + n] || RO, G[path + "?raciones=" + n] ? 200 : 404);
       }
       var hit = G[path + u.search] || G[path];
-      return hit !== undefined ? res(clone(hit)) : res({ detail: "No disponible en la demo" }, 404);
+      return hit !== undefined ? res(clone(hit)) : res({ detail: EN ? "Not available in the demo" : "No disponible en la demo" }, 404);
     }
     var L = G["/api/compra/listas/" + D.lista];
     if ((m = path.match(/^\/api\/compra\/items\/(\d+)$/)) && L) {

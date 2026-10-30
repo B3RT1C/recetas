@@ -52,6 +52,8 @@ def test_live_demo_and_carousel_strict_csp_and_sample_data_only():
     assert not re.search(r"<script(?![^>]*\bsrc=)", idx)
     for f in (ROOT / "static/assets").iterdir():
         assert (demo / "assets" / f.name).read_bytes() == f.read_bytes()
+    for f in (ROOT / "scripts/landing_demo").iterdir():
+        assert (demo / f.name).read_bytes() == f.read_bytes(), f"stale demo/{f.name}: run build_landing_demo.py"
     api = json.loads((demo / "data/api.json").read_text())
     raw = json.dumps(api)
     assert api["get"]["/api/auth/me"]["usuario"] == "demo"
