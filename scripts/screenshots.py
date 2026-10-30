@@ -52,6 +52,8 @@ def main():
                 pg.goto(f"{a.base}/#/ajustes"); pg.wait_for_selector("#aiF"); pg.wait_for_timeout(300); shot("ajustes")
                 pg.wait_for_selector("#s-estado .stats"); pg.evaluate("document.querySelector('#s-estado').scrollIntoView()")
                 pg.wait_for_timeout(300); shot("estado")
+                pg.evaluate("document.querySelector('#s-acc').scrollIntoView()"); pg.wait_for_selector("#s-acc form")
+                pg.click("#s-acc [data-qr]"); pg.wait_for_timeout(400); shot("acceso")
                 pg.goto(f"{a.base}/#/planificador"); pg.wait_for_selector(".week"); pg.wait_for_timeout(400); shot("planificador")
                 pg.goto(f"{a.base}/#/compra"); pg.wait_for_selector(".shop"); pg.wait_for_timeout(400); shot("compra")
                 ctx.close()
