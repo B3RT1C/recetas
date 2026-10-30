@@ -8,6 +8,9 @@ L = Path(__file__).resolve().parent.parent / "landing"
 cfg = json.loads((L / "site.config.json").read_text())
 ALLOWED = {urlparse(cfg["site_url"]).netloc, urlparse(cfg["demo_url"]).netloc,
            "commons.wikimedia.org", "creativecommons.org", "www.sitemaps.org", "www.w3.org"}
+ALLOWED |= {urlparse(u).netloc for u in cfg.get("profiles", {}).values()}
+ALLOWED |= {urlparse(u).netloc for u in cfg.get("downloads", {}).values() if u}
+ALLOWED.discard("")
 if cfg.get("repo_public"):
     ALLOWED.add(urlparse(cfg["repo_url"]).netloc)
 
