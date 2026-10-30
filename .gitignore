@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv*/
+data/*.db
+data/*.db-*
+media/
+videos/
+*.session
+secret.key
+.recetas-web/
+dist/
