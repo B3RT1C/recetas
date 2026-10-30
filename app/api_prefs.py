@@ -16,7 +16,8 @@ VIEWS = ("una", "compacta", "miniatura", "cuadricula")
 LEGACY_VIEWS = {"info": "miniatura", "detalle": "miniatura"}
 THUMBS = ("portada", "icono")
 THUMBS_KEY = "lista:miniaturas"
-DEFAULT = {"vista": "cuadricula", "densidad": 4, "miniaturas": "portada"}
+DEFAULT = {"vista": "cuadricula", "densidad": 4, "miniaturas": "portada", "interfaz": "comoda"}
+UI_DENSITIES = ("comoda", "compacta")
 
 
 def normalize_view(v) -> Optional[str]:
@@ -40,6 +41,7 @@ class ListPrefsIn(BaseModel):
     vista: Optional[Literal["una", "compacta", "miniatura", "cuadricula", "info", "detalle"]] = None
     densidad: Optional[int] = Field(default=None, ge=2, le=8)
     miniaturas: Optional[Literal["portada", "icono"]] = None  # icono genérico o miniatura del vídeo/portada
+    interfaz: Optional[Literal["comoda", "compacta"]] = None  # densidad de la interfaz (cada dispositivo puede tener la suya)
 
 
 def _key(request: Request) -> str:
@@ -57,6 +59,8 @@ def register(app: FastAPI, svc) -> None:
             out["vista"] = v
         if isinstance(saved.get("densidad"), int) and 2 <= saved["densidad"] <= 8:
             out["densidad"] = saved["densidad"]
+        if saved.get("interfaz") in UI_DENSITIES:
+            out["interfaz"] = saved["interfaz"]
         out["miniaturas"] = get_thumbs(db)
         return out
 
@@ -67,11 +71,12 @@ def register(app: FastAPI, svc) -> None:
 
     @app.put("/api/preferencias/lista", tags=["ajustes"])
     def put_list_prefs(body: ListPrefsIn, request: Request):
-        if body.vista is None and body.densidad is None and body.miniaturas is None:
+        if body.vista is None and body.densidad is None and body.miniaturas is None and body.interfaz is None:
             raise HTTPException(422, "Nada que guardar")
         cur = read(request)
         user = {"vista": normalize_view(body.vista) if body.vista else cur["vista"],
-                "densidad": body.densidad if body.densidad is not None else cur["densidad"]}
+                "densidad": body.densidad if body.densidad is not None else cur["densidad"],
+                "interfaz": body.interfaz or cur["interfaz"]}
         db.set_setting(_key(request), user)
         if body.miniaturas:
             set_thumbs(db, body.miniaturas)

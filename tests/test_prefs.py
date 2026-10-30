@@ -6,10 +6,10 @@ def test_prefs_require_login(anon):
 
 
 def test_prefs_default_and_roundtrip(client):
-    assert client.get("/api/preferencias/lista").json() == {"vista": "cuadricula", "densidad": 4, "miniaturas": "portada"}
+    assert client.get("/api/preferencias/lista").json() == {"vista": "cuadricula", "densidad": 4, "miniaturas": "portada", "interfaz": "comoda"}
     r = client.put("/api/preferencias/lista", json={"vista": "compacta", "densidad": 6})
-    assert r.status_code == 200 and r.json() == {"vista": "compacta", "densidad": 6, "miniaturas": "portada"}
-    assert client.get("/api/preferencias/lista").json() == {"vista": "compacta", "densidad": 6, "miniaturas": "portada"}
+    assert r.status_code == 200 and r.json() == {"vista": "compacta", "densidad": 6, "miniaturas": "portada", "interfaz": "comoda"}
+    assert client.get("/api/preferencias/lista").json() == {"vista": "compacta", "densidad": 6, "miniaturas": "portada", "interfaz": "comoda"}
 
 
 def test_prefs_validation(client):
@@ -26,7 +26,7 @@ def test_prefs_csrf(client):
 
 def test_prefs_ignore_corrupt_stored_value(client, services):
     services.db.set_setting("prefs:admin:lista", {"vista": "rara", "densidad": 99})
-    assert client.get("/api/preferencias/lista").json() == {"vista": "cuadricula", "densidad": 4, "miniaturas": "portada"}
+    assert client.get("/api/preferencias/lista").json() == {"vista": "cuadricula", "densidad": 4, "miniaturas": "portada", "interfaz": "comoda"}
 
 
 @pytest.mark.parametrize("old,new", [("info", "miniatura"), ("detalle", "miniatura"), ("una", "una"), ("cuadricula", "cuadricula")])
