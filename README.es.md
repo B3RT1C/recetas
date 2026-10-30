@@ -4,11 +4,11 @@
 <h1 align="center">Recetario C</h1>
 <p align="center"><b>Tus recetas guardadas de Instagram convertidas en un recetario autoalojado y local-first.</b></p>
 <p align="center">
-  <img alt="version" src="https://img.shields.io/badge/version-v2.1.4-c2410c">
+  <img alt="version" src="https://img.shields.io/badge/version-v2.1.5-c2410c">
   <img alt="Python" src="https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white">
   <img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white">
   <img alt="SQLite" src="https://img.shields.io/badge/SQLite-003B57?logo=sqlite&logoColor=white">
-  <img alt="tests" src="https://img.shields.io/badge/tests-192%20passing-2ea44f">
+  <img alt="tests" src="https://img.shields.io/badge/tests-202%20passing-2ea44f">
   <img alt="license" src="https://img.shields.io/badge/licencia-pendiente-lightgrey">
   <img alt="self-hosted" src="https://img.shields.io/badge/autoalojado-6d28d9">
   <img alt="local-first" src="https://img.shields.io/badge/local--first-0e7490">
@@ -75,6 +75,7 @@ Variables de entorno, primer administrador, agentes/MCP y seguridad: **[docs/CON
 - [x] v2.1.2 – portadas y cuadrícula
 - [x] v2.1.3 – selector de vistas
 - [x] v2.1.4 – interfaz más amplia (espaciado de 8 px, cabecera agrupada, densidad)
+- [x] v2.1.5 – corrección: recursos con versión en la caché, planificador en móvil
 - [x] Landing bilingüe
 - [ ] v2.2 – pasos en paralelo (DAG con `depends_on`)
 - [ ] Fase 4 – versión pública local-first (SQLite WASM/OPFS, BYOK, exportar/importar, transferencia en LAN)
