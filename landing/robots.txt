@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+Disallow: /docs/
+Sitemap: https://recetario-c.pages.dev/sitemap.xml
