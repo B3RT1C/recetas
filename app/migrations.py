@@ -72,7 +72,16 @@ def m2_price_history(c: sqlite3.Connection) -> None:
     """)
 
 
-MIGRATIONS: list[Callable[[sqlite3.Connection], None]] = [m1_phase2, m2_price_history]
+def m3_cover_source(c: sqlite3.Connection) -> None:
+    """v2.1.2: per-recipe cover choice. NULL = follow the global default (Ajustes).
+
+    cover_source: original | frame | upload | generic; cover_param: frame seconds, library id or upload path.
+    Imports/reimports never write these columns, so a manual choice survives a reimport."""
+    _add_col(c, "recipes", "cover_source", "TEXT CHECK (cover_source IN ('original','frame','upload','generic'))")
+    _add_col(c, "recipes", "cover_param", "TEXT")
+
+
+MIGRATIONS: list[Callable[[sqlite3.Connection], None]] = [m1_phase2, m2_price_history, m3_cover_source]
 LATEST = len(MIGRATIONS)
 
 

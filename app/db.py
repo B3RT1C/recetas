@@ -18,7 +18,7 @@ from .services.tags import suggest_allergens, suggest_tags
 
 SHORTCODE_RE = re.compile(r"/(?:reel|reels|p|tv)/([A-Za-z0-9_-]+)")
 # Keys added by v2 on top of the legacy recetas.json schema (stripped by the legacy export).
-V2_KEYS = ("etiquetas", "foto", "video", "origen", "creado", "actualizado", "caption_original", "precios_estimados_ia",
+V2_KEYS = ("etiquetas", "foto", "video", "miniatura", "reimportado", "origen", "creado", "actualizado", "caption_original", "precios_estimados_ia",
            "alergenos", "nutricion", "favorito", "valoracion", "cocinado")
 # Recipe status: v1 "solo en vídeo" dishes are recipes still waiting to be transcribed.
 ESTADO_COMPLETA = "completa"

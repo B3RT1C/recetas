@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal, Optional
 
+from .api_covers import CoverIn
 from fastapi import Depends, FastAPI, File, Header, HTTPException, Query, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
@@ -90,6 +91,7 @@ class CookiesIn(BaseModel):
 class ImportItem(BaseModel):
     shortcode: str = Field(pattern=r"^[A-Za-z0-9_-]{5,40}$")
     contenido: Literal["video", "foto", "ambos"] = "ambos"
+    reimportar: bool = False
 
 
 class ImportIn(BaseModel):
@@ -496,6 +498,23 @@ def create_app(services: Optional[Services] = None) -> FastAPI:
     register_access(app, svc)
     from .api_prefs import register as register_prefs
     register_prefs(app, svc)
+    from .api_covers import register as register_covers
+    register_covers(app, svc, get_or_404)
+
+    @app.get("/api/v1/covers/library", tags=["api externa (token)"], dependencies=[read_dep])
+    def v1_cover_library():
+        from .services import covers
+        return covers.library()
+
+    @app.put("/api/v1/recipes/{rid}/cover", tags=["api externa (token)"], dependencies=[write_dep])
+    def v1_set_cover(rid: int, body: CoverIn):
+        """Same body as PUT /api/recipes/{rid}/portada: {fuente: original|frame|upload|generic|null, segundo, biblioteca}."""
+        from .services import covers
+        get_or_404(rid)
+        try:
+            return covers.choose(svc.recipes, rid, body.fuente, body.segundo, body.biblioteca)
+        except covers.CoverError as e:
+            raise HTTPException(422, str(e)) from None
 
     # ------------------------------------------------------------ static + media + MCP
     app.mount("/mcp", BearerAuthASGI(mcp_app, lambda t: svc.tokens.verify(t, "read")))

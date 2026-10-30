@@ -10,7 +10,7 @@ con reproducción del vídeo local al abrir, filtros actuales reutilizados y nav
 **Estimación:** 1–1,5 días (componente de cuadrícula + carga diferida de portadas + tests de accesibilidad y capturas).
 No requiere cambios de esquema.
 
-## v2.1.2 — Portadas y cuadrícula
+## v2.1.2 — Portadas y cuadrícula (hecho)
 
 1. **Cuadrícula**: el hueco bajo el título se rellena con una línea de metadatos pequeña (tiempo · €/ración); si no hay datos,
    la tarjeta ajusta su altura al título.

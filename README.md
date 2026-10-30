@@ -85,7 +85,8 @@ SQLite: recipes (documento JSON + columnas indexadas), drafts, jobs, tokens, set
   etiquetas; modo selección + exportar seleccionadas.
 - **Detalle**: valoración, favorito, escalado de raciones (redondeo inteligente), temporizadores por paso, vídeo local o
   iframe de Instagram, registro "lo he cocinado", imprimir/PDF, **Modo cocina** (pantalla completa, Wake Lock), traducir con IA.
-- **Añadir/editar**: ingredientes y pasos estructurados, pegar caption y parsear, subir foto/vídeo (validados por tipo y tamaño).
+- **Añadir/editar**: ingredientes y pasos estructurados, pegar caption y parsear, subir foto/vídeo (validados por tipo y tamaño),
+  **portada**: miniatura original, fotograma elegido con deslizador, foto subida (sin EXIF) o foto genérica libre.
 - **Importar** (asistente de 5 pasos, independiente de la fuente): conectar (usuario + contraseña con 2FA, o cookie
   `sessionid`) → colección → publicaciones con miniatura y vídeo/foto/ambos → progreso → revisar borradores.
   Deduplicado por shortcode. La contraseña **nunca** se guarda: solo el archivo de sesión.
@@ -94,7 +95,7 @@ SQLite: recipes (documento JSON + columnas indexadas), drafts, jobs, tokens, set
 - **Compra**: varias listas, pasillos, agregado y conversión de unidades, despensa («ya lo tengo»), recurrentes,
   precios orientativos.
 - **Ajustes**: tema, idioma, **Acceso** (URLs, copiar, QR, cambiar dirección/puerto), **Estado**, **Conectar tu IA** (presets OpenAI, OpenRouter, Ollama, LM Studio…; "Probar
-  conexión"; clave cifrada, solo se muestran los 4 últimos caracteres), tokens de acceso, estado de Instagram, Acerca de.
+  conexión"; clave cifrada, solo se muestran los 4 últimos caracteres), tokens de acceso, estado de Instagram, portada por defecto, Acerca de.
 
 ## Acceso para agentes
 
@@ -106,7 +107,9 @@ REST (documentada en `/docs`):
 curl -H "Authorization: Bearer rct_..." "http://localhost:8088/api/v1/recipes?q=pollo"
 ```
 
-MCP (herramientas `search_recipes`, `get_recipe`, `list_collections`, `import_recipe`):
+Portadas: `GET /api/v1/covers/library`, `PUT /api/v1/recipes/{id}/cover` (`{"fuente": "generic", "biblioteca": "paella"}`).
+
+MCP (herramientas `search_recipes`, `get_recipe`, `list_collections`, `import_recipe`, `list_cover_library`, `set_recipe_cover`):
 
 ```jsonc
 // Cliente con streamable HTTP

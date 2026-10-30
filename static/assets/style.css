@@ -432,3 +432,25 @@ main:focus,main:focus-visible{outline:none}
 .grid.v-cuadricula .card .thumb{aspect-ratio:4/3}
 .v-cuadricula .card h3{line-height:1.25;min-height:2.5em}
 .card .tags .more{color:var(--muted)}
+/* v2.1.2 — grid meta line + covers. Reels (9:16) are centre-cropped with object-fit:cover at the
+   card's ratio: a blurred letterbox would shrink the dish to a narrow strip in 4:3 cards and
+   double the image work per card, while the dish in recipe reels is almost always centred. */
+.gmeta{margin:auto 0 0;font-size:.78rem;line-height:1.3;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:1.3em}
+.gmeta .ic{width:.9em;height:.9em;vertical-align:-.1em}
+.v-cuadricula .card .body{display:flex;flex-direction:column;gap:.3rem}
+.thumb img{object-fit:cover;object-position:50% 50%}
+.cover-wrap{display:grid;grid-template-columns:minmax(180px,260px) 1fr;gap:1rem;align-items:start}
+.cover-now{margin:0}.cover-now .thumb{aspect-ratio:4/3;border-radius:var(--radius);overflow:hidden}
+.cover-opts{border:0;padding:0;margin:0;display:grid;gap:.4rem}
+.cover-opt{display:flex;gap:.6rem;align-items:flex-start;padding:.5rem .7rem;border:1px solid var(--line);border-radius:calc(var(--radius) - 4px);cursor:pointer}
+.cover-opt span{display:grid;gap:.1rem}.cover-opt.off{opacity:.55;cursor:not-allowed}
+.cover-opt:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.cover-pane{margin-top:1rem;display:grid;gap:.5rem;max-width:520px}.cover-pane[hidden]{display:none}
+.frame-prev{aspect-ratio:4/3;border-radius:var(--radius);overflow:hidden;background:var(--surface-2)}
+.cover-pane input[type=range]{width:100%;accent-color:var(--accent)}
+.warn{color:var(--danger,#b42318)}
+.cover-lib{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:.6rem;max-width:none}
+.lib-item{display:grid;gap:.2rem;text-align:left;padding:.35rem;border:1px solid var(--line);border-radius:calc(var(--radius) - 4px);background:var(--surface);color:inherit;cursor:pointer;font:inherit}
+.lib-item img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:6px}.lib-item small{font-size:.68rem}
+.lib-item.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+@media (max-width:640px){.cover-wrap{grid-template-columns:1fr}}
