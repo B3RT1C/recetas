@@ -26,6 +26,7 @@ from .services.exporter import build_export
 from .services.importer import ImportService
 from .services.instagram import InstagramError, InstagramProvider, is_cdn_url, make_provider
 from .services.recipes import DuplicateError, RecipeService
+from .services.auth import AuthService
 from .services.secrets import SecretBox
 from .services.tokens import TokenService
 
@@ -43,6 +44,7 @@ class Services:
     importer: ImportService
     tokens: TokenService
     prices: Optional["PriceCache"] = None
+    auth: Optional[AuthService] = None
 
 
 def build_services(settings: Optional[Settings] = None, ig_provider: Optional[InstagramProvider] = None,
@@ -56,7 +58,7 @@ def build_services(settings: Optional[Settings] = None, ig_provider: Optional[In
     ig = ig_provider or make_provider(settings.ig_provider, settings.secret_dir)
     importer = ImportService(db, settings, recipes, ai, ig, delay_s=0 if settings.ig_provider == "mock" else import_delay)
     from .services.prices import PriceCache
-    return Services(settings, db, recipes, ai, ig, importer, TokenService(db), PriceCache(db))
+    return Services(settings, db, recipes, ai, ig, importer, TokenService(db), PriceCache(db), AuthService(db))
 
 
 # ---------------------------------------------------------------- request models
@@ -156,6 +158,9 @@ def create_app(services: Optional[Services] = None) -> FastAPI:
         if not r:
             raise HTTPException(404, "Receta no encontrada")
         return r
+
+    from .web_auth import install_auth
+    install_auth(app, svc)
 
     # ------------------------------------------------------------ meta
     @app.get("/api/health", tags=["meta"])
