@@ -27,6 +27,8 @@ class Settings:
     ig_provider: str = field(default_factory=lambda: os.environ.get("RECETAS_IG_PROVIDER", "instaloader"))
     max_photo_mb: int = field(default_factory=lambda: int(os.environ.get("RECETAS_MAX_PHOTO_MB", "10")))
     max_video_mb: int = field(default_factory=lambda: int(os.environ.get("RECETAS_MAX_VIDEO_MB", "300")))
+    # ffmpeg for video covers: full path or command name; empty/missing => covers fall back gracefully.
+    ffmpeg: str = field(default_factory=lambda: os.environ.get("RECETAS_FFMPEG", "ffmpeg"))
 
     @property
     def db_path(self) -> Path:

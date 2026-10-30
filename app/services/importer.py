@@ -123,6 +123,18 @@ class ImportService:
                 time.sleep(self.delay_s)
         job.estado = "cancelado" if job.cancelar else "terminado"
         job.terminado = now()
+        self._log_job(job)
+
+    def _log_job(self, job: Job) -> None:
+        """Persist a summary for the Estado panel (survives restarts)."""
+        errs = [{"shortcode": i.shortcode, "mensaje": i.mensaje} for i in job.items if i.estado == "error"][:50]
+        try:
+            self.db.execute("INSERT OR REPLACE INTO job_log(id,kind,estado,created,finished,total,ok,errores) "
+                            "VALUES(?,?,?,?,?,?,?,?)",
+                            (job.id, "importacion", job.estado, job.creado, job.terminado, len(job.items),
+                             sum(1 for i in job.items if i.estado == "ok"), json.dumps(errs, ensure_ascii=False)))
+        except Exception:  # never break an import because of the log
+            log.exception("job_log")
 
     def _import_one(self, job: Job, item: JobItem) -> None:
         post = self.provider.post(item.shortcode)

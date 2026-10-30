@@ -130,6 +130,10 @@ def is_whole(name: str, unit: str) -> bool:
     return c in ("ud", "diente", "lata", "sobre") or bool(WHOLE_RE.search(strip_accents((name or "").lower())))
 
 
+def _r(x: float) -> float:
+    return float(math.floor(x + 0.5))  # half up (Python's round() is banker's rounding)
+
+
 def round_qty(qty: Optional[float], unit: str, name: str = "") -> tuple[Optional[float], bool]:
     """Smart rounding. Returns (value, rounded?)."""
     if qty is None:
@@ -137,18 +141,18 @@ def round_qty(qty: Optional[float], unit: str, name: str = "") -> tuple[Optional
     u = canonical(1, unit, name)[1] if unit_kind(unit) == "count" else _key(unit)
     if unit_kind(unit) == "count":
         if re.search(r"\bhuevos?\b", strip_accents((name or "").lower())):
-            r = max(1.0, float(round(qty)))
+            r = max(1.0, _r(qty))
         elif is_whole(name, unit):
-            r = max(0.5, round(qty * 2) / 2) if qty < 2 else float(round(qty))
+            r = max(0.5, _r(qty * 2) / 2) if qty < 2 else _r(qty)
         elif u in ("pizca", "puñado", "manojo", "ramita"):
-            r = max(1.0, float(round(qty)))
+            r = max(1.0, _r(qty))
         else:
-            r = round(qty * 4) / 4 if qty < 3 else float(round(qty))
+            r = _r(qty * 4) / 4 if qty < 3 else _r(qty)
     elif u in ("cda", "cdta", "taza", "vaso", "cdas", "cdtas", "tazas"):
-        r = max(0.25, round(qty * 4) / 4)
+        r = max(0.25, _r(qty * 4) / 4)
     elif u in ("g", "ml"):
         step = 1 if qty < 20 else 5 if qty < 200 else 10 if qty < 5000 else 50
-        r = max(step, round(qty / step) * step) if qty >= 1 else round(qty, 1)
+        r = max(step, _r(qty / step) * step) if qty >= 1 else round(qty, 1)
     elif u in ("kg", "l"):
         r = round(qty, 2)
     else:

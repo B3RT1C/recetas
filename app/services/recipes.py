@@ -40,6 +40,8 @@ def fuzzy_contains(term: str, words: list[str], haystack: str) -> bool:
 
 def normalize(data: dict) -> dict:
     """Fill derived fields of a manually created / imported recipe (never overwrite given values)."""
+    for computed in ("portada", "media", "estado", "id", "shortcode"):
+        data.pop(computed, None)
     if data.get("tipo", "receta") != "receta":
         return data
     raciones = data.get("raciones") or 2
@@ -108,6 +110,13 @@ class RecipeService:
         out = {"id": row["id"], "tipo": row["tipo"], "shortcode": row["shortcode"],
                "estado": ESTADO_COMPLETA if row["tipo"] == "receta" else ESTADO_PENDIENTE, **data}
         out["media"] = self.media_for(row["shortcode"], data)
+        thumbs = getattr(self, "thumbs", None)
+        if thumbs is not None:
+            video = out["media"]["video"]
+            out["portada"] = thumbs.cover(row["shortcode"] or f"r{row['id']}",
+                                          self._path_for_url(video) if video else None, out["media"]["foto"])
+        else:
+            out["portada"] = out["media"]["foto"]
         return out
 
     def get(self, rid: int) -> Optional[dict]:
@@ -261,7 +270,7 @@ class RecipeService:
         for r in self.all():
             if ids is not None and r["id"] not in ids:
                 continue
-            item = {k: v for k, v in r.items() if k not in V2_KEYS and k not in ("id", "tipo", "shortcode", "media", "estado")}
+            item = {k: v for k, v in r.items() if k not in V2_KEYS and k not in ("id", "tipo", "shortcode", "media", "estado", "portada")}
             if r["tipo"] == "receta":
                 doc["recetas"].append({"id": r["id"], **item})
             else:

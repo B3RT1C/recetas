@@ -45,6 +45,9 @@ class Services:
     tokens: TokenService
     prices: Optional["PriceCache"] = None
     auth: Optional[AuthService] = None
+    shopping: Optional["ShoppingService"] = None
+    planner: Optional["PlannerService"] = None
+    thumbs: Optional["ThumbService"] = None
 
 
 def build_services(settings: Optional[Settings] = None, ig_provider: Optional[InstagramProvider] = None,
@@ -58,7 +61,14 @@ def build_services(settings: Optional[Settings] = None, ig_provider: Optional[In
     ig = ig_provider or make_provider(settings.ig_provider, settings.secret_dir)
     importer = ImportService(db, settings, recipes, ai, ig, delay_s=0 if settings.ig_provider == "mock" else import_delay)
     from .services.prices import PriceCache
-    return Services(settings, db, recipes, ai, ig, importer, TokenService(db), PriceCache(db), AuthService(db))
+    from .services.planner import PlannerService
+    from .services.shopping import ShoppingService
+    from .services.thumbs import ThumbService
+    prices = PriceCache(db)
+    thumbs = ThumbService(settings)
+    recipes.thumbs = thumbs
+    return Services(settings, db, recipes, ai, ig, importer, TokenService(db), prices, AuthService(db),
+                    ShoppingService(db, prices), PlannerService(db, recipes), thumbs)
 
 
 # ---------------------------------------------------------------- request models
@@ -468,6 +478,9 @@ def create_app(services: Optional[Services] = None) -> FastAPI:
     def v1_import_url(body: ImportUrlIn):
         """Importa una publicación de Instagram por URL (requiere Instagram conectado en la web)."""
         return svc.importer.import_url(body.url)
+
+    from .api_phase2 import register
+    register(app, svc, get_or_404)
 
     # ------------------------------------------------------------ static + media + MCP
     app.mount("/mcp", BearerAuthASGI(mcp_app, lambda t: svc.tokens.verify(t, "read")))
