@@ -256,7 +256,7 @@ function gridMeta(r) {
 /* Compact list: one text line per recipe (title + time · €/ración), a tiny cover or icon at most. */
 function cardCompact(r) {
   const pend = r.estado !== "completa";
-  const meta = pend ? `<span class="badge pend">Pendiente</span>` : [r.tiempo_total_min ? `${r.tiempo_total_min} min` : "", r.precio_racion_eur != null ? `${eur(r.precio_racion_eur)}/rac.` : ""].filter(Boolean).join(" · ");
+  const meta = pend ? `<span class="badge pend">Pendiente</span>` : [r.tiempo_total_min ? `${r.tiempo_total_min} min` : "", r.precio_racion_eur != null ? `<span class="cprice"> · ${eur(r.precio_racion_eur)}/rac.</span>` : ""].join("");
   return `<article class="card vcomp ${pend ? "pending" : ""}">${selBox(r)}
     <a href="#/receta/${r.id}" class="cardlink">${thumbHtml(r)}<h3>${esc(r.titulo)}${r.favorito ? ` ${ic("star", "Favorita", "fill")}` : ""}</h3><span class="cmeta">${meta}</span></a></article>`;
 }

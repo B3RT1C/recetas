@@ -489,3 +489,4 @@ main:focus,main:focus-visible{outline:none}
 .v-miniatura .card .meta{font-size:.8rem}
 .v-miniatura .card:hover{transform:none}
 @media(max-width:400px){.listbar{gap:.4rem}.viewpick{gap:.4rem}.v-miniatura .meta .badge.est{display:none}}
+@media (max-width:400px){.v-compacta .cprice{display:none}}

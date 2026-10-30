@@ -8,6 +8,7 @@ videos). The optional frame-slider shot needs --private-video PATH (uploaded to 
 the landing page or the static demo.
 """
 import argparse
+import json
 import os
 from pathlib import Path
 
@@ -92,8 +93,11 @@ def use_library_covers(pg, base, H):
     recs = pg.request.get(f"{base}/api/recipes?limit=500").json()
     items = recs.get("items", recs) if isinstance(recs, dict) else recs
     # every sample recipe ships its own distinct CC0 photo (data/sample/recetas-demo.json "foto"); use exactly that one
+    sample = json.loads((Path(__file__).resolve().parent.parent / "data/sample/recetas-demo.json").read_text(encoding="utf-8"))
+    sample = sample.get("recetas", sample) if isinstance(sample, dict) else sample
+    by_title = {x["titulo"]: Path(x["foto"]).stem for x in sample}
     for i, r in enumerate(items):
-        stem = Path((r.get("media") or {}).get("foto") or "").stem
+        stem = by_title.get(r.get("titulo"), "")
         pick = stem if stem in ids else ids[i % len(ids)]
         pg.request.put(f"{base}/api/recipes/{r['id']}/portada", headers=H,
                        data={"fuente": "generic", "biblioteca": pick})
