@@ -171,6 +171,8 @@ label.f{display:block;font-weight:600;font-size:.9rem;margin:.8rem 0 .3rem}
 
 /* settings */
 .settings{display:grid;gap:1rem}
+.settings>*{min-width:0}
+#accF input{max-width:100%}
 @media(min-width:980px){.settings{grid-template-columns:220px 1fr}}
 .side{display:flex;gap:.3rem;overflow-x:auto}
 @media(min-width:980px){.side{flex-direction:column;position:sticky;top:80px;align-self:start}}
