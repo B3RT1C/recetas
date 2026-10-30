@@ -15,14 +15,14 @@ SIZES = {"desktop": (1440, 900), "mobile": (390, 844)}
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--base", default="http://127.0.0.1:8088")
-    ap.add_argument("--recipe", type=int, default=9)
+    ap.add_argument("--recipe", type=int, default=10)
     ap.add_argument("--user", default="admin")
     ap.add_argument("--password", default="contraseña-capturas")
     a = ap.parse_args()
     OUT.mkdir(parents=True, exist_ok=True)
     errors = []
     with sync_playwright() as p:
-        b = p.chromium.launch()
+        b = p.chromium.launch(args=["--lang=es-ES"])
         creds = {"username": a.user, "password": a.password}
         for theme in ("light", "dark"):
             for size, (w, h) in SIZES.items():
@@ -39,6 +39,9 @@ def main():
                 csrf = pg.evaluate("fetch('/api/auth/me').then(r => r.json()).then(m => m.csrf)")
                 H = {"X-CSRF-Token": csrf}
                 pg.goto(f"{a.base}/#/recetas"); pg.wait_for_selector(".card"); pg.wait_for_timeout(300); shot("lista")
+                # filters popover (desktop) / sheet (mobile) with one active filter so the badge shows
+                pg.click("#filtBtn"); pg.select_option("#tmax", "45"); pg.wait_for_timeout(400); shot("filtros")
+                pg.click("#filtReset"); pg.keyboard.press("Escape"); pg.wait_for_timeout(300)
                 for mode in ("una", "info", "detalle", "cuadricula"):
                     pg.click(f'[data-view="{mode}"]'); pg.wait_for_timeout(500); shot(f"lista-{mode}")
                 pg.fill("#densR", "6"); pg.dispatch_event("#densR", "input"); pg.wait_for_timeout(500); shot("lista-cuadricula-densa")
@@ -63,6 +66,31 @@ def main():
                 ctx.close()
         b.close()
     print("page errors:", errors or "none")
+    overview()
+
+
+def overview():
+    """Contact sheet of every screenshot: docs/screenshots/_overview.png (needs ffmpeg)."""
+    import shutil
+    import subprocess
+    import tempfile
+    files = sorted(f for f in OUT.glob("*.png") if not f.name.startswith("_"))
+    if not files or not shutil.which("ffmpeg"):
+        return
+    cols = 6
+    with tempfile.TemporaryDirectory() as tmp:
+        # every tile 360x225 letterboxed on a neutral background, labelled with its file name
+        for i, f in enumerate(files):
+            label = f.stem.replace(":", "")
+            subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-i", str(f), "-vf",
+                            "scale=360:225:force_original_aspect_ratio=decrease,pad=360:250:(ow-iw)/2:0:color=0xe9e4dc,"
+                            f"drawtext=text='{label}':x=6:y=232:fontsize=13:fontcolor=0x333333",
+                            f"{tmp}/{i:03d}.png"], check=True)
+        rows = -(-len(files) // cols)
+        subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-framerate", "1", "-i", f"{tmp}/%03d.png", "-vf",
+                        f"tile={cols}x{rows}:padding=6:margin=6:color=0xffffff", "-frames:v", "1",
+                        str(OUT / "_overview.png")], check=True)
+    print("overview:", OUT / "_overview.png", f"({len(files)} capturas)")
 
 
 if __name__ == "__main__":
