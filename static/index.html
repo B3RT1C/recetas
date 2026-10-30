@@ -1,1 +1,30 @@
-<!doctype html><title>x</title>
+<!doctype html>
+<html lang="es" data-mode="server">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Recetario personal: recetas guardadas de Instagram, escalables, con precios estimados.">
+<meta name="theme-color" content="#c2410c">
+<title>Recetario C</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍳</text></svg>">
+<link rel="stylesheet" href="/assets/style.css">
+<script>(function(){var t=localStorage.getItem("tema")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.dataset.theme=t})()</script>
+</head>
+<body>
+<a class="skip" href="#main">Saltar al contenido</a>
+<header class="top">
+  <a class="brand" href="#/recetas"><span aria-hidden="true">🍳</span> Recetario C</a>
+  <nav class="nav" id="nav" aria-label="Secciones"></nav>
+  <button class="icon-btn" id="themeBtn" type="button" aria-label="Cambiar tema"></button>
+</header>
+<main id="main" tabindex="-1"></main>
+<nav class="tabbar" id="tabbar" aria-label="Secciones"></nav>
+<div id="timers" class="timers" aria-live="polite"></div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<dialog id="dlg"></dialog>
+<div id="cook" class="cook" hidden></div>
+<script src="/assets/i18n.js"></script>
+<script src="/assets/api.js"></script>
+<script src="/assets/app.js"></script>
+</body>
+</html>
