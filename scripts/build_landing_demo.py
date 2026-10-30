@@ -53,7 +53,7 @@ def record():
         for p in ["/api/auth/me", "/api/meta", "/api/recipes", "/api/tags", "/api/preferencias/lista", "/api/plan",
                   "/api/compra/listas", f"/api/compra/listas/{lid}", "/api/compra/categorias", "/api/compra/despensa",
                   "/api/ajustes/portada", "/api/portadas/biblioteca", "/api/estado", "/api/acceso", "/api/ai/config",
-                  "/api/tokens", "/api/instagram/status", "/api/drafts"]:
+                  "/api/tokens", "/api/instagram/status", "/api/drafts", "/api/sources"]:
             r = c.get(p)
             if r.status_code == 200:
                 get[p] = r.json()
