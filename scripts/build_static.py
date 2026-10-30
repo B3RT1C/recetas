@@ -53,14 +53,20 @@ def main():
             meta = c.get("/api/meta").json()
         # release the SQLite handle before the temp dir is removed (Windows can't delete open files)
         app.state.services.db.close()
+    sample = {r["titulo"]: r.get("foto") for r in json.loads(
+        (ROOT / "data" / "sample" / "recetas-demo.json").read_text(encoding="utf-8"))["recetas"]}
     for r in recetas:
-        r["media"] = {"video": None, "foto": None}
+        # only the free sample covers (data/sample/covers, CC0/PD) are shipped; never videos or Instagram frames
+        foto = sample.get(r.get("titulo"))
+        foto = foto if foto and (ROOT / "data" / "sample" / "covers" / Path(foto).name).exists() else None
+        r["media"] = {"video": None, "foto": foto}
         r.pop("miniatura", None)
-        r["portada"] = None
+        r["portada"] = foto
     meta.update(instagram_proveedor=None, ia_configurada=False)
     if out.exists():
         shutil.rmtree(out, onexc=_force_remove) if sys.version_info >= (3, 12) else shutil.rmtree(out)
     shutil.copytree(ROOT / "static", out)
+    shutil.copytree(ROOT / "data" / "sample" / "covers", out / "media" / "covers")
     idx = out / "index.html"
     html = idx.read_text(encoding="utf-8")
     html = html.replace('data-mode="server"', 'data-mode="static"', 1)
