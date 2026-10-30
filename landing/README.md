@@ -14,7 +14,7 @@ fuentes del sistema, sin frameworks ni CDN. Iconos Lucide (ISC), los mismos que 
 | Variables | ninguna |
 
 `_headers` define caché (HTML siempre revalida; `img/` 30 días; `assets/` 1 día) y cabeceras de seguridad (CSP estricta
-`'self'`, HSTS, nosniff, frame-ancestors none). No hay hash: si cambia un asset, se renombra con un número de versión (`landing.2.css`, `landing.2.js`) y se
+`'self'`, HSTS, nosniff, frame-ancestors none). No hay hash: si cambia un asset, se renombra con un número de versión (`landing.3.css`, `landing.2.js`) y se
 regenera el HTML. `/demo/*` tiene su propia CSP (solo `'self'`, `frame-ancestors 'self'`, `noindex`).
 
 ## Simuladores (demo en vivo)

@@ -162,7 +162,7 @@ def mockup(t, k):
     return f"""<div class="shots" data-mock>
     <div class="frame desk mock" role="region" aria-label="{e(t['mk_dlabel'])}">
       <div class="mbar" aria-hidden="true"><i></i><i></i><i></i><span>recetario.local</span></div>
-      <div class="mscreen" data-w="1024"><iframe src="/demo/{q}#/recetas" title="{e(t['mk_dtitle'])}" data-tour="desk"></iframe></div>
+      <div class="mscreen" data-w="1280"><iframe src="/demo/{q}#/recetas" title="{e(t['mk_dtitle'])}" data-tour="desk"></iframe></div>
     </div>
     <div class="frame phone mock mphone" role="region" aria-label="{e(t['mk_mlabel'])}">
       <div class="mscreen" data-w="390"><iframe src="/demo/{q}#/recetas" title="{e(t['mk_mtitle'])}" data-tour="phone"></iframe></div>
@@ -257,7 +257,7 @@ def page(k):
 <meta name="twitter:title" content="{e(t['title'])}">
 <meta name="twitter:description" content="{e(t['desc'])}">
 <meta name="twitter:image" content="{SITE}/img/og.jpg">
-<link rel="stylesheet" href="/assets/landing.2.css">
+<link rel="stylesheet" href="/assets/landing.3.css">
 <script src="/assets/theme.js"></script>
 <script src="/assets/demo-data.js" defer></script>
 <script src="/assets/landing.2.js" defer></script>
@@ -343,7 +343,7 @@ def credits_page(k):
 <link rel="canonical" href="{SITE}{p}">
 <link rel="alternate" hreflang="es" href="{SITE}/creditos/"><link rel="alternate" hreflang="en" href="{SITE}/en/credits/"><link rel="alternate" hreflang="x-default" href="{SITE}/creditos/">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="icon" href="/favicon.ico" sizes="32x32">
-<link rel="stylesheet" href="/assets/landing.2.css"><script src="/assets/theme.js"></script>
+<link rel="stylesheet" href="/assets/landing.3.css"><script src="/assets/theme.js"></script>
 </head>
 <body><main id="main" class="wrap sec">
 <p><a href="{t['path']}">{ic('arrow-left')} {h[3]}</a></p>
