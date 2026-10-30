@@ -4,11 +4,11 @@
 <h1 align="center">Recetario C</h1>
 <p align="center"><b>Your saved Instagram recipes, turned into a self-hosted, local-first cookbook.</b></p>
 <p align="center">
-  <img alt="version" src="https://img.shields.io/badge/version-v2.1.2-c2410c">
+  <img alt="version" src="https://img.shields.io/badge/version-v2.1.3-c2410c">
   <img alt="Python" src="https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white">
   <img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white">
   <img alt="SQLite" src="https://img.shields.io/badge/SQLite-003B57?logo=sqlite&logoColor=white">
-  <img alt="tests" src="https://img.shields.io/badge/tests-169%20passing-2ea44f">
+  <img alt="tests" src="https://img.shields.io/badge/tests-178%20passing-2ea44f">
   <img alt="license" src="https://img.shields.io/badge/license-pending-lightgrey">
   <img alt="self-hosted" src="https://img.shields.io/badge/self--hosted-6d28d9">
   <img alt="local-first" src="https://img.shields.io/badge/local--first-0e7490">
@@ -25,7 +25,7 @@
 ## ✨ Features
 
 - 📥 **Instagram importer** – 5-step wizard: pick a saved collection, choose posts, review drafts (dedup by shortcode).
-- 🔎 **Recipes** – typo-tolerant search, filters, tags/allergens, five list views incl. grid with chosen covers.
+- 🔎 **Recipes** – typo-tolerant search, filters, tags/allergens, 4 views: single, compact list, list with thumbnail, grid.
 - 🍳 **Cook mode** – serving scaling, per-step timers, full screen with Wake Lock, print/PDF.
 - 🗓️ **Meal planner** – weekly plan by day and meal, one click to the shopping list.
 - 🛒 **Shopping & pantry** – multiple lists, aisles, unit conversion, recurring items, *estimated* prices.
@@ -38,8 +38,10 @@
 ## 📸 Gallery
 
 <table>
-<tr><td align="center"><img src="docs/screenshots/lista-cuadricula-dark-desktop.png" width="260" alt="Grid (dark)"><br><sub>Grid (dark)</sub></td><td align="center"><img src="docs/screenshots/detalle-light-desktop.png" width="260" alt="Recipe detail"><br><sub>Recipe detail</sub></td><td align="center"><img src="docs/screenshots/planificador-dark-desktop.png" width="260" alt="Meal planner (dark)"><br><sub>Meal planner (dark)</sub></td></tr>
-<tr><td align="center"><img src="docs/screenshots/compra-light-mobile.png" width="160" alt="Shopping list"><br><sub>Shopping list</sub></td><td align="center"><img src="docs/screenshots/detalle-dark-mobile.png" width="160" alt="Detail (mobile, dark)"><br><sub>Detail (mobile, dark)</sub></td><td align="center"><img src="docs/screenshots/importar-light-mobile.png" width="160" alt="Importer"><br><sub>Importer</sub></td></tr>
+<tr><td align="center"><img src="docs/screenshots/lista-cuadricula-dark-desktop.png" width="260" alt="Grid (dark)"></td><td align="center"><img src="docs/screenshots/detalle-light-desktop.png" width="260" alt="Recipe detail"></td><td align="center"><img src="docs/screenshots/planificador-dark-desktop.png" width="260" alt="Meal planner (dark)"></td></tr>
+<tr><td align="center">Grid</td><td align="center">Detail</td><td align="center">Planner</td></tr>
+<tr><td align="center"><img src="docs/screenshots/compra-light-mobile.png" width="160" alt="Shopping list"></td><td align="center"><img src="docs/screenshots/detalle-dark-mobile.png" width="160" alt="Detail (mobile, dark)"></td><td align="center"><img src="docs/screenshots/importar-light-mobile.png" width="160" alt="Importer"></td></tr>
+<tr><td align="center">Shopping</td><td align="center">Detail</td><td align="center">Importer</td></tr>
 </table>
 
 <sub>Demo data with CC0 photos only. More in <a href="docs/screenshots/">docs/screenshots/</a>.</sub>
@@ -48,19 +50,14 @@
 
 ```mermaid
 flowchart LR
-  IG[("Instagram<br/>saved collections")] --> IMP
-  subgraph IMP["Importer"]
-    direction TB
-    IL["Instaloader"] --> FF["ffmpeg<br/>(covers, frames)"]
-    YT["yt-dlp (planned)"] -.-> FF
-    FF --> AI["OpenAI-compatible AI / caption parser<br/>(Whisper planned)"]
-  end
+  IG["Instagram"] --> IMP["Importer<br/>Instaloader · ffmpeg · AI"]
   IMP --> API["FastAPI"]
-  API --> DB[("SQLite")]
-  API --> MED[("media/ · videos/")]
-  UI["Web UI<br/>(HTML/CSS/JS, ES/EN)"] <--> API
-  AG["AI agents"] <-->|"REST /api/v1 · MCP /mcp + stdio"| API
+  API --> DB[("SQLite + media")]
+  DB --> UI["Web UI"]
+  AG["AI agents<br/>REST · MCP"] <--> API
 ```
+
+<sub>Detailed diagram: <a href="docs/CONFIG.md">docs/CONFIG.md</a></sub>
 
 ## 🚀 Quick start
 
@@ -76,6 +73,7 @@ Environment variables, first admin, agents/MCP setup, security notes: **[docs/CO
 ## 🗺️ Roadmap
 
 - [x] v2.1.2 – covers and grid view
+- [x] v2.1.3 – view selector
 - [x] Bilingual landing page
 - [ ] v2.2 – parallel recipe steps (`depends_on` DAG)
 - [ ] Phase 4 – public local-first edition (SQLite WASM/OPFS, BYOK, export/import, LAN transfer)

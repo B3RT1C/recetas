@@ -46,6 +46,22 @@ y no debe llevar secretos (las claves de IA se guardan cifradas desde Ajustes).
 
 ## Arquitectura (detalle)
 
+```mermaid
+flowchart LR
+  IG[("Instagram<br/>saved collections")] --> IMP
+  subgraph IMP["Importer"]
+    direction TB
+    IL["Instaloader"] --> FF["ffmpeg<br/>(covers, frames)"]
+    YT["yt-dlp (planned)"] -.-> FF
+    FF --> AI["OpenAI-compatible AI / caption parser<br/>(Whisper planned)"]
+  end
+  IMP --> API["FastAPI"]
+  API --> DB[("SQLite")]
+  API --> MED[("media/ · videos/")]
+  UI["Web UI<br/>(HTML/CSS/JS, ES/EN)"] <--> API
+  AG["AI agents"] <-->|"REST /api/v1 · MCP /mcp + stdio"| API
+```
+
 ```
 static/ (HTML + CSS + JS sin build, router por hash, i18n ES/EN)
    │ fetch /api/...            agentes ── /api/v1 (token) ── /mcp (token, streamable HTTP) ── stdio
@@ -93,7 +109,7 @@ curl -H "Authorization: Bearer rct_..." "http://localhost:8088/api/v1/recipes?q=
 
 Portadas: `GET /api/v1/covers/library`, `PUT /api/v1/recipes/{id}/cover` (`{"fuente": "generic", "biblioteca": "paella"}`).
 
-MCP (herramientas `search_recipes`, `get_recipe`, `list_collections`, `import_recipe`, `list_cover_library`, `set_recipe_cover`):
+MCP (herramientas `search_recipes`, `get_recipe`, `list_collections`, `import_recipe`, `list_cover_library`, `set_recipe_cover`, `get_list_preferences`, `set_list_preferences`):
 
 ```jsonc
 // Cliente con streamable HTTP
@@ -113,7 +129,7 @@ python scripts/build_static.py      # → dist/ (solo lectura, sin vídeos, mini
 
 ```bash
 pip install -r requirements-dev.txt && python -m playwright install chromium
-python -m pytest                                    # 169 tests (Instagram con proveedor mock)
+python -m pytest                                    # 178 tests (Instagram con proveedor mock)
 python run.py --mock-instagram --port 8088 &
 python scripts/screenshots.py --base http://127.0.0.1:8088
 ```
@@ -134,6 +150,6 @@ python scripts/screenshots.py --base http://127.0.0.1:8088
 
 Filtros: `filtros`. Vista general de todas las capturas: `docs/screenshots/_overview.png`. Para regenerarlas: arrancar con `RECETAS_SEED_FILE=data/sample/recetas-demo.json` y `--mock-instagram`, poblar con `scripts/seed_demo.py --password-stdin` y ejecutar `scripts/screenshots.py --base http://127.0.0.1:PUERTO`. Fotos de muestra: ver `data/sample/covers/ATTRIBUTION.md`.
 
-Vistas de la lista: `lista-una`, `lista-info`, `lista-detalle`, `lista-cuadricula`, `lista-cuadricula-densa`.
+Vistas de la lista (v2.1.3): «Una sola», «Lista compacta», «Lista con miniatura», «Cuadrícula» (los valores antiguos `info` y `detalle` se migran a `miniatura`). Capturas: `lista-una`, `lista-info`, `lista-detalle`, `lista-cuadricula`, `lista-cuadricula-densa`.
 
 Todas las capturas (claro/oscuro, 1440×900 y 390×844): `docs/screenshots/`.
