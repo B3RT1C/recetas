@@ -11,3 +11,9 @@ for t in light dark; do
   for v in lista detalle compra; do w $v-$t-mobile m-$v-$t 300; done
 done
 ffmpeg -v error -y -i $S/lista-cuadricula-light-desktop.png -vf "crop=1440:756:0:0,scale=1200:630" -q:v 3 $O/og.jpg
+# Interactive hero mockup: CC0 sample covers, small WebP.
+mkdir -p $O/r
+for f in data/sample/covers/*.jpg; do n=$(basename "$f" .jpg)
+  ffmpeg -v error -y -i "$f" -vf "scale=320:200:force_original_aspect_ratio=increase,crop=320:200" -c:v libwebp -quality 70 -compression_level 6 "$O/r/$n.webp"; done
+# v2.1.2 grid screenshot for the gallery.
+for t in light dark; do w lista-cuadricula-$t-desktop g-cuadricula-$t 960; w lista-cuadricula-$t-desktop g-cuadricula-$t-480 480; done
