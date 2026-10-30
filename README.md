@@ -122,7 +122,7 @@ python scripts/build_static.py      # → dist/ (solo lectura, sin vídeos, mini
 
 ```bash
 pip install -r requirements-dev.txt && python -m playwright install chromium
-python -m pytest                                    # 128 tests (Instagram con proveedor mock)
+python -m pytest                                    # 129 tests (Instagram con proveedor mock)
 python run.py --mock-instagram --port 8088 &
 python scripts/screenshots.py --base http://127.0.0.1:8088
 ```
