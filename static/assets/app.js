@@ -92,14 +92,15 @@ async function viewList() {
   const [tags, meta] = await Promise.all([API.tags(), API.meta()]);
   main.innerHTML = `
   <div class="hero"><div><h1>${t("nav_recetas")}</h1>
-    <p class="muted sub">${meta.recetas} completas · ${meta.solo_video} pendientes de transcribir</p></div>
+    ${meta.solo_video > 0 ? `<p class="muted sub">${meta.solo_video} pendiente${meta.solo_video === 1 ? "" : "s"} de transcribir</p>` : ""}</div>
     <div class="no-print hero-actions">
       ${API.STATIC ? "" : `<a class="btn primary new-d" href="#/nueva">${ic("plus")} ${t("new_recipe")}</a>`}
       <div class="more-wrap"><button class="btn icon" id="moreBtn" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="moreMenu" aria-label="${t("more_actions")}" title="${t("more_actions")}">${ic("more")}</button>
-        <div class="moremenu" id="moreMenu" role="menu" hidden>
-          ${API.STATIC ? "" : `<a role="menuitem" class="mi" href="#/nueva">${ic("plus")} ${t("new_recipe")}</a>`}
-          <button role="menuitem" class="mi" id="selBtn" type="button" aria-pressed="${selecting}">${ic("list-checks")} ${t("select")}</button>
-          ${API.STATIC ? "" : `<button role="menuitem" class="mi" id="expBtn" type="button">${ic("download")} ${t("export")}</button>`}
+        <div class="moremenu" id="moreMenu" role="group" aria-label="${t("more_actions")}" hidden>
+          ${API.STATIC ? "" : `<a class="mi" href="#/nueva">${ic("plus")} ${t("new_recipe")}</a>`}
+          <button class="mi" id="selBtn" type="button" aria-pressed="${selecting}">${ic("list-checks")} ${t("select")}</button>
+          ${API.STATIC ? "" : `<button class="mi" id="expBtn" type="button">${ic("download")} ${t("export")}</button>`}
+          <label class="dens mi-range" ${VIEW.vista === "cuadricula" ? "" : "hidden"}><span>${t("columns")}</span><input id="densR" type="range" min="2" max="${MOBILE.matches ? 3 : 8}" step="1" value="${cols()}" aria-valuetext="${cols()} ${t("columns").toLowerCase()}"><output id="densO">${cols()}</output></label>
         </div></div>
     </div></div>
   ${API.STATIC ? "" : `<a class="fab no-print" href="#/nueva" aria-label="${t("new_recipe")}" title="${t("new_recipe")}">${ic("plus")}<span>${t("new_short")}</span></a>`}
@@ -140,7 +141,7 @@ async function viewList() {
     b.hidden = !n; b.textContent = n; $("#filtBtn").setAttribute("aria-label", n ? `Filtros, ${n} activo${n > 1 ? "s" : ""}` : "Filtros"); };
   badge(); bindFilterPopover(() => { Object.assign(F, { estado: "", favoritos: false, etiqueta: "", max_min: "", max_precio: "", orden: "original" }); $("#tmax").value = ""; $("#pmax").value = ""; $("#ord").value = "original";
     $$("[data-estado]").forEach(x => x.setAttribute("aria-pressed", x.dataset.estado === "")); $("#favF").setAttribute("aria-pressed", "false"); $$("[data-tag]").forEach(x => x.setAttribute("aria-pressed", "false")); badge(); reload(); });
-  bindMoreMenu();
+  bindMoreMenu(); bindFab();
   $("#selBtn").onclick = () => { closeMore(); selecting = !selecting; if (!selecting) selected.clear(); $("#selBtn").setAttribute("aria-pressed", selecting); renderResults(); };
   $("#expBtn") && ($("#expBtn").onclick = () => { closeMore(); exportDialog(); });
   bindViewPicker();
@@ -148,9 +149,19 @@ async function viewList() {
   API.prefsLista().then(applyServerPrefs).catch(() => {});
 }
 // 'Filtros' popover (desktop) / bottom sheet (mobile): focus trap, Esc and outside click close, focus returns to the button
+/* Floating "Nueva": hides while scrolling down, comes back on scroll up (CSS drops the animation for reduced motion). */
+let fabScroll;
+function bindFab() {
+  const fab = $(".fab"); if (!fab) return;
+  let last = scrollY;
+  if (fabScroll) removeEventListener("scroll", fabScroll);
+  fabScroll = () => { const y = scrollY; if (Math.abs(y - last) < 6) return;
+    fab.classList.toggle("fab-hide", y > last && y > 80); last = y; };
+  addEventListener("scroll", fabScroll, { passive: true });
+}
 let closeMore = () => {};
 function bindMoreMenu() {
-  const btn = $("#moreBtn"), m = $("#moreMenu"), items = () => $$(".mi", m).filter(x => x.getClientRects().length);
+  const btn = $("#moreBtn"), m = $("#moreMenu"), items = () => $$(".mi, #densR", m).filter(x => x.getClientRects().length);
   const outside = e => { if (!btn.parentElement.contains(e.target)) closeMore(false); };
   closeMore = (refocus = false) => { if (m.hidden) return; m.hidden = true; btn.setAttribute("aria-expanded", "false");
     document.removeEventListener("pointerdown", outside, true); refocus && btn.focus(); };
@@ -160,7 +171,7 @@ function bindMoreMenu() {
   m.addEventListener("keydown", e => {
     const l = items(), i = l.indexOf(document.activeElement);
     if (e.key === "Escape") { e.preventDefault(); closeMore(true); }
-    else if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); l[(i + (e.key === "ArrowDown" ? 1 : -1) + l.length) % l.length].focus(); }
+    else if ((e.key === "ArrowDown" || e.key === "ArrowUp") && e.target.id !== "densR") { e.preventDefault(); l[(i + (e.key === "ArrowDown" ? 1 : -1) + l.length) % l.length].focus(); }
     else if (e.key === "Tab") closeMore();
   });
   window.addEventListener("hashchange", () => closeMore(), { once: true });
@@ -218,8 +229,7 @@ function cols() { return MOBILE.matches ? DENS_M : VIEW.densidad; }
 MOBILE.addEventListener?.("change", () => { const r = $("#densR"); if (r) r.max = MOBILE.matches ? 3 : 8; setView({}, false); });
 function viewPicker() {
   return `<div class="viewpick"><div role="group" aria-label="${t("view_group")}" class="seg vseg">${VIEWS.map(([v, i]) =>
-    `<button type="button" data-view="${v}" aria-pressed="${VIEW.vista === v}" aria-label="${t("view_" + v)}" title="${t("view_" + v)}">${ic(i)}<span class="vlabel">${t("view_" + v + "_s")}</span></button>`).join("")}</div>
-    <label class="dens" ${VIEW.vista === "cuadricula" ? "" : "hidden"}><span>Columnas</span><input id="densR" type="range" min="2" max="${MOBILE.matches ? 3 : 8}" step="1" value="${cols()}" aria-valuetext="${cols()} columnas"><output id="densO">${cols()}</output></label></div>`;
+    `<button type="button" data-view="${v}" aria-pressed="${VIEW.vista === v}" aria-label="${t("view_" + v)}" title="${t("view_" + v)}">${ic(i)}<span class="vlabel">${t("view_" + v + "_s")}</span></button>`).join("")}</div></div>`;
 }
 function setView(p, save = true) {
   VIEW = { vista: normView(p.vista) || VIEW.vista, densidad: p.densidad ?? VIEW.densidad, local: save || VIEW.local };
@@ -284,9 +294,10 @@ function cardGrid(r) {
 /* One fixed-height line under the title so every grid card keeps the same height. */
 function gridMeta(r) {
   if (r.estado !== "completa") return `<p class="gmeta">${ic("film")} Pendiente de transcribir</p>`;
-  const bits = [r.tiempo_total_min ? `${ic("timer")} ${r.tiempo_total_min} min` : "",
-    r.precio_racion_eur != null ? `${eur(r.precio_racion_eur)}/ración` : ""].filter(Boolean);
-  return `<p class="gmeta">${bits.length ? bits.join(` <span aria-hidden="true">·</span> `) : "&nbsp;"}</p>`;
+  // two short chips that may wrap onto a second line; the price is never cut
+  const bits = [r.tiempo_total_min ? `<span class="gm">${ic("timer")} ${r.tiempo_total_min} min</span>` : "",
+    r.precio_racion_eur != null ? `<span class="gm" title="${eur(r.precio_racion_eur)} por ración">${eur(r.precio_racion_eur)}<span class="sr"> por ración</span><span aria-hidden="true">/rac.</span></span>` : ""].filter(Boolean);
+  return `<p class="gmeta">${bits.length ? bits.join("") : "&nbsp;"}</p>`;
 }
 /* Compact list: one text line per recipe (title + time · €/ración), a tiny cover or icon at most. */
 function cardCompact(r) {

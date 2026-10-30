@@ -138,9 +138,13 @@ def test_grid_columns_match_slider_and_titles_wrap(page):
     pg, _ = page
     pg.click('[data-view="cuadricula"]'); pg.wait_for_timeout(200)
     assert pg.get_attribute("#densR", "max") == "3"
-    # switcher shares the row with the count; the column control sits below
-    cnt, sw, dens = (pg.eval_on_selector(s, "e => e.getBoundingClientRect().top") for s in ("#count", ".vseg", ".dens"))
-    assert abs(cnt - sw) < 30 and dens > sw + 20
+    # no extra row: the switcher shares the row with the count and the first card follows right after
+    cnt, sw = (pg.eval_on_selector(s, "e => e.getBoundingClientRect().top") for s in ("#count", ".vseg"))
+    assert abs(cnt - sw) < 30
+    assert pg.eval_on_selector(".listbar", "e => e.getBoundingClientRect().height") < 60
+    assert pg.locator("main > .listbar .dens, main > .listbar #densR").count() == 0
+    # the columns slider lives in the ⋯ panel
+    pg.click("#moreBtn"); assert pg.is_visible("#densR")
     for n in ("2", "3"):
         if pg.input_value("#densR") != n:
             pg.fill("#densR", n); pg.dispatch_event("#densR", "input"); pg.wait_for_timeout(200)
@@ -155,6 +159,13 @@ def test_grid_defaults_to_two_columns_on_mobile(page):
     pg, _ = page
     pg.click('[data-view="cuadricula"]'); pg.wait_for_timeout(200)
     assert pg.text_content("#densO") == "2"
+    # the meta line (time + price) is never clipped
+    clipped = pg.eval_on_selector_all(".v-cuadricula .gmeta", """ps => ps.filter(p => {
+      const r = p.getBoundingClientRect();
+      return p.scrollWidth > p.clientWidth + 1 || [...p.querySelectorAll('.gm')].some(g => { const b = g.getBoundingClientRect(); return b.right > r.right + 1 || b.bottom > r.bottom + 1; });
+    }).length""")
+    assert clipped == 0
+    assert pg.locator(".v-cuadricula .gmeta .gm").filter(has_text="€").count() > 0
     assert pg.eval_on_selector("#results", "e => getComputedStyle(e).gridTemplateColumns.split(' ').length") == 2
 
 
@@ -186,3 +197,34 @@ def test_active_view_button_contrast(page, theme):
     assert pg.evaluate(CONTRAST_JS, [on, track]) >= 3, (on, track)
     off = pg.eval_on_selector('[data-view="una"]', "e => getComputedStyle(e).color")
     assert pg.evaluate(CONTRAST_JS, [off, on]) >= 3
+
+
+def test_subtitle_single_line_and_no_repeat(page):
+    pg, _ = page
+    sub = pg.locator(".hero .sub")
+    if sub.count():
+        assert "recetas" not in sub.text_content() and "completas" not in sub.text_content()
+        assert sub.evaluate("e => e.getClientRects().length === 1 && e.getBoundingClientRect().height < 30")
+    h = pg.eval_on_selector(".hero", "e => e.getBoundingClientRect().height")
+    assert h < 90
+
+
+def test_fab_does_not_cover_last_card(page):
+    pg, _ = page
+    for v in ("una", "cuadricula"):
+        pg.click(f'[data-view="{v}"]'); pg.wait_for_timeout(200)
+        pg.evaluate("window.scrollTo(0, document.documentElement.scrollHeight)"); pg.wait_for_timeout(100)
+        pg.mouse.wheel(0, -40); pg.wait_for_timeout(400)  # scrolling up shows the FAB again
+        fab = pg.eval_on_selector(".fab", "e => [e.getBoundingClientRect().top, getComputedStyle(e).opacity]")
+        assert fab[1] == "1"
+        last = pg.eval_on_selector_all("#results .card", "cs => cs.at(-1).getBoundingClientRect().bottom")
+        assert last <= fab[0], (v, last, fab)
+    pg.evaluate("window.scrollTo(0, 0)"); pg.wait_for_timeout(100)
+    pg.mouse.wheel(0, 400); pg.wait_for_timeout(400)
+    assert "fab-hide" in pg.get_attribute(".fab", "class")
+
+
+def test_fab_respects_reduced_motion(page):
+    pg, _ = page
+    pg.emulate_media(reduced_motion="reduce")
+    assert pg.eval_on_selector(".fab", "e => getComputedStyle(e).transitionDuration") in ("0s", "0s, 0s")
