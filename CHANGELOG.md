@@ -2,6 +2,22 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versiones según [SemVer](https://semver.org/lang/es/).
 
+## [2.1.3] — 2026-10-30 — Selector de vistas
+
+### Cambiado
+- Vistas en orden «Una sola», «Lista compacta», «Lista con miniatura», «Cuadrícula», con iconos propios que corresponden a lo que muestran.
+- «Una sola» más fina: portada más baja (16:7 en móvil), menos relleno y texto más pequeño.
+- La vista se recuerda por dispositivo (localStorage) y prevalece sobre la preferencia del servidor.
+- Valores antiguos `info` y `detalle` se migran a `miniatura` (API y navegador).
+
+### Añadido
+- Ajustes → Apariencia: en las listas, miniatura del vídeo/portada (por defecto) o icono genérico. En `/api/preferencias/lista` (`miniaturas`) y MCP (`get_list_preferences`, `set_list_preferences`).
+- Botones del selector con `aria-pressed`, `aria-label` y tooltip (ES/EN), flechas del teclado y área táctil ≥ 40 px.
+- Tests de navegador a 360 px y test de fotos de ejemplo únicas y acreditadas.
+
+### Corregido
+- Capturas: cada receta de ejemplo usa su propia foto CC0 (antes se repetía la pasta).
+
 ## [2.1.2] — 2026-10-30 — Portadas y cuadrícula
 
 ### Añadido

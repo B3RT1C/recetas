@@ -13,7 +13,7 @@ window.I18N = {
     pending_banner: "Pendiente de transcribir: de momento solo está el vídeo.", transcribe: "Transcribir a mano",
     edit: "Editar", delete: "Eliminar", print: "Imprimir / PDF", cook_mode: "Modo cocina", translate: "Traducir con IA",
     back: "Volver", save: "Guardar", cancel: "Cancelar", close: "Cerrar", theme: "Cambiar tema", language: "Idioma",
-    soon: "Próximamente", about: "Acerca de este proyecto", appearance: "Apariencia",
+    soon: "Próximamente", about: "Acerca de este proyecto", appearance: "Apariencia", view_group: "Vista de la lista", view_una: "Una sola: una receta grande por fila", view_compacta: "Lista compacta: solo texto", view_miniatura: "Lista con miniatura", view_cuadricula: "Cuadrícula de portadas", view_una_s: "Una sola", view_compacta_s: "Compacta", view_miniatura_s: "Con miniatura", view_cuadricula_s: "Cuadrícula",
   },
   en: {
     nav_recetas: "Recipes", nav_plan: "Planner", nav_compra: "Shopping", nav_importar: "Import", nav_ajustes: "Settings",
@@ -27,7 +27,7 @@ window.I18N = {
     pending_banner: "Waiting for transcription: only the video for now.", transcribe: "Transcribe manually",
     edit: "Edit", delete: "Delete", print: "Print / PDF", cook_mode: "Cook mode", translate: "Translate with AI",
     back: "Back", save: "Save", cancel: "Cancel", close: "Close", theme: "Toggle theme", language: "Language",
-    soon: "Coming soon", about: "About this project", appearance: "Appearance",
+    soon: "Coming soon", about: "About this project", appearance: "Appearance", view_group: "List view", view_una: "Single: one large recipe per row", view_compacta: "Compact list: text only", view_miniatura: "List with thumbnail", view_cuadricula: "Cover grid", view_una_s: "Single", view_compacta_s: "Compact", view_miniatura_s: "Thumbnails", view_cuadricula_s: "Grid",
   },
 };
 window.LANG = localStorage.getItem("lang") || "es";

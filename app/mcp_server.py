@@ -120,6 +120,25 @@ def build_mcp(services: Any, stdio_token: Optional[dict] = None) -> MCPServer:
             raise ToolError(str(e)) from None
         return {k: r.get(k) for k in ("id", "titulo", "portada", "portada_fuente", "portada_param", "portada_efectiva")}
 
+    @mcp.tool()
+    def get_list_preferences(ctx: Context) -> dict:
+        """Preferencias globales de la lista: miniaturas = 'portada' (miniatura del vídeo/portada, por defecto) o
+        'icono' (icono genérico)."""
+        require(ctx, "read")
+        from .api_prefs import get_thumbs
+        return {"miniaturas": get_thumbs(services.db)}
+
+    @mcp.tool()
+    def set_list_preferences(ctx: Context, miniaturas: str) -> dict:
+        """Cambia qué se muestra en las vistas de lista: 'portada' (miniatura) o 'icono' (icono genérico).
+        Necesita scope 'write'."""
+        require(ctx, "write")
+        from .api_prefs import set_thumbs
+        try:
+            return {"miniaturas": set_thumbs(services.db, miniaturas)}
+        except ValueError as e:
+            raise ToolError(str(e)) from None
+
     return mcp
 
 
