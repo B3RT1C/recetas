@@ -701,3 +701,18 @@ body,.cook{background:var(--elev-0)}
   .hero-actions:has(#wPrev) #wList{grid-column:1/-1}
 }
 @media(max-width:760px){.daystrip a{padding-bottom:8px}.daystrip a i{bottom:3px}}
+/* v2.1.6 batch 4: desktop layout */
+.cook .big p{max-width:40ch;margin:0 auto}
+@media(min-width:1024px){
+  .shop{display:block;columns:2 320px;column-gap:1rem}
+  .shop>*{break-inside:avoid;margin:0 0 1rem}
+  .shop>.small-empty{column-span:all}
+  .addform{max-width:880px}
+}
+@media(min-width:1100px){
+  .pchip .pc .btn[data-move]{font-size:0;gap:0;width:30px;justify-content:center}
+  .pchip .pc .btn[data-move] .ic{font-size:1rem}
+  .pchip .pc{gap:.15rem}
+  .pchip .pc .small.muted{display:none}
+}
+.pchip .pt>span:last-child{hyphens:auto;overflow-wrap:normal;word-break:normal}
