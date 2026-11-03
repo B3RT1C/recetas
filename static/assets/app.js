@@ -111,7 +111,7 @@ async function viewList() {
     </div></div>
   ${API.STATIC ? "" : `<a class="fab no-print" href="#/nueva" aria-label="${t("new_recipe")}" title="${t("new_recipe")}">${ic("plus")}<span>${t("new_short")}</span></a>`}
   <div class="toolbar">
-    <div class="search"><label class="sr" for="q">Buscar</label><input id="q" class="input" type="search" placeholder="${t("search_ph")}" value="${esc(F.q)}" autocomplete="off"></div>
+    <div class="search"><label class="sr" for="q">Buscar</label><input id="q" class="input" type="search" placeholder="${matchMedia("(max-width:640px)").matches ? t("search_ph_short") : t("search_ph")}" value="${esc(F.q)}" autocomplete="off"></div>
       <div class="fpop-wrap">
         <button class="btn" type="button" id="filtBtn" aria-haspopup="dialog" aria-expanded="false" aria-controls="filtPanel">${ic("sliders-horizontal")}<span class="blabel">Filtros</span><span class="fbadge" id="filtN" hidden></span></button>
         <div class="fpop" id="filtPanel" role="dialog" aria-modal="true" aria-labelledby="filtTitle" hidden>
@@ -719,7 +719,7 @@ async function viewImport() {
   if (W.step > 1 && !st.conectado && W.step < 4) W.step = 1;
   main.innerHTML = `<div class="hero"><div><h1>${t("nav_importar")}</h1><p class="muted" style="margin:0">Trae recetas de tus guardados. Antes de guardarlas podrás revisarlas y editarlas.</p></div>
     ${drafts.length ? `<button class="btn" type="button" id="goRev">${ic("notebook-pen")} ${drafts.length} borrador${drafts.length > 1 ? "es" : ""} por revisar</button>` : ""}</div>
-    <ol class="wizard-steps">${WSTEPS.map((s, i) => `<li ${W.step === i + 1 ? 'aria-current="step"' : ""} class="${W.step > i + 1 ? "done" : ""}"><b>${W.step > i + 1 ? ic("check", "Hecho") : i + 1}</b>${s}</li>`).join("")}</ol>
+    <ol class="wizard-steps">${WSTEPS.map((s, i) => `<li ${W.step === i + 1 ? 'aria-current="step"' : ""} class="${W.step > i + 1 ? "done" : ""}"><b>${W.step > i + 1 ? ic("check", "Hecho") : i + 1}</b><span class="ws-n">${t("step_of", i + 1, WSTEPS.length)} · </span>${s}</li>`).join("")}</ol>
     <section class="panel" id="wz"></section>`;
   $("#goRev") && ($("#goRev").onclick = () => { W.step = 5; viewImport(); });
   const wz = $("#wz");
@@ -731,7 +731,8 @@ async function viewImport() {
 }
 function wizConnect(wz, sources, st) {
   wz.innerHTML = `<h2>1. Elige la fuente</h2>
-  <div class="row srcopts" role="radiogroup">${sources.map(s => `<label class="chip" style="cursor:${s.disponible ? "pointer" : "not-allowed"};opacity:${s.disponible ? 1 : .55}"><input type="radio" name="src" value="${s.id}" ${s.id === W.source ? "checked" : ""} ${s.disponible ? "" : "disabled"}> ${esc(s.label)}${s.disponible ? "" : ` <span class="n">${t("soon")}</span>`}</label>`).join("")}</div>
+  <div class="row srcopts" role="radiogroup">${sources.filter(s => s.disponible).map(s => `<label class="chip" style="cursor:${s.disponible ? "pointer" : "not-allowed"};opacity:${s.disponible ? 1 : .55}"><input type="radio" name="src" value="${s.id}" ${s.id === W.source ? "checked" : ""} ${s.disponible ? "" : "disabled"}> ${esc(s.label)}</label>`).join("")}</div>
+  ${sources.some(s => !s.disponible) ? `<p class="small muted soonline">${t("soon")}: ${sources.filter(s => !s.disponible).map(s => esc(s.label)).join(", ")}</p>` : ""}
   <h2 style="margin-top:1.5rem">2. Conecta tu cuenta</h2>
   ${st.conectado ? `<div class="banner">${ic("circle-check")} Conectado como <b>@${esc(st.usuario)}</b> <span class="muted small">(${esc(st.proveedor)})</span><button class="btn sm" type="button" id="igOut">Desconectar</button><button class="btn primary" type="button" id="next">Continuar ${ic("arrow-right")}</button></div>` : `
   <p class="muted small">${ic("lock")} La contraseña solo se usa para iniciar sesión y <b>nunca se guarda</b>: se conserva únicamente el archivo de sesión en este equipo. Instagram puede pedir verificación o limitar peticiones si importas mucho de golpe.</p>
@@ -915,14 +916,16 @@ async function viewPlanner() {
       <button class="btn" type="button" id="wNext" aria-label="Semana siguiente">${ic("arrow-right")}</button>
       <button class="btn primary full-m" type="button" id="wList" ${wk.items.length ? "" : "disabled"}>${ic("shopping-cart")} Añadir a la lista</button>
     </div></div>
-  <p class="weeklabel"><b>Semana del ${fmtDay(wk.inicio)} al ${fmtDay(wk.fin)}</b> <span class="muted small">· Arrastra los platos entre huecos o usa «Mover».</span></p>
+  <p class="weeklabel"><b>Semana del ${fmtDay(wk.inicio)} al ${fmtDay(wk.fin)}</b> <span class="muted small draghint">· Arrastra los platos entre huecos o usa «Mover».</span></p>
+  <nav class="daystrip no-print" aria-label="${t("days")}">${wk.dias.map((d, i) => `<a href="#/planificador" data-jump="${d}" class="${d === today ? "today" : ""}"><span>${DIAS[i]}</span><b>${+d.slice(8)}</b>${(bySlot[d + "|comida"] || bySlot[d + "|cena"]) ? `<i aria-hidden="true"></i>` : ""}</a>`).join("")}</nav>
   <div class="week" id="week">${wk.dias.map((d, i) => `
-    <section class="day ${d === today ? "today" : ""}" aria-label="${fmtDay(d, true)}">
+    <section class="day ${d === today ? "today" : ""}" id="day-${d}" aria-label="${fmtDay(d, true)}">
       <h2><span>${DIAS[i]}</span> <span class="muted">${fmtDay(d)}</span>${d === today ? ` <span class="badge pend">hoy</span>` : ""}</h2>
-      ${COMIDAS.map(([c, lbl]) => `<div class="slot" data-slot="${d}|${c}"><h3>${lbl}</h3>
+      ${COMIDAS.map(([c, lbl]) => `<div class="slot ${(bySlot[d + "|" + c] || []).length ? "" : "empty"}" data-slot="${d}|${c}"><h3>${lbl}</h3>
         <ul>${(bySlot[d + "|" + c] || []).map(planChip).join("")}</ul>
         <button class="btn sm ghost addslot" type="button" data-add="${d}|${c}" aria-label="Añadir receta a ${lbl.toLowerCase()} del ${fmtDay(d, true)}">${ic("plus")} Añadir</button></div>`).join("")}
     </section>`).join("")}</div>`;
+  $$("[data-jump]").forEach(a => a.onclick = e => { e.preventDefault(); $("#day-" + a.dataset.jump)?.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" }); });
   $("#wPrev").onclick = () => { PLAN.inicio = wk.anterior; viewPlanner(); };
   $("#wNext").onclick = () => { PLAN.inicio = wk.siguiente; viewPlanner(); };
   $("#wToday").onclick = () => { PLAN.inicio = null; viewPlanner(); };
@@ -1051,7 +1054,7 @@ function shopItem(i) {
     <input type="checkbox" id="b${i.id}" data-buy="${i.id}" ${i.estado === "comprado" ? "checked" : ""} aria-label="Comprado: ${esc(i.nombre)}">
     <label for="b${i.id}" class="grow"><span class="q">${esc(i.texto_cantidad)}</span> ${esc(i.nombre)}${i.recurrente ? ` <span title="Recurrente">${ic("repeat", "recurrente")}</span>` : ""}
       ${i.nota ? `<span class="small muted"> · ${esc(i.nota)}</span>` : ""}
-      ${src.length ? `<span class="src small muted">${[...new Set(src)].map(esc).join(", ")}</span>` : ""}</label>
+      ${src.length ? (u => `<span class="src small muted" title="${esc(u.join(", "))}">${esc(u[0])}${u.length > 1 ? ` +${u.length - 1}` : ""}</span>`)([...new Set(src)]) : ""}</label>
     ${i.precio_eur != null ? `<span class="p small">${eur(i.precio_eur)}</span>` : ""}
     <button type="button" class="icon-btn sm no-print" data-have="${i.id}" aria-pressed="${i.estado === "ya_lo_tengo"}" title="Ya lo tengo" aria-label="Ya lo tengo: ${esc(i.nombre)}">${ic("house")}</button>
     <button type="button" class="icon-btn sm no-print" data-edit="${i.id}" aria-label="Editar ${esc(i.nombre)}">${ic("pencil")}</button></li>`;

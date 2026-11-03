@@ -150,7 +150,7 @@ label.f{display:block;font-weight:600;font-size:.9rem;margin:.8rem 0 .3rem}
 .editor-row{display:grid;grid-template-columns:80px 90px 1fr 90px auto;gap:.4rem;align-items:center;margin-bottom:.4rem}
 .editor-row.step{grid-template-columns:1fr 90px auto}
 @media(max-width:600px){.editor-row{grid-template-columns:1fr 1fr auto;}.editor-row .nm{grid-column:1/-1;order:-1}.editor-row.step{grid-template-columns:1fr 70px auto}}
-.form-grid{display:grid;gap:0 1rem;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.form-grid{display:grid;gap:.6rem 1rem;grid-template-columns:repeat(2,minmax(0,1fr))}
 .drop{border:2px dashed var(--line);border-radius:12px;padding:1rem;text-align:center}
 
 /* wizard (import steps; the servings counter is .stepper) */
@@ -257,7 +257,6 @@ dialog input[type=radio],dialog input[type=checkbox]{accent-color:var(--accent);
 .lerr{color:var(--danger);min-height:1.3em;margin:.6rem 0}
 .btn.wide{width:100%}
 .dlg{min-width:min(460px,86vw)}
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
 /* planner */
 .weeklabel{margin:.2rem 0 1rem}
 .week{display:grid;gap:.8rem;grid-template-columns:1fr}
@@ -606,7 +605,7 @@ body,.cook{background:var(--elev-0)}
 .pchip .pc{flex-wrap:wrap;row-gap:4px}
 /* v2.1.6 batch 1 */
 .wizard-steps{max-width:100%;scrollbar-width:none}
-.dlg-stack{grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr))}
+.form-grid.dlg-stack{grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr))}
 .dlg-stack select{text-overflow:ellipsis}
 @media(max-width:640px){
   .fab .ic{width:24px;height:24px}
@@ -654,3 +653,51 @@ body,.cook{background:var(--elev-0)}
   .d-media .photo,.d-media img{border-radius:var(--radius) var(--radius) 0 0;aspect-ratio:16/11}
   .d-media .iglink{margin:.5rem .9rem .7rem}
 }
+/* v2.1.6 batch 3: mobile density */
+.ws-n{display:none}
+.soonline{margin:.6rem 0 0}
+.daystrip{display:none}
+@media(pointer:coarse){.draghint{display:none}}
+@media(max-width:760px){
+  /* dialogs become bottom sheets, like the filters panel */
+  #dlg{margin:auto 0 0;width:100%;max-width:100%;max-height:88vh;border-radius:18px 18px 0 0;padding-bottom:env(safe-area-inset-bottom)}
+  #dlg[open]{animation:sheet-up .2s ease-out}
+  #dlg .dlg{padding-bottom:1rem}
+  #dlg .dlg>.row:last-child:not(.menu){flex-wrap:wrap}
+  #dlg .dlg>.row:last-child .btn{flex:1 1 auto;justify-content:center}
+  /* planner */
+  .daystrip{display:grid;grid-template-columns:repeat(7,1fr);gap:.25rem;position:sticky;top:var(--hdr,62px);z-index:5;background:var(--bg);padding:.35rem 0;margin:0 0 .6rem}
+  .daystrip a{display:flex;flex-direction:column;align-items:center;min-height:44px;justify-content:center;border-radius:10px;color:var(--muted);text-decoration:none;font-size:.7rem;position:relative;text-transform:capitalize}
+  .daystrip a b{font-size:.95rem;color:var(--text)}
+  .daystrip a.today{background:var(--accent-soft)}.daystrip a.today b{color:var(--accent)}
+  .daystrip a i{position:absolute;bottom:4px;width:5px;height:5px;border-radius:50%;background:var(--accent)}
+  .day{scroll-margin-top:120px;gap:.35rem;padding:.6rem}
+  .slot.empty{display:flex;align-items:center;justify-content:space-between;min-height:0;padding:.15rem .45rem;border-style:dotted}
+  .slot.empty h3{margin:0}
+  .slot.empty ul{display:none}
+  .slot.empty .addslot{width:auto;margin:0;min-height:40px}
+  /* shopping rows */
+  .items li{gap:.45rem;padding:.4rem 0}
+  .items label{min-width:0}
+  .items .src{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .items .p{white-space:nowrap}
+  /* import wizard: only the current step, as "Step n of 5 · name" */
+  .wizard-steps{overflow:visible}
+  .wizard-steps li:not([aria-current]){display:none}
+  .wizard-steps li[aria-current]{flex:1;min-width:0}
+  .ws-n{display:inline}
+}
+@keyframes sheet-up{from{transform:translateY(30%);opacity:.4}to{transform:none;opacity:1}}
+@media(prefers-reduced-motion:reduce){#dlg[open]{animation:none}}
+@media(max-width:480px){
+  .form-grid{grid-template-columns:1fr}
+}
+.menu .btn{text-align:start}
+@media(max-width:760px){
+  .slot{position:relative}
+  .slot:not(.empty) .addslot{position:absolute;top:0;right:.2rem;width:auto;margin:0;min-height:32px;padding:0 .5rem;font-size:.75rem}
+  .day h2{text-transform:none}
+  .hero-actions:has(#wPrev){display:grid;grid-template-columns:48px 1fr 48px;gap:.5rem}
+  .hero-actions:has(#wPrev) #wList{grid-column:1/-1}
+}
+@media(max-width:760px){.daystrip a{padding-bottom:8px}.daystrip a i{bottom:3px}}

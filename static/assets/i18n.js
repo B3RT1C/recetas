@@ -37,6 +37,7 @@ Object.assign(I18N.es, {
   suggested_steps: "Pasos sugeridos (no aparecen en el vídeo).", fewer_servings: "Menos raciones", more_servings: "Más raciones", not_in_video: "El vídeo no lo dice",
   prices_estimated: "Precios estimados: solo orientativos.", cooked_it: "Lo he cocinado", no_logs: "Aún no hay registros.", date: "Fecha", notes_optional: "Notas (opcional)",
   cook_notes_ph: "¿Qué cambiarías la próxima vez?", add: "Añadir",
+  step_of: (n, m) => `Paso ${n} de ${m}`, search_ph_short: "Buscar recetas…", days: "Días de la semana",
 });
 Object.assign(I18N.en, {
   favorite: "Favourite", by_author: a => `by ${a}`, added_on: d => `added ${d}`, your_rating: "Your rating", rating: "Rating", n_stars: n => `${n} stars`,
@@ -44,6 +45,7 @@ Object.assign(I18N.en, {
   suggested_steps: "Suggested steps (not shown in the video).", fewer_servings: "Fewer servings", more_servings: "More servings", not_in_video: "Not stated in the video",
   prices_estimated: "Estimated prices: for guidance only.", cooked_it: "I cooked it", no_logs: "No entries yet.", date: "Date", notes_optional: "Notes (optional)",
   cook_notes_ph: "What would you change next time?", add: "Add",
+  step_of: (n, m) => `Step ${n} of ${m}`, search_ph_short: "Search recipes…", days: "Days of the week",
 });
 window.LANG = localStorage.getItem("lang") || "es";
 window.t = (k, ...a) => { const v = (I18N[LANG] || I18N.es)[k] ?? I18N.es[k] ?? k; return typeof v === "function" ? v(...a) : v; };
