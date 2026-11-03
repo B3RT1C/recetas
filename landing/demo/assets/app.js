@@ -4,7 +4,8 @@ const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const main = $("#main");
-const eur = n => n == null ? "—" : n.toLocaleString("es-ES", { style: "currency", currency: "EUR" });
+const LOC = () => (window.LANG === "en" ? "en-GB" : "es-ES");
+const eur = n => n == null ? "—" : n.toLocaleString(LOC(), { style: "currency", currency: "EUR" });
 const norm = s => (s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
 /* ---------- small UI helpers ---------- */
@@ -26,7 +27,7 @@ function fmtQty(n) {
   if (n >= 10) return String(Math.round(n));
   const w = Math.floor(n), f = n - w;
   for (const [v, s] of FR) if (Math.abs(f - v) < .04) return (w ? w : "") + s;
-  return (Math.round(n * 10) / 10).toLocaleString("es-ES");
+  return (Math.round(n * 10) / 10).toLocaleString(LOC());
 }
 /* Smart scaling: whole-unit items (eggs, cloves, cans) are rounded sensibly. */
 const WHOLE = /huevo|diente|lata|sobre|yema|clara|pechuga|muslo|loncha|rebanada|tortilla|lomo/;
@@ -58,7 +59,7 @@ function renderNav(cur) {
   $("#tabbar").style.gridTemplateColumns = `repeat(${API.STATIC ? 4 : 5},1fr)`;
 }
 function themeIcon() { const d = document.documentElement.dataset.theme === "dark"; $("#themeBtn").innerHTML = ic(d ? "sun" : "moon"); $("#themeBtn").setAttribute("aria-label", t("theme")); }
-$("#themeBtn").onclick = () => { const r = document.documentElement; r.dataset.theme = r.dataset.theme === "dark" ? "light" : "dark"; localStorage.setItem("tema", r.dataset.theme); themeIcon(); };
+$("#themeBtn").onclick = () => { const r = document.documentElement; r.dataset.theme = r.dataset.theme === "dark" ? "light" : "dark"; localStorage.setItem("tema", r.dataset.theme); themeIcon(); $$("input[name=tema]").forEach(i => i.checked = i.value === r.dataset.theme); };
 
 const routes = {
   recetas: viewList, receta: viewDetail, editar: viewEditor, nueva: viewEditor, borrador: viewEditor,
@@ -81,7 +82,13 @@ async function router() {
   router.first = false;
 }
 router.first = true;
-addEventListener("hashchange", () => { window.scrollTo(0, 0); router(); });
+// Close every modal surface left open by the previous screen (dialogs, sheets, cook mode) before rendering the next one.
+function closeOverlays() {
+  $$("dialog[open]").forEach(d => d.close());
+  document.body.classList.remove("fpop-open");
+  const ck = $("#cook"); if (ck && !ck.hidden) { ck.hidden = true; document.fullscreenElement && document.exitFullscreen?.().catch(() => {}); }
+}
+addEventListener("hashchange", () => { closeOverlays(); window.scrollTo(0, 0); router(); });
 
 /* =========================================================== LIST */
 const F = Object.assign({ q: "", estado: "", favoritos: false, etiqueta: "", max_min: "", max_precio: "", orden: "original" }, JSON.parse(sessionStorage.getItem("filtros") || "{}"));
@@ -105,7 +112,7 @@ async function viewList() {
     </div></div>
   ${API.STATIC ? "" : `<a class="fab no-print" href="#/nueva" aria-label="${t("new_recipe")}" title="${t("new_recipe")}">${ic("plus")}<span>${t("new_short")}</span></a>`}
   <div class="toolbar">
-    <div class="search"><label class="sr" for="q">Buscar</label><input id="q" class="input" type="search" placeholder="${t("search_ph")}" value="${esc(F.q)}" autocomplete="off"></div>
+    <div class="search"><label class="sr" for="q">Buscar</label><input id="q" class="input" type="search" placeholder="${matchMedia("(max-width:640px)").matches ? t("search_ph_short") : t("search_ph")}" value="${esc(F.q)}" autocomplete="off"></div>
       <div class="fpop-wrap">
         <button class="btn" type="button" id="filtBtn" aria-haspopup="dialog" aria-expanded="false" aria-controls="filtPanel">${ic("sliders-horizontal")}<span class="blabel">Filtros</span><span class="fbadge" id="filtN" hidden></span></button>
         <div class="fpop" id="filtPanel" role="dialog" aria-modal="true" aria-labelledby="filtTitle" hidden>
@@ -156,7 +163,7 @@ function bindFab() {
   let last = scrollY;
   if (fabScroll) removeEventListener("scroll", fabScroll);
   fabScroll = () => { const y = scrollY; if (Math.abs(y - last) < 6) return;
-    fab.classList.toggle("fab-hide", y > last && y > 80); last = y; };
+    fab.classList.toggle("fab-hide", y > last && y > 80); fab.classList.toggle("fab-mini", y > 80); last = y; };
   addEventListener("scroll", fabScroll, { passive: true });
 }
 let closeMore = () => {};
@@ -278,7 +285,7 @@ function phaseTimes(r) {
 function mainIngredients(r, n = 5) {
   return [...(r.ingredientes || [])].filter(i => i.nombre).sort((a, b) => (b.precio_eur || 0) - (a.precio_eur || 0)).slice(0, n).map(i => i.nombre);
 }
-const fdate = s => { const d = s ? new Date(s) : null; return d && !isNaN(d) ? d.toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" }) : ""; };
+const fdate = s => { const d = s ? new Date(s) : null; return d && !isNaN(d) ? d.toLocaleDateString(LOC(), { day: "numeric", month: "short", year: "numeric" }) : ""; };
 function card(r) {
   if (VIEW.vista === "una") return cardWide(r, false);
   if (VIEW.vista === "compacta") return cardCompact(r);
@@ -412,57 +419,60 @@ async function viewDetail(id) {
   setTitle(r.titulo);
   const pend = r.estado !== "completa";
   const base = r.raciones || 1; let k = 1;
+  const media = videoFrame(r);
   main.innerHTML = `
   <nav class="crumbs"><a href="#/recetas">${ic("arrow-left")} ${t("nav_recetas")}</a></nav>
-  <div class="detail">
-    <div>
-      <div class="panel">
-        <div class="row" style="justify-content:space-between;align-items:flex-start">
+  <div class="detail ${media ? "has-media" : "no-media"}">
+    ${media ? `<div class="panel d-media no-print">${media}</div>` : ""}
+    <div class="panel d-head">
+        <div class="row" style="justify-content:space-between;align-items:flex-start;flex-wrap:nowrap">
           <h1 class="grow">${esc(r.titulo)}</h1>
-          ${API.STATIC ? "" : `<button class="icon-btn no-print" id="favBtn" type="button" aria-pressed="${!!r.favorito}" aria-label="Favorita">${ic("star", "", r.favorito ? "fill" : "")}</button>`}
+          ${API.STATIC ? "" : `<button class="icon-btn no-print" id="favBtn" type="button" aria-pressed="${!!r.favorito}" aria-label="${t("favorite")}">${ic("star", "", r.favorito ? "fill" : "")}</button>`}
         </div>
-        <p class="muted" style="margin:0">${[r.autor ? `de <b>${esc(r.autor)}</b>` : "", fdate(r.creado) ? `<span id="dDate">añadida el ${fdate(r.creado)}</span>` : ""].filter(Boolean).join(" · ")} </p>
-        ${API.STATIC ? "" : `<div class="row no-print" style="margin-top:.5rem"><span class="small muted">Tu valoración</span><span class="stars" role="group" aria-label="Valoración">${[1, 2, 3, 4, 5].map(n => `<button type="button" data-star="${n}" class="${(r.valoracion || 0) >= n ? "on" : ""}" aria-label="${n} estrellas">${ic("star")}</button>`).join("")}</span></div>`}
+        <p class="muted" style="margin:0">${[r.autor ? t("by_author", `<b>${esc(r.autor)}</b>`) : "", fdate(r.creado) ? `<span id="dDate">${t("added_on", fdate(r.creado))}</span>` : ""].filter(Boolean).join(" · ")} </p>
+        ${API.STATIC ? "" : `<div class="row no-print" style="margin-top:.5rem"><span class="small muted">${t("your_rating")}</span><span class="stars" role="group" aria-label="${t("rating")}">${[1, 2, 3, 4, 5].map(n => `<button type="button" data-star="${n}" class="${(r.valoracion || 0) >= n ? "on" : ""}" aria-label="${t("n_stars", n)}">${ic("star")}</button>`).join("")}</span></div>`}
         ${pend ? `<div class="banner"><span>${ic("film")} ${t("pending_banner")}</span>${API.STATIC ? "" : `<a class="btn sm" href="#/editar/${r.id}">${ic("pen-line")} ${t("transcribe")}</a>`}</div>` : `
-        <div class="facts">
-          <div class="fact"><b>${r.tiempo_total_min ?? "—"} min</b><span>tiempo total</span></div>
-          <div class="fact"><b>${eur(r.precio_racion_eur)}</b><span>por ración · ${t("est")}</span></div>
-          <div class="fact"><b>${eur(r.precio_total_eur)}</b><span>total · ${t("est")}</span></div>
-          ${r.nutricion?.kcal ? `<div class="fact"><b>${r.nutricion.kcal} kcal</b><span>por ración · ${t("est")}</span></div>` : ""}
+        <div class="dfacts">
+          <div class="fact"><b>${r.tiempo_total_min ?? "—"} min</b><span>${t("total_time")}</span></div>
+          <div class="fact"><b>${eur(r.precio_racion_eur)}</b><span>${t("per_serving")} · ${t("est")}</span></div>
+          <div class="fact"><b>${eur(r.precio_total_eur)}</b><span>${t("total")} · ${t("est")}</span></div>
+          ${r.nutricion?.kcal ? `<div class="fact"><b>${r.nutricion.kcal} kcal</b><span>${t("per_serving")} · ${t("est")}</span></div>` : ""}
         </div>`}
         <div class="row">${(r.etiquetas || []).map(x => `<a class="chip" href="#/recetas" data-gotag="${esc(x)}">${esc(x)}</a>`).join("")}</div>
-        ${(r.alergenos || []).length ? `<p class="small" style="margin:.6rem 0 0"><b>Alérgenos (orientativo):</b> ${(r.alergenos).map(a => `<span class="badge alg">${esc(a)}</span>`).join(" ")}</p>` : ""}
+        ${(r.alergenos || []).length ? `<p class="small" style="margin:.6rem 0 0"><b>${t("allergens")}:</b> ${(r.alergenos).map(a => `<span class="badge alg">${esc(a)}</span>`).join(" ")}</p>` : ""}
         <div class="actions no-print">
           ${pend || !r.pasos?.length ? "" : `<button class="btn primary" id="cookBtn" type="button">${ic("chef-hat")} ${t("cook_mode")}</button>`}
-          ${API.STATIC || pend ? "" : `<button class="btn" id="toList" type="button">${ic("shopping-cart")} Añadir a la lista</button><button class="btn" id="toPlan" type="button">${ic("calendar-days")} Planificar</button>`}
+          ${API.STATIC || pend ? "" : `<button class="btn" id="toList" type="button">${ic("shopping-cart")} ${t("add_to_list")}</button><button class="btn" id="toPlan" type="button">${ic("calendar-days")} ${t("plan_it")}</button>`}
           <button class="btn" type="button" onclick="print()">${ic("printer")} ${t("print")}</button>
           ${API.STATIC ? "" : `<a class="btn" href="#/editar/${r.id}">${ic("pencil")} ${t("edit")}</a>
           <button class="btn" id="trBtn" type="button">${ic("languages")} ${t("translate")}</button>
-          <button class="btn ghost danger" id="delBtn" type="button">${ic("trash-2")} ${t("delete")}</button>`}
+          <button class="btn ghost danger sm" id="delBtn" type="button">${ic("trash-2")} ${t("delete")}</button>`}
         </div>
-      </div>
-      ${pend ? "" : `
-      <section class="panel" aria-labelledby="hIng">
-        <div class="row" style="justify-content:space-between"><h2 id="hIng">${t("ingredients")}</h2>
-          <div class="scaler"><button class="icon-btn" type="button" id="minus" aria-label="Menos raciones">${ic("minus")}</button>
-            <output id="srv" aria-live="polite">${base}</output><span>${t("servings")}${r.raciones_estimadas ? ` <span class="badge est" title="El vídeo no lo dice">${t("est")}</span>` : ""}</span>
-            <button class="icon-btn" type="button" id="plus" aria-label="Más raciones">${ic("plus")}</button></div></div>
-        <ul class="ings" id="ings"></ul>
-        <p class="small muted" style="margin-bottom:0">${ic("euro")} Precios <b>estimados</b>: solo orientativos. <span id="ptot"></span></p>
-      </section>
-      <section class="panel" aria-labelledby="hSt"><h2 id="hSt">${t("steps")}</h2>
-        <ol class="steps">${(r.pasos || []).map((s, i) => `<li><div><p style="margin:0">${esc(s.texto)}</p>${s.minutos ? `<button class="btn sm no-print" style="margin-top:.4rem" type="button" data-timer="${i}">${ic("timer")} ${s.minutos} min</button>` : ""}</div></li>`).join("")}</ol>
-        ${(r.pasos_sugeridos) ? `<p class="small muted">Pasos sugeridos (no aparecen en el vídeo).</p>` : ""}
-      </section>`}
-      ${r.notas || r.nota ? `<section class="panel"><h2>${t("notes")}</h2><p style="white-space:pre-line;margin:0">${esc(r.notas || r.nota)}</p></section>` : ""}
     </div>
-    <aside>
-      ${videoFrame(r) ? `<div class="panel no-print">${videoFrame(r)}</div>` : ""}
-      ${API.STATIC ? "" : `<section class="panel no-print"><h2>Lo he cocinado</h2>
-        <ul class="joblist">${(r.cocinado || []).map((c, i) => `<li>${ic("utensils")} <b>${esc(c.fecha)}</b> <span class="grow">${esc(c.notas || "")}</span><button class="btn sm ghost" type="button" data-delc="${i}" aria-label="Borrar">${ic("x")}</button></li>`).join("") || `<li class="muted small">Aún no hay registros.</li>`}</ul>
-        <form id="cookLog" class="row"><label class="sr" for="cd">Fecha</label><input id="cd" class="input" type="date" required value="${new Date().toISOString().slice(0, 10)}" style="width:auto">
-          <label class="sr" for="cn">Notas</label><input id="cn" class="input grow" placeholder="Notas (opcional)" maxlength="500"><button class="btn" type="submit">Añadir</button></form></section>`}
-    </aside>
+    <div class="d-main">
+      ${pend ? "" : `
+      <section class="panel d-steps" aria-labelledby="hSt"><h2 id="hSt">${t("steps")}</h2>
+        <ol class="steps">${(r.pasos || []).map((s, i) => `<li><div><p style="margin:0">${esc(s.texto)}</p>${s.minutos ? `<button class="btn sm no-print" style="margin-top:.4rem" type="button" data-timer="${i}">${ic("timer")} ${s.minutos} min</button>` : ""}</div></li>`).join("")}</ol>
+        ${(r.pasos_sugeridos) ? `<p class="small muted">${t("suggested_steps")}</p>` : ""}
+      </section>`}
+      ${r.notas || r.nota ? `<section class="panel d-notes"><h2>${t("notes")}</h2><p style="white-space:pre-line;margin:0">${esc(r.notas || r.nota)}</p></section>` : ""}
+    </div>
+    <div class="d-side">
+      ${pend ? "" : `
+      <section class="panel d-ing" aria-labelledby="hIng">
+        <div class="row" style="justify-content:space-between"><h2 id="hIng">${t("ingredients")}</h2>
+          <div class="scaler"><button class="icon-btn" type="button" id="minus" aria-label="${t("fewer_servings")}">${ic("minus")}</button>
+            <output id="srv" aria-live="polite">${base}</output><span>${t("servings")}${r.raciones_estimadas ? ` <span class="badge est" title="${t("not_in_video")}">${t("est")}</span>` : ""}</span>
+            <button class="icon-btn" type="button" id="plus" aria-label="${t("more_servings")}">${ic("plus")}</button></div></div>
+        <ul class="ings" id="ings"></ul>
+        <p class="small muted" style="margin-bottom:0">${ic("euro")} ${t("prices_estimated")} <span id="ptot"></span></p>
+      </section>`}
+      ${API.STATIC ? "" : `<section class="panel d-log no-print"><h2>${t("cooked_it")}</h2>
+        <ul class="joblist">${(r.cocinado || []).map((c, i) => `<li>${ic("utensils")} <b>${esc(fdate(c.fecha) || c.fecha)}</b> <span class="grow">${esc(c.notas || "")}</span><button class="btn sm ghost" type="button" data-delc="${i}" aria-label="${t("delete")}">${ic("x")}</button></li>`).join("") || `<li class="muted small">${t("no_logs")}</li>`}</ul>
+        <form id="cookLog" class="cooklog"><label class="f" for="cd">${t("date")}</label><input id="cd" class="input" type="date" required value="${new Date().toISOString().slice(0, 10)}">
+          <label class="f" for="cn">${t("notes_optional")}</label><textarea id="cn" class="input" rows="2" placeholder="${t("cook_notes_ph")}" maxlength="500"></textarea>
+          <button class="btn" type="submit">${ic("plus")} ${t("add")}</button></form></section>`}
+    </div>
   </div>`;
   setTimeout(fitEmb, 50); fitVideo();
   $$("[data-gotag]").forEach(a => a.onclick = () => { F.etiqueta = a.dataset.gotag; sessionStorage.setItem("filtros", JSON.stringify(F)); });
@@ -710,7 +720,7 @@ async function viewImport() {
   if (W.step > 1 && !st.conectado && W.step < 4) W.step = 1;
   main.innerHTML = `<div class="hero"><div><h1>${t("nav_importar")}</h1><p class="muted" style="margin:0">Trae recetas de tus guardados. Antes de guardarlas podrás revisarlas y editarlas.</p></div>
     ${drafts.length ? `<button class="btn" type="button" id="goRev">${ic("notebook-pen")} ${drafts.length} borrador${drafts.length > 1 ? "es" : ""} por revisar</button>` : ""}</div>
-    <ol class="stepper">${WSTEPS.map((s, i) => `<li ${W.step === i + 1 ? 'aria-current="step"' : ""} class="${W.step > i + 1 ? "done" : ""}"><b>${W.step > i + 1 ? ic("check", "Hecho") : i + 1}</b>${s}</li>`).join("")}</ol>
+    <ol class="wizard-steps">${WSTEPS.map((s, i) => `<li ${W.step === i + 1 ? 'aria-current="step"' : ""} class="${W.step > i + 1 ? "done" : ""}"><b>${W.step > i + 1 ? ic("check", "Hecho") : i + 1}</b><span class="ws-n">${t("step_of", i + 1, WSTEPS.length)} · </span>${s}</li>`).join("")}</ol>
     <section class="panel" id="wz"></section>`;
   $("#goRev") && ($("#goRev").onclick = () => { W.step = 5; viewImport(); });
   const wz = $("#wz");
@@ -722,7 +732,8 @@ async function viewImport() {
 }
 function wizConnect(wz, sources, st) {
   wz.innerHTML = `<h2>1. Elige la fuente</h2>
-  <div class="row" role="radiogroup">${sources.map(s => `<label class="chip" style="cursor:${s.disponible ? "pointer" : "not-allowed"};opacity:${s.disponible ? 1 : .55}"><input type="radio" name="src" value="${s.id}" ${s.id === W.source ? "checked" : ""} ${s.disponible ? "" : "disabled"}> ${esc(s.label)}${s.disponible ? "" : ` <span class="n">${t("soon")}</span>`}</label>`).join("")}</div>
+  <div class="row srcopts" role="radiogroup">${sources.filter(s => s.disponible).map(s => `<label class="chip" style="cursor:${s.disponible ? "pointer" : "not-allowed"};opacity:${s.disponible ? 1 : .55}"><input type="radio" name="src" value="${s.id}" ${s.id === W.source ? "checked" : ""} ${s.disponible ? "" : "disabled"}> ${esc(s.label)}</label>`).join("")}</div>
+  ${sources.some(s => !s.disponible) ? `<p class="small muted soonline">${t("soon")}: ${sources.filter(s => !s.disponible).map(s => esc(s.label)).join(", ")}</p>` : ""}
   <h2 style="margin-top:1.5rem">2. Conecta tu cuenta</h2>
   ${st.conectado ? `<div class="banner">${ic("circle-check")} Conectado como <b>@${esc(st.usuario)}</b> <span class="muted small">(${esc(st.proveedor)})</span><button class="btn sm" type="button" id="igOut">Desconectar</button><button class="btn primary" type="button" id="next">Continuar ${ic("arrow-right")}</button></div>` : `
   <p class="muted small">${ic("lock")} La contraseña solo se usa para iniciar sesión y <b>nunca se guarda</b>: se conserva únicamente el archivo de sesión en este equipo. Instagram puede pedir verificación o limitar peticiones si importas mucho de golpe.</p>
@@ -846,7 +857,7 @@ addEventListener("auth-required", () => { if (AUTH.ok) { AUTH.ok = false; toast(
 /* ---------- shared pickers ---------- */
 const COMIDAS = [["comida", "Comida"], ["cena", "Cena"]];
 const DIAS = ["lun", "mar", "mié", "jue", "vie", "sáb", "dom"];
-const fmtDay = (iso, long) => new Date(iso + "T12:00").toLocaleDateString("es-ES", long ? { weekday: "long", day: "numeric", month: "long" } : { day: "numeric", month: "short" });
+const fmtDay = (iso, long) => new Date(iso + "T12:00").toLocaleDateString(LOC(), long === "mid" ? { weekday: "short", day: "numeric", month: "short" } : long ? { weekday: "long", day: "numeric", month: "long" } : { day: "numeric", month: "short" });
 const isoToday = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); };
 let recipeCache = null;
 async function allRecipes() { return recipeCache ??= (await API.recipes({})).filter(r => r.tipo === "receta"); }
@@ -906,14 +917,16 @@ async function viewPlanner() {
       <button class="btn" type="button" id="wNext" aria-label="Semana siguiente">${ic("arrow-right")}</button>
       <button class="btn primary full-m" type="button" id="wList" ${wk.items.length ? "" : "disabled"}>${ic("shopping-cart")} Añadir a la lista</button>
     </div></div>
-  <p class="weeklabel"><b>Semana del ${fmtDay(wk.inicio)} al ${fmtDay(wk.fin)}</b> <span class="muted small">· Arrastra los platos entre huecos o usa «Mover».</span></p>
+  <p class="weeklabel"><b>Semana del ${fmtDay(wk.inicio)} al ${fmtDay(wk.fin)}</b> <span class="muted small draghint">· Arrastra los platos entre huecos o usa «Mover».</span></p>
+  <nav class="daystrip no-print" aria-label="${t("days")}">${wk.dias.map((d, i) => `<a href="#/planificador" data-jump="${d}" class="${d === today ? "today" : ""}"><span>${DIAS[i]}</span><b>${+d.slice(8)}</b>${(bySlot[d + "|comida"] || bySlot[d + "|cena"]) ? `<i aria-hidden="true"></i>` : ""}</a>`).join("")}</nav>
   <div class="week" id="week">${wk.dias.map((d, i) => `
-    <section class="day ${d === today ? "today" : ""}" aria-label="${fmtDay(d, true)}">
+    <section class="day ${d === today ? "today" : ""}" id="day-${d}" aria-label="${fmtDay(d, true)}">
       <h2><span>${DIAS[i]}</span> <span class="muted">${fmtDay(d)}</span>${d === today ? ` <span class="badge pend">hoy</span>` : ""}</h2>
-      ${COMIDAS.map(([c, lbl]) => `<div class="slot" data-slot="${d}|${c}"><h3>${lbl}</h3>
+      ${COMIDAS.map(([c, lbl]) => `<div class="slot ${(bySlot[d + "|" + c] || []).length ? "" : "empty"}" data-slot="${d}|${c}"><h3>${lbl}</h3>
         <ul>${(bySlot[d + "|" + c] || []).map(planChip).join("")}</ul>
         <button class="btn sm ghost addslot" type="button" data-add="${d}|${c}" aria-label="Añadir receta a ${lbl.toLowerCase()} del ${fmtDay(d, true)}">${ic("plus")} Añadir</button></div>`).join("")}
     </section>`).join("")}</div>`;
+  $$("[data-jump]").forEach(a => a.onclick = e => { e.preventDefault(); $("#day-" + a.dataset.jump)?.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" }); });
   $("#wPrev").onclick = () => { PLAN.inicio = wk.anterior; viewPlanner(); };
   $("#wNext").onclick = () => { PLAN.inicio = wk.siguiente; viewPlanner(); };
   $("#wToday").onclick = () => { PLAN.inicio = null; viewPlanner(); };
@@ -952,7 +965,7 @@ function planChip(p) {
 }
 function moveDialog(wk, p) {
   const d = dialog(`<form class="dlg" id="mvF"><h2>Mover «${esc(p.titulo)}»</h2>
-    <div class="form-grid"><div><label class="f" for="mvd">Día</label><select id="mvd" class="input">${wk.dias.map((x, i) => `<option value="${x}" ${x === p.fecha ? "selected" : ""}>${fmtDay(x, true)}</option>`).join("")}<option value="other">Otro día…</option></select>
+    <div class="form-grid dlg-stack"><div><label class="f" for="mvd">Día</label><select id="mvd" class="input">${wk.dias.map((x, i) => `<option value="${x}" ${x === p.fecha ? "selected" : ""}>${fmtDay(x, "mid")}</option>`).join("")}<option value="other">Otro día…</option></select>
       <input id="mvo" class="input" type="date" hidden value="${p.fecha}" aria-label="Otro día"></div>
     <div><label class="f" for="mvc">Comida</label><select id="mvc" class="input">${COMIDAS.map(([v, l]) => `<option value="${v}" ${v === p.comida ? "selected" : ""}>${l}</option>`).join("")}</select></div></div>
     <div class="row" style="justify-content:flex-end;margin-top:1rem"><button class="btn" type="button" id="mvx">${t("cancel")}</button><button class="btn primary" type="submit">Mover</button></div></form>`);
@@ -981,7 +994,7 @@ async function viewShopping() {
   const pend = L.items.filter(i => i.estado === "pendiente"), have = L.items.filter(i => i.estado === "ya_lo_tengo"), done = L.items.filter(i => i.estado === "comprado");
   const groups = []; pend.forEach(i => { const g = groups.find(g => g.id === i.categoria_id); g ? g.items.push(i) : groups.push({ id: i.categoria_id, items: [i] }); });
   main.innerHTML = `
-  <div class="hero"><div><h1>${t("nav_compra")}</h1><p class="muted" style="margin:0">${pend.length} por comprar${done.length ? ` · ${done.length} comprados` : ""}${have.length ? ` · ${have.length} ya en casa` : ""}</p></div>
+  <div class="hero"><div><h1>${t("nav_compra")}</h1><p class="muted" style="margin:0">${pend.length} por comprar${done.length ? ` · ${done.length} comprados` : ""}${have.length ? ` · ${have.length} ya en casa` : ""}</p>${L.mostrar_precios && L.precio_estimado_eur != null ? `<p class="shop-total" style="margin:.2rem 0 0">${t("list_total")}: <b>${eur(L.precio_estimado_eur)}</b> <span class="badge est" title="${t("prices_estimated")}">${t("est")}</span></p>` : ""}</div>
     <div class="row no-print hero-actions">
       <button class="btn" type="button" id="shShare">${ic("share-2")} Compartir</button>
       <button class="btn" type="button" onclick="print()">${ic("printer")} Imprimir</button>
@@ -1042,7 +1055,7 @@ function shopItem(i) {
     <input type="checkbox" id="b${i.id}" data-buy="${i.id}" ${i.estado === "comprado" ? "checked" : ""} aria-label="Comprado: ${esc(i.nombre)}">
     <label for="b${i.id}" class="grow"><span class="q">${esc(i.texto_cantidad)}</span> ${esc(i.nombre)}${i.recurrente ? ` <span title="Recurrente">${ic("repeat", "recurrente")}</span>` : ""}
       ${i.nota ? `<span class="small muted"> · ${esc(i.nota)}</span>` : ""}
-      ${src.length ? `<span class="src small muted">${[...new Set(src)].map(esc).join(", ")}</span>` : ""}</label>
+      ${src.length ? (u => `<span class="src small muted" title="${esc(u.join(", "))}">${esc(u[0])}${u.length > 1 ? ` +${u.length - 1}` : ""}</span>`)([...new Set(src)]) : ""}</label>
     ${i.precio_eur != null ? `<span class="p small">${eur(i.precio_eur)}</span>` : ""}
     <button type="button" class="icon-btn sm no-print" data-have="${i.id}" aria-pressed="${i.estado === "ya_lo_tengo"}" title="Ya lo tengo" aria-label="Ya lo tengo: ${esc(i.nombre)}">${ic("house")}</button>
     <button type="button" class="icon-btn sm no-print" data-edit="${i.id}" aria-label="Editar ${esc(i.nombre)}">${ic("pencil")}</button></li>`;
@@ -1212,26 +1225,74 @@ async function renderEstado(refresh) {
 }
 
 /* =========================================================== SETTINGS */
-async function viewSettings() {
+// Settings: an index of sections (mobile) or a side menu (desktop) plus one section per hash route, e.g. #/ajustes/ia.
+const SETTINGS = [["apariencia", "palette", "set_appearance"], ["portadas", "film", "set_covers"], ["ia", "bot", "set_ai"], ["agentes", "key-round", "set_agents"],
+  ["importacion", "instagram", "set_import"], ["precios", "euro", "set_prices"], ["copias", "download", "set_backup"], ["cuenta", "lock", "set_account"], ["estado", "activity", "set_status"]];
+const STATIC_SETTINGS = ["apariencia", "precios", "estado"];
+async function viewSettings(arg) {
   setTitle(t("nav_ajustes"));
+  const avail = SETTINGS.filter(([id]) => !API.STATIC || STATIC_SETTINGS.includes(id));
+  const cur = avail.find(([id]) => id === arg)?.[0];
+  if (arg && !cur) { location.replace("#/ajustes"); return; }
+  const sel = cur || "apariencia";
   const meta = await API.meta();
-  main.innerHTML = `<h1>${t("nav_ajustes")}</h1><div class="settings">
-  <nav class="side" aria-label="Apartados">${[["ap", t("appearance")], ...(API.STATIC ? [] : [["por", "Portadas"], ["ia", "Conectar tu IA"], ["tok", "Acceso para agentes"], ["ig", "Instagram"], ["estado", "Estado"], ["acc", "Acceso"], ["sesion", "Sesión"]]), ["about", t("about")]].map(([id, l]) => `<a href="#/ajustes" data-jump="${id}">${l}</a>`).join("")}</nav>
-  <div>
-   <section class="panel" id="s-ap"><h2>${t("appearance")}</h2><div class="row">
-     <button class="btn" type="button" id="tg">${ic("sun-moon")} ${t("theme")}</button>
-     <label>${t("language")} <select class="input" id="lang" style="width:auto">${[["es", "Español"], ["en", "English"]].map(([v, l]) => `<option value="${v}" ${LANG === v ? "selected" : ""}>${l}</option>`).join("")}</select></label></div>
-     <fieldset class="cover-opts" id="densOpt"><legend class="f">${t("density")}</legend>
+  const [, icon, key] = SETTINGS.find(([id]) => id === sel);
+  main.innerHTML = `<div class="settings ${cur ? "s-sub" : "s-index"}">
+  <div class="s-menu"><h1>${t("nav_ajustes")}</h1>
+  <nav class="side" aria-label="${t("set_sections")}">${avail.map(([id, ico, k]) => `<a href="#/ajustes/${id}" ${id === sel ? 'aria-current="page"' : ""}>${ic(ico)}<span>${t(k)}</span>${ic("chevron-right")}</a>`).join("")}</nav></div>
+  <div class="s-content">
+   <nav class="crumbs s-back"><a href="#/ajustes">${ic("arrow-left")} ${t("nav_ajustes")}</a></nav>
+   <h2 class="s-title">${ic(icon)} ${t(key)}</h2>
+   ${settingsSection(sel, meta)}
+  </div></div>`;
+  if (sel === "apariencia") bindAppearance();
+  if (API.STATIC) return;
+  const fail = (id, e) => { const b = $(id); if (b) b.innerHTML = `<p class="muted">${esc(e.message)}</p>`; };
+  ({
+    portadas: () => renderCoverDefault().catch(e => fail("#s-por", e)),
+    ia: () => renderAI().catch(e => fail("#s-ia", e)),
+    agentes: () => renderTokens().catch(e => fail("#s-tok", e)),
+    importacion: () => renderIG().catch(e => fail("#s-ig", e)),
+    precios: () => { $("#stPan") && ($("#stPan").onclick = () => pantryDialog()); $("#stCats") && ($("#stCats").onclick = () => catsDialog()); },
+    copias: () => { $("#stExp").onclick = () => exportDialog(); },
+    cuenta: () => { renderAcceso().catch(e => fail("#s-acc", e));
+      $("#logout").onclick = () => guard(async () => { await API.auth.logout(); AUTH.ok = false; location.hash = "#/login"; viewLogin(); }); },
+    estado: () => renderEstado().catch(e => fail("#s-estado", e)),
+  })[sel]?.();
+}
+function settingsSection(sel, meta) {
+  switch (sel) {
+    case "apariencia": return `<section class="panel" id="s-ap">
+     <fieldset class="cover-opts" id="themeOpt"><legend class="f">${t("theme_label")}</legend>
+       ${[["light", t("theme_light"), "sun"], ["dark", t("theme_dark"), "moon"]].map(([v, l, i]) =>
+         `<label class="cover-opt"><input type="radio" name="tema" value="${v}" ${(document.documentElement.dataset.theme || "light") === v ? "checked" : ""}><span><b>${ic(i)} ${l}</b></span></label>`).join("")}
+     </fieldset>
+     <label class="f" for="lang">${t("language")}</label><select class="input" id="lang">${[["es", "Español"], ["en", "English"]].map(([v, l]) => `<option value="${v}" ${LANG === v ? "selected" : ""}>${l}</option>`).join("")}</select>
+     <fieldset class="cover-opts" id="densOpt" style="margin-top:1rem"><legend class="f">${t("density")}</legend>
        ${[["comoda", t("density_comfy")], ["compacta", t("density_compact")]].map(([v, l]) =>
          `<label class="cover-opt"><input type="radio" name="interfaz" value="${v}" ${UIDENS === v ? "checked" : ""}><span><b>${l}</b></span></label>`).join("")}
        <small class="muted">${t("density_note")}</small>
      </fieldset>
-     <fieldset class="cover-opts" id="thumbOpt" style="margin-top:1rem"><legend class="f">En las listas, mostrar</legend>
-       ${[["portada", "Miniatura del vídeo o portada", "La imagen de cada receta (recomendado)"], ["icono", "Icono genérico", "Más ligera y uniforme; sin fotos"]].map(([v, l, n]) =>
+     <fieldset class="cover-opts" id="thumbOpt" style="margin-top:1rem"><legend class="f">${t("thumbs_legend")}</legend>
+       ${[["portada", t("thumbs_cover"), t("thumbs_cover_n")], ["icono", t("thumbs_icon"), t("thumbs_icon_n")]].map(([v, l, n]) =>
          `<label class="cover-opt"><input type="radio" name="miniaturas" value="${v}" ${THUMBS === v ? "checked" : ""}><span><b>${l}</b><small class="muted">${n}</small></span></label>`).join("")}
-     </fieldset></section>
-   ${API.STATIC ? "" : `<section class="panel" id="s-por"></section><section class="panel" id="s-ia"></section><section class="panel" id="s-tok"></section><section class="panel" id="s-ig"></section><section class="panel" id="s-acc"></section><section class="panel" id="s-estado"><h2>${ic("activity")} Estado</h2><p class="muted">Cargando…</p></section>
-   <section class="panel" id="s-sesion"><h2>${ic("lock")} Sesión</h2><p>Has entrado como <b>${esc(AUTH.user)}</b>. Para cambiar la contraseña usa <code>python -m app.cli create-admin --replace</code> en el servidor.</p><button class="btn" type="button" id="logout">Cerrar sesión</button></section>`}
+     </fieldset></section>`;
+    case "portadas": return `<section class="panel" id="s-por"><p class="muted">${t("loading")}</p></section>`;
+    case "ia": return `<section class="panel" id="s-ia"><p class="muted">${t("loading")}</p></section>`;
+    case "agentes": return `<section class="panel" id="s-tok"><p class="muted">${t("loading")}</p></section>`;
+    case "importacion": return `<section class="panel" id="s-ig"><p class="muted">${t("loading")}</p></section>`;
+    case "precios": return `<section class="panel" id="s-precios">
+     <p>${t("prices_body")}</p>
+     <ul class="small muted plain"><li>${ic("shield-check")} ${t("prices_no_store")}</li><li>${ic("euro")} ${t("prices_toggle")}</li></ul>
+     ${meta.nota_precios ? `<p class="small muted">${esc(meta.nota_precios)}</p>` : ""}
+     ${API.STATIC ? "" : `<div class="row" style="margin-top:1rem"><button class="btn" type="button" id="stPan">${ic("house")} ${t("pantry")}</button><button class="btn" type="button" id="stCats">${ic("layout-list")} ${t("aisles")}</button><a class="btn" href="#/compra">${ic("shopping-cart")} ${t("nav_compra")}</a></div>`}</section>`;
+    case "copias": return `<section class="panel" id="s-copias"><p>${t("backup_body")}</p>
+     <div class="row"><button class="btn primary" type="button" id="stExp">${ic("download")} ${t("export")}</button></div>
+     <p class="small muted" style="margin-top:1rem">${t("backup_note")}</p></section>`;
+    case "cuenta": return `<section class="panel" id="s-sesion"><h2>${ic("lock")} ${t("session")}</h2><p>${t("signed_in_as", `<b>${esc(AUTH.user)}</b>`)}</p>
+     <p class="small muted">${t("password_hint")} <code>python -m app.cli create-admin --replace</code></p><button class="btn" type="button" id="logout">${t("logout")}</button></section>
+     <section class="panel" id="s-acc"><p class="muted">${t("loading")}</p></section>`;
+    case "estado": return `${API.STATIC ? "" : `<section class="panel" id="s-estado"><p class="muted">${t("loading")}</p></section>`}
    <section class="panel" id="s-about"><h2>${t("about")}</h2>
      <p>Recetario personal que convierte vídeos de recetas guardados en Instagram en recetas escalables, con precios <b>estimados</b> y modo cocina. Versión ${esc(meta.version || "2")}.</p>
      <pre class="arch" aria-label="Arquitectura">Navegador (SPA vanilla JS, sin build)
@@ -1244,24 +1305,23 @@ FastAPI + uvicorn ──► SQLite (recetas como documentos JSON, migración sin
    ├─ Exportar: JSON · HTML · Markdown · ZIP con medios
    └─ Medios: videos/CÓDIGO.mp4 (compatible v1) · media/…</pre>
      <p class="small muted">${esc(meta.nota_precios || "")}</p>
-     ${API.STATIC ? `<p class="small">Esta es una demo estática de solo lectura con datos de ejemplo.</p>` : `<p class="small"><a href="/docs" target="_blank">Documentación de la API (OpenAPI) ${ic("external-link")}</a></p>`}</section>
-  </div></div>`;
-  $$("[data-jump]").forEach(a => a.onclick = e => { e.preventDefault(); $(`#s-${a.dataset.jump}`).scrollIntoView({ behavior: "smooth" }); });
-  $("#tg").onclick = () => $("#themeBtn").click();
+     ${API.STATIC ? `<p class="small">Esta es una demo estática de solo lectura con datos de ejemplo.</p>` : `<p class="small"><a href="/docs" target="_blank">Documentación de la API (OpenAPI) ${ic("external-link")}</a></p>`}</section>`;
+  }
+  return "";
+}
+function bindAppearance() {
+  $$("input[name=tema]").forEach(i => i.onchange = () => { document.documentElement.dataset.theme = i.value; localStorage.setItem("tema", i.value); themeIcon(); });
   $$("input[name=interfaz]").forEach(i => i.onchange = () => guard(async () => {
     setUIDens(i.value);
     if (!API.STATIC) await API.setPrefsLista({ interfaz: UIDENS });
-    toast("Preferencia guardada");
+    toast(t("pref_saved"));
   }));
   $$("input[name=miniaturas]").forEach(i => i.onchange = () => guard(async () => {
     THUMBS = i.value; localStorage.setItem("miniaturas", THUMBS);
     if (!API.STATIC) await API.setPrefsLista({ miniaturas: THUMBS });
-    toast("Preferencia guardada");
+    toast(t("pref_saved"));
   }));
   $("#lang").onchange = e => { localStorage.setItem("lang", e.target.value); location.reload(); };
-  if (API.STATIC) return;
-  renderCoverDefault().catch(() => {}); renderAI(); renderTokens(); renderIG(); renderAcceso().catch(e => $("#s-acc").innerHTML = `<h2>${ic("wifi")} Acceso</h2><p class="muted">${esc(e.message)}</p>`); renderEstado().catch(e => $("#s-estado").innerHTML = `<h2>${ic("activity")} Estado</h2><p class="muted">${esc(e.message)}</p>`);
-  $("#logout").onclick = () => guard(async () => { await API.auth.logout(); AUTH.ok = false; location.hash = "#/login"; viewLogin(); });
 }
 async function renderCoverDefault() {
   const box = $("#s-por"), c = await API.coverDefault();
