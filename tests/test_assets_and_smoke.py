@@ -109,6 +109,10 @@ LAYOUT_JS = """() => {
   return out; }"""
 
 
+SETTINGS_SUBROUTES = ("apariencia", "portadas", "ia", "agentes", "importacion", "precios", "copias", "cuenta", "estado")
+ROUTES = ("receta/2", "planificador", "compra", "importar", "ajustes") + tuple(f"ajustes/{s}" for s in SETTINGS_SUBROUTES)
+
+
 @pytest.fixture()
 def messy(server, services):  # noqa: F811
     """Real third-party seed (already loaded) plus edge cases and a full week that references a deleted recipe."""
@@ -157,7 +161,7 @@ def test_no_console_errors_and_sane_layout_everywhere(messy, vw, theme):
             pg.evaluate(f"localStorage.setItem('interfaz','{dens}')"); pg.goto(f"{base}/#/recetas"); pg.reload(); pg.wait_for_selector(".card")
             for v in ("una", "compacta", "miniatura", "cuadricula"):
                 pg.click(f'[data-view="{v}"]'); pg.wait_for_timeout(150); check(f"{dens}/recetas/{v}")
-            for route in ("receta/2", "planificador", "compra", "ajustes"):
+            for route in ROUTES:
                 pg.goto(f"{base}/#/{route}"); pg.wait_for_timeout(700); check(f"{dens}/{route}")
             # an empty week, three weeks ahead
             pg.goto(f"{base}/#/planificador"); pg.wait_for_selector("#wNext")

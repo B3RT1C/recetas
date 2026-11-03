@@ -125,7 +125,7 @@ def test_density_toggle(page):
     pad = lambda: pg.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--section').trim()")
     assert pg.evaluate("document.documentElement.dataset.density") == "comoda"
     comfy = pad()
-    pg.goto(pg.url.split("#")[0] + "#/ajustes"); pg.wait_for_selector("input[name=interfaz]")
+    pg.goto(pg.url.split("#")[0] + "#/ajustes/apariencia"); pg.wait_for_selector("input[name=interfaz]")
     pg.check("input[name=interfaz][value=compacta]"); pg.wait_for_timeout(300)
     assert pg.evaluate("document.documentElement.dataset.density") == "compacta"
     assert pg.evaluate("localStorage.getItem('interfaz')") == "compacta" and pad() != comfy
