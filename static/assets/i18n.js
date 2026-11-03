@@ -30,6 +30,21 @@ window.I18N = {
     soon: "Coming soon", about: "About this project", appearance: "Appearance", view_group: "List view", view_una: "Single: one large recipe per row", view_compacta: "Compact list: text only", view_miniatura: "List with thumbnail", view_cuadricula: "Cover grid", view_una_s: "Single", view_compacta_s: "Compact", view_miniatura_s: "Thumbnails", view_cuadricula_s: "Grid",
   },
 };
+/* v2.1.6 strings */
+Object.assign(I18N.es, {
+  favorite: "Favorita", by_author: a => `de ${a}`, added_on: d => `añadida el ${d}`, your_rating: "Tu valoración", rating: "Valoración", n_stars: n => `${n} estrellas`,
+  total_time: "tiempo total", per_serving: "por ración", total: "total", allergens: "Alérgenos (orientativo)", add_to_list: "Añadir a la lista", plan_it: "Planificar",
+  suggested_steps: "Pasos sugeridos (no aparecen en el vídeo).", fewer_servings: "Menos raciones", more_servings: "Más raciones", not_in_video: "El vídeo no lo dice",
+  prices_estimated: "Precios estimados: solo orientativos.", cooked_it: "Lo he cocinado", no_logs: "Aún no hay registros.", date: "Fecha", notes_optional: "Notas (opcional)",
+  cook_notes_ph: "¿Qué cambiarías la próxima vez?", add: "Añadir",
+});
+Object.assign(I18N.en, {
+  favorite: "Favourite", by_author: a => `by ${a}`, added_on: d => `added ${d}`, your_rating: "Your rating", rating: "Rating", n_stars: n => `${n} stars`,
+  total_time: "total time", per_serving: "per serving", total: "total", allergens: "Allergens (approximate)", add_to_list: "Add to list", plan_it: "Plan",
+  suggested_steps: "Suggested steps (not shown in the video).", fewer_servings: "Fewer servings", more_servings: "More servings", not_in_video: "Not stated in the video",
+  prices_estimated: "Estimated prices: for guidance only.", cooked_it: "I cooked it", no_logs: "No entries yet.", date: "Date", notes_optional: "Notes (optional)",
+  cook_notes_ph: "What would you change next time?", add: "Add",
+});
 window.LANG = localStorage.getItem("lang") || "es";
 window.t = (k, ...a) => { const v = (I18N[LANG] || I18N.es)[k] ?? I18N.es[k] ?? k; return typeof v === "function" ? v(...a) : v; };
 document.documentElement.lang = LANG;

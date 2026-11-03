@@ -115,7 +115,7 @@ label.f{display:block;font-weight:600;font-size:.9rem;margin:.8rem 0 .3rem}
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:1.1rem 1.2rem;box-shadow:var(--shadow)}
 .panel+.panel{margin-top:1rem}
 .crumbs{margin-bottom:.8rem}
-.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:.6rem;margin:1rem 0}
+.dfacts{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:.6rem;margin:1rem 0}
 .fact{background:var(--surface-2);border-radius:12px;padding:.6rem .8rem}
 .fact b{display:block;font-size:1.15rem}
 .fact span{font-size:.78rem;color:var(--muted)}
@@ -614,3 +614,43 @@ body,.cook{background:var(--elev-0)}
   .fab.fab-mini span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 }
 .srcopts .chip{max-width:100%;white-space:normal;height:auto;min-height:var(--tap,44px)}
+/* v2.1.6 batch 2: recipe detail */
+.detail{display:grid;gap:1rem;grid-template-columns:minmax(0,1fr)}
+.detail .panel+.panel{margin-top:0}
+.d-main,.d-side{display:grid;gap:1rem;align-content:start;min-width:0}
+.d-media .photo,.d-media img{width:100%;border-radius:12px;display:block;object-fit:cover;aspect-ratio:4/3}
+.d-media{padding:.6rem}
+.d-media .iglink{margin:.5rem .4rem 0}
+.cooklog{display:grid;gap:.35rem}
+.cooklog textarea{resize:vertical;min-height:4.2rem;width:100%}
+.cooklog .btn{justify-self:start;margin-top:.4rem}
+.actions #delBtn{margin-left:auto}
+@media(min-width:980px){
+  .detail{grid-template-columns:minmax(0,1fr) 360px;align-items:start}
+  .detail.no-media .d-head{grid-column:1/-1}
+  .d-head{grid-column:1;grid-row:1}
+  .d-media{grid-column:2;grid-row:1;align-self:stretch;display:flex;flex-direction:column}
+  .d-media .photo,.d-media img{flex:1;min-height:0;aspect-ratio:auto;max-height:420px}
+  .d-main{grid-column:1;grid-row:2}
+  .d-side{grid-column:2;grid-row:2;align-self:stretch}
+  .d-ing{position:sticky;top:76px;max-height:calc(100vh - 96px);overflow:auto}
+  .dfacts{grid-template-columns:repeat(auto-fit,minmax(0,1fr))}
+}
+@media(max-width:979px){
+  .d-main,.d-side{display:contents}
+  .d-media{order:1}.d-head{order:2}.d-ing{order:3}.d-steps{order:4}.d-notes{order:5}.d-log{order:6}
+}
+@media(max-width:760px){
+  .dfacts{grid-template-columns:repeat(3,minmax(0,1fr));gap:.4rem}
+  .dfacts .fact:nth-child(4){display:none}
+  .dfacts .fact{padding:.5rem .55rem}
+  .dfacts .fact b{font-size:1rem}
+  .dfacts .fact span{font-size:.7rem;line-height:1.2;display:block}
+  .actions{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+  .actions .btn{justify-content:center;width:100%;min-width:0}
+  .actions #cookBtn{grid-column:1/-1;min-height:48px}
+  .actions #delBtn{grid-column:1/-1;justify-self:center;width:auto;margin:.6rem 0 0;color:var(--muted)}
+  .d-media{padding:0;overflow:hidden}
+  .d-media .photo,.d-media img{border-radius:var(--radius) var(--radius) 0 0;aspect-ratio:16/11}
+  .d-media .iglink{margin:.5rem .9rem .7rem}
+}

@@ -418,57 +418,60 @@ async function viewDetail(id) {
   setTitle(r.titulo);
   const pend = r.estado !== "completa";
   const base = r.raciones || 1; let k = 1;
+  const media = videoFrame(r);
   main.innerHTML = `
   <nav class="crumbs"><a href="#/recetas">${ic("arrow-left")} ${t("nav_recetas")}</a></nav>
-  <div class="detail">
-    <div>
-      <div class="panel">
-        <div class="row" style="justify-content:space-between;align-items:flex-start">
+  <div class="detail ${media ? "has-media" : "no-media"}">
+    ${media ? `<div class="panel d-media no-print">${media}</div>` : ""}
+    <div class="panel d-head">
+        <div class="row" style="justify-content:space-between;align-items:flex-start;flex-wrap:nowrap">
           <h1 class="grow">${esc(r.titulo)}</h1>
-          ${API.STATIC ? "" : `<button class="icon-btn no-print" id="favBtn" type="button" aria-pressed="${!!r.favorito}" aria-label="Favorita">${ic("star", "", r.favorito ? "fill" : "")}</button>`}
+          ${API.STATIC ? "" : `<button class="icon-btn no-print" id="favBtn" type="button" aria-pressed="${!!r.favorito}" aria-label="${t("favorite")}">${ic("star", "", r.favorito ? "fill" : "")}</button>`}
         </div>
-        <p class="muted" style="margin:0">${[r.autor ? `de <b>${esc(r.autor)}</b>` : "", fdate(r.creado) ? `<span id="dDate">añadida el ${fdate(r.creado)}</span>` : ""].filter(Boolean).join(" · ")} </p>
-        ${API.STATIC ? "" : `<div class="row no-print" style="margin-top:.5rem"><span class="small muted">Tu valoración</span><span class="stars" role="group" aria-label="Valoración">${[1, 2, 3, 4, 5].map(n => `<button type="button" data-star="${n}" class="${(r.valoracion || 0) >= n ? "on" : ""}" aria-label="${n} estrellas">${ic("star")}</button>`).join("")}</span></div>`}
+        <p class="muted" style="margin:0">${[r.autor ? t("by_author", `<b>${esc(r.autor)}</b>`) : "", fdate(r.creado) ? `<span id="dDate">${t("added_on", fdate(r.creado))}</span>` : ""].filter(Boolean).join(" · ")} </p>
+        ${API.STATIC ? "" : `<div class="row no-print" style="margin-top:.5rem"><span class="small muted">${t("your_rating")}</span><span class="stars" role="group" aria-label="${t("rating")}">${[1, 2, 3, 4, 5].map(n => `<button type="button" data-star="${n}" class="${(r.valoracion || 0) >= n ? "on" : ""}" aria-label="${t("n_stars", n)}">${ic("star")}</button>`).join("")}</span></div>`}
         ${pend ? `<div class="banner"><span>${ic("film")} ${t("pending_banner")}</span>${API.STATIC ? "" : `<a class="btn sm" href="#/editar/${r.id}">${ic("pen-line")} ${t("transcribe")}</a>`}</div>` : `
-        <div class="facts">
-          <div class="fact"><b>${r.tiempo_total_min ?? "—"} min</b><span>tiempo total</span></div>
-          <div class="fact"><b>${eur(r.precio_racion_eur)}</b><span>por ración · ${t("est")}</span></div>
-          <div class="fact"><b>${eur(r.precio_total_eur)}</b><span>total · ${t("est")}</span></div>
-          ${r.nutricion?.kcal ? `<div class="fact"><b>${r.nutricion.kcal} kcal</b><span>por ración · ${t("est")}</span></div>` : ""}
+        <div class="dfacts">
+          <div class="fact"><b>${r.tiempo_total_min ?? "—"} min</b><span>${t("total_time")}</span></div>
+          <div class="fact"><b>${eur(r.precio_racion_eur)}</b><span>${t("per_serving")} · ${t("est")}</span></div>
+          <div class="fact"><b>${eur(r.precio_total_eur)}</b><span>${t("total")} · ${t("est")}</span></div>
+          ${r.nutricion?.kcal ? `<div class="fact"><b>${r.nutricion.kcal} kcal</b><span>${t("per_serving")} · ${t("est")}</span></div>` : ""}
         </div>`}
         <div class="row">${(r.etiquetas || []).map(x => `<a class="chip" href="#/recetas" data-gotag="${esc(x)}">${esc(x)}</a>`).join("")}</div>
-        ${(r.alergenos || []).length ? `<p class="small" style="margin:.6rem 0 0"><b>Alérgenos (orientativo):</b> ${(r.alergenos).map(a => `<span class="badge alg">${esc(a)}</span>`).join(" ")}</p>` : ""}
+        ${(r.alergenos || []).length ? `<p class="small" style="margin:.6rem 0 0"><b>${t("allergens")}:</b> ${(r.alergenos).map(a => `<span class="badge alg">${esc(a)}</span>`).join(" ")}</p>` : ""}
         <div class="actions no-print">
           ${pend || !r.pasos?.length ? "" : `<button class="btn primary" id="cookBtn" type="button">${ic("chef-hat")} ${t("cook_mode")}</button>`}
-          ${API.STATIC || pend ? "" : `<button class="btn" id="toList" type="button">${ic("shopping-cart")} Añadir a la lista</button><button class="btn" id="toPlan" type="button">${ic("calendar-days")} Planificar</button>`}
+          ${API.STATIC || pend ? "" : `<button class="btn" id="toList" type="button">${ic("shopping-cart")} ${t("add_to_list")}</button><button class="btn" id="toPlan" type="button">${ic("calendar-days")} ${t("plan_it")}</button>`}
           <button class="btn" type="button" onclick="print()">${ic("printer")} ${t("print")}</button>
           ${API.STATIC ? "" : `<a class="btn" href="#/editar/${r.id}">${ic("pencil")} ${t("edit")}</a>
           <button class="btn" id="trBtn" type="button">${ic("languages")} ${t("translate")}</button>
-          <button class="btn ghost danger" id="delBtn" type="button">${ic("trash-2")} ${t("delete")}</button>`}
+          <button class="btn ghost danger sm" id="delBtn" type="button">${ic("trash-2")} ${t("delete")}</button>`}
         </div>
-      </div>
-      ${pend ? "" : `
-      <section class="panel" aria-labelledby="hIng">
-        <div class="row" style="justify-content:space-between"><h2 id="hIng">${t("ingredients")}</h2>
-          <div class="scaler"><button class="icon-btn" type="button" id="minus" aria-label="Menos raciones">${ic("minus")}</button>
-            <output id="srv" aria-live="polite">${base}</output><span>${t("servings")}${r.raciones_estimadas ? ` <span class="badge est" title="El vídeo no lo dice">${t("est")}</span>` : ""}</span>
-            <button class="icon-btn" type="button" id="plus" aria-label="Más raciones">${ic("plus")}</button></div></div>
-        <ul class="ings" id="ings"></ul>
-        <p class="small muted" style="margin-bottom:0">${ic("euro")} Precios <b>estimados</b>: solo orientativos. <span id="ptot"></span></p>
-      </section>
-      <section class="panel" aria-labelledby="hSt"><h2 id="hSt">${t("steps")}</h2>
-        <ol class="steps">${(r.pasos || []).map((s, i) => `<li><div><p style="margin:0">${esc(s.texto)}</p>${s.minutos ? `<button class="btn sm no-print" style="margin-top:.4rem" type="button" data-timer="${i}">${ic("timer")} ${s.minutos} min</button>` : ""}</div></li>`).join("")}</ol>
-        ${(r.pasos_sugeridos) ? `<p class="small muted">Pasos sugeridos (no aparecen en el vídeo).</p>` : ""}
-      </section>`}
-      ${r.notas || r.nota ? `<section class="panel"><h2>${t("notes")}</h2><p style="white-space:pre-line;margin:0">${esc(r.notas || r.nota)}</p></section>` : ""}
     </div>
-    <aside>
-      ${videoFrame(r) ? `<div class="panel no-print">${videoFrame(r)}</div>` : ""}
-      ${API.STATIC ? "" : `<section class="panel no-print"><h2>Lo he cocinado</h2>
-        <ul class="joblist">${(r.cocinado || []).map((c, i) => `<li>${ic("utensils")} <b>${esc(c.fecha)}</b> <span class="grow">${esc(c.notas || "")}</span><button class="btn sm ghost" type="button" data-delc="${i}" aria-label="Borrar">${ic("x")}</button></li>`).join("") || `<li class="muted small">Aún no hay registros.</li>`}</ul>
-        <form id="cookLog" class="row"><label class="sr" for="cd">Fecha</label><input id="cd" class="input" type="date" required value="${new Date().toISOString().slice(0, 10)}" style="width:auto">
-          <label class="sr" for="cn">Notas</label><input id="cn" class="input grow" placeholder="Notas (opcional)" maxlength="500"><button class="btn" type="submit">Añadir</button></form></section>`}
-    </aside>
+    <div class="d-main">
+      ${pend ? "" : `
+      <section class="panel d-steps" aria-labelledby="hSt"><h2 id="hSt">${t("steps")}</h2>
+        <ol class="steps">${(r.pasos || []).map((s, i) => `<li><div><p style="margin:0">${esc(s.texto)}</p>${s.minutos ? `<button class="btn sm no-print" style="margin-top:.4rem" type="button" data-timer="${i}">${ic("timer")} ${s.minutos} min</button>` : ""}</div></li>`).join("")}</ol>
+        ${(r.pasos_sugeridos) ? `<p class="small muted">${t("suggested_steps")}</p>` : ""}
+      </section>`}
+      ${r.notas || r.nota ? `<section class="panel d-notes"><h2>${t("notes")}</h2><p style="white-space:pre-line;margin:0">${esc(r.notas || r.nota)}</p></section>` : ""}
+    </div>
+    <div class="d-side">
+      ${pend ? "" : `
+      <section class="panel d-ing" aria-labelledby="hIng">
+        <div class="row" style="justify-content:space-between"><h2 id="hIng">${t("ingredients")}</h2>
+          <div class="scaler"><button class="icon-btn" type="button" id="minus" aria-label="${t("fewer_servings")}">${ic("minus")}</button>
+            <output id="srv" aria-live="polite">${base}</output><span>${t("servings")}${r.raciones_estimadas ? ` <span class="badge est" title="${t("not_in_video")}">${t("est")}</span>` : ""}</span>
+            <button class="icon-btn" type="button" id="plus" aria-label="${t("more_servings")}">${ic("plus")}</button></div></div>
+        <ul class="ings" id="ings"></ul>
+        <p class="small muted" style="margin-bottom:0">${ic("euro")} ${t("prices_estimated")} <span id="ptot"></span></p>
+      </section>`}
+      ${API.STATIC ? "" : `<section class="panel d-log no-print"><h2>${t("cooked_it")}</h2>
+        <ul class="joblist">${(r.cocinado || []).map((c, i) => `<li>${ic("utensils")} <b>${esc(fdate(c.fecha) || c.fecha)}</b> <span class="grow">${esc(c.notas || "")}</span><button class="btn sm ghost" type="button" data-delc="${i}" aria-label="${t("delete")}">${ic("x")}</button></li>`).join("") || `<li class="muted small">${t("no_logs")}</li>`}</ul>
+        <form id="cookLog" class="cooklog"><label class="f" for="cd">${t("date")}</label><input id="cd" class="input" type="date" required value="${new Date().toISOString().slice(0, 10)}">
+          <label class="f" for="cn">${t("notes_optional")}</label><textarea id="cn" class="input" rows="2" placeholder="${t("cook_notes_ph")}" maxlength="500"></textarea>
+          <button class="btn" type="submit">${ic("plus")} ${t("add")}</button></form></section>`}
+    </div>
   </div>`;
   setTimeout(fitEmb, 50); fitVideo();
   $$("[data-gotag]").forEach(a => a.onclick = () => { F.etiqueta = a.dataset.gotag; sessionStorage.setItem("filtros", JSON.stringify(F)); });
