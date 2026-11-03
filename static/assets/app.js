@@ -81,7 +81,13 @@ async function router() {
   router.first = false;
 }
 router.first = true;
-addEventListener("hashchange", () => { window.scrollTo(0, 0); router(); });
+// Close every modal surface left open by the previous screen (dialogs, sheets, cook mode) before rendering the next one.
+function closeOverlays() {
+  $$("dialog[open]").forEach(d => d.close());
+  document.body.classList.remove("fpop-open");
+  const ck = $("#cook"); if (ck && !ck.hidden) { ck.hidden = true; document.fullscreenElement && document.exitFullscreen?.().catch(() => {}); }
+}
+addEventListener("hashchange", () => { closeOverlays(); window.scrollTo(0, 0); router(); });
 
 /* =========================================================== LIST */
 const F = Object.assign({ q: "", estado: "", favoritos: false, etiqueta: "", max_min: "", max_precio: "", orden: "original" }, JSON.parse(sessionStorage.getItem("filtros") || "{}"));
@@ -156,7 +162,7 @@ function bindFab() {
   let last = scrollY;
   if (fabScroll) removeEventListener("scroll", fabScroll);
   fabScroll = () => { const y = scrollY; if (Math.abs(y - last) < 6) return;
-    fab.classList.toggle("fab-hide", y > last && y > 80); last = y; };
+    fab.classList.toggle("fab-hide", y > last && y > 80); fab.classList.toggle("fab-mini", y > 80); last = y; };
   addEventListener("scroll", fabScroll, { passive: true });
 }
 let closeMore = () => {};
@@ -710,7 +716,7 @@ async function viewImport() {
   if (W.step > 1 && !st.conectado && W.step < 4) W.step = 1;
   main.innerHTML = `<div class="hero"><div><h1>${t("nav_importar")}</h1><p class="muted" style="margin:0">Trae recetas de tus guardados. Antes de guardarlas podrás revisarlas y editarlas.</p></div>
     ${drafts.length ? `<button class="btn" type="button" id="goRev">${ic("notebook-pen")} ${drafts.length} borrador${drafts.length > 1 ? "es" : ""} por revisar</button>` : ""}</div>
-    <ol class="stepper">${WSTEPS.map((s, i) => `<li ${W.step === i + 1 ? 'aria-current="step"' : ""} class="${W.step > i + 1 ? "done" : ""}"><b>${W.step > i + 1 ? ic("check", "Hecho") : i + 1}</b>${s}</li>`).join("")}</ol>
+    <ol class="wizard-steps">${WSTEPS.map((s, i) => `<li ${W.step === i + 1 ? 'aria-current="step"' : ""} class="${W.step > i + 1 ? "done" : ""}"><b>${W.step > i + 1 ? ic("check", "Hecho") : i + 1}</b>${s}</li>`).join("")}</ol>
     <section class="panel" id="wz"></section>`;
   $("#goRev") && ($("#goRev").onclick = () => { W.step = 5; viewImport(); });
   const wz = $("#wz");
@@ -722,7 +728,7 @@ async function viewImport() {
 }
 function wizConnect(wz, sources, st) {
   wz.innerHTML = `<h2>1. Elige la fuente</h2>
-  <div class="row" role="radiogroup">${sources.map(s => `<label class="chip" style="cursor:${s.disponible ? "pointer" : "not-allowed"};opacity:${s.disponible ? 1 : .55}"><input type="radio" name="src" value="${s.id}" ${s.id === W.source ? "checked" : ""} ${s.disponible ? "" : "disabled"}> ${esc(s.label)}${s.disponible ? "" : ` <span class="n">${t("soon")}</span>`}</label>`).join("")}</div>
+  <div class="row srcopts" role="radiogroup">${sources.map(s => `<label class="chip" style="cursor:${s.disponible ? "pointer" : "not-allowed"};opacity:${s.disponible ? 1 : .55}"><input type="radio" name="src" value="${s.id}" ${s.id === W.source ? "checked" : ""} ${s.disponible ? "" : "disabled"}> ${esc(s.label)}${s.disponible ? "" : ` <span class="n">${t("soon")}</span>`}</label>`).join("")}</div>
   <h2 style="margin-top:1.5rem">2. Conecta tu cuenta</h2>
   ${st.conectado ? `<div class="banner">${ic("circle-check")} Conectado como <b>@${esc(st.usuario)}</b> <span class="muted small">(${esc(st.proveedor)})</span><button class="btn sm" type="button" id="igOut">Desconectar</button><button class="btn primary" type="button" id="next">Continuar ${ic("arrow-right")}</button></div>` : `
   <p class="muted small">${ic("lock")} La contraseña solo se usa para iniciar sesión y <b>nunca se guarda</b>: se conserva únicamente el archivo de sesión en este equipo. Instagram puede pedir verificación o limitar peticiones si importas mucho de golpe.</p>
@@ -846,7 +852,7 @@ addEventListener("auth-required", () => { if (AUTH.ok) { AUTH.ok = false; toast(
 /* ---------- shared pickers ---------- */
 const COMIDAS = [["comida", "Comida"], ["cena", "Cena"]];
 const DIAS = ["lun", "mar", "mié", "jue", "vie", "sáb", "dom"];
-const fmtDay = (iso, long) => new Date(iso + "T12:00").toLocaleDateString("es-ES", long ? { weekday: "long", day: "numeric", month: "long" } : { day: "numeric", month: "short" });
+const fmtDay = (iso, long) => new Date(iso + "T12:00").toLocaleDateString("es-ES", long === "mid" ? { weekday: "short", day: "numeric", month: "short" } : long ? { weekday: "long", day: "numeric", month: "long" } : { day: "numeric", month: "short" });
 const isoToday = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); };
 let recipeCache = null;
 async function allRecipes() { return recipeCache ??= (await API.recipes({})).filter(r => r.tipo === "receta"); }
@@ -952,7 +958,7 @@ function planChip(p) {
 }
 function moveDialog(wk, p) {
   const d = dialog(`<form class="dlg" id="mvF"><h2>Mover «${esc(p.titulo)}»</h2>
-    <div class="form-grid"><div><label class="f" for="mvd">Día</label><select id="mvd" class="input">${wk.dias.map((x, i) => `<option value="${x}" ${x === p.fecha ? "selected" : ""}>${fmtDay(x, true)}</option>`).join("")}<option value="other">Otro día…</option></select>
+    <div class="form-grid dlg-stack"><div><label class="f" for="mvd">Día</label><select id="mvd" class="input">${wk.dias.map((x, i) => `<option value="${x}" ${x === p.fecha ? "selected" : ""}>${fmtDay(x, "mid")}</option>`).join("")}<option value="other">Otro día…</option></select>
       <input id="mvo" class="input" type="date" hidden value="${p.fecha}" aria-label="Otro día"></div>
     <div><label class="f" for="mvc">Comida</label><select id="mvc" class="input">${COMIDAS.map(([v, l]) => `<option value="${v}" ${v === p.comida ? "selected" : ""}>${l}</option>`).join("")}</select></div></div>
     <div class="row" style="justify-content:flex-end;margin-top:1rem"><button class="btn" type="button" id="mvx">${t("cancel")}</button><button class="btn primary" type="submit">Mover</button></div></form>`);

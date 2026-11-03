@@ -44,7 +44,7 @@ h2{font-size:1.25rem}h3{font-size:1.05rem}
 .tabbar a[aria-current=page]{color:var(--accent);background:var(--accent-soft)}
 
 main{max-width:1240px;margin:0 auto;padding:clamp(1rem,2.5vw,2rem)}
-main:focus{outline:none}
+main:focus,main:focus-visible{outline:none;box-shadow:none}
 
 /* controls */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:.4rem;border:1px solid var(--line);background:var(--surface);
@@ -153,12 +153,12 @@ label.f{display:block;font-weight:600;font-size:.9rem;margin:.8rem 0 .3rem}
 .form-grid{display:grid;gap:0 1rem;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
 .drop{border:2px dashed var(--line);border-radius:12px;padding:1rem;text-align:center}
 
-/* wizard */
-.stepper{display:flex;gap:.4rem;list-style:none;padding:0;margin:0 0 1.2rem;overflow-x:auto}
-.stepper li{flex:1;min-width:max-content;display:flex;align-items:center;gap:.4rem;padding:.5rem .7rem;border-radius:10px;background:var(--surface-2);color:var(--muted);font-weight:600;font-size:.85rem}
-.stepper li b{width:1.5rem;height:1.5rem;border-radius:50%;display:grid;place-items:center;background:var(--line);font-size:.75rem}
-.stepper li[aria-current=step]{background:var(--accent-soft);color:var(--accent)}
-.stepper li[aria-current=step] b,.stepper li.done b{background:var(--accent);color:#fff}
+/* wizard (import steps; the servings counter is .stepper) */
+.wizard-steps{display:flex;gap:.4rem;list-style:none;padding:0;margin:0 0 1.2rem;overflow-x:auto}
+.wizard-steps li{flex:1;min-width:max-content;display:flex;align-items:center;gap:.4rem;padding:.5rem .7rem;border-radius:10px;background:var(--surface-2);color:var(--muted);font-weight:600;font-size:.85rem}
+.wizard-steps li b{width:1.5rem;height:1.5rem;border-radius:50%;display:grid;place-items:center;background:var(--line);font-size:.75rem}
+.wizard-steps li[aria-current=step]{background:var(--accent-soft);color:var(--accent)}
+.wizard-steps li[aria-current=step] b,.wizard-steps li.done b{background:var(--accent);color:#fff}
 .posts{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:.8rem}
 .post{border:2px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface);display:flex;flex-direction:column}
 .post.on{border-color:var(--accent)}
@@ -233,7 +233,6 @@ dialog input[type=radio],dialog input[type=checkbox]{accent-color:var(--accent);
 .post label.pick{min-width:0}
 .post label.pick>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .post .pb{min-width:0}
-main:focus,main:focus-visible{outline:none}
 @media (max-width:600px){.filters>select{flex:1 1 40%;min-width:0;width:auto!important;font-size:.85rem;min-height:38px}.filters .seg{flex:1 1 100%}.hero .row{width:100%}.hero .row .btn{flex:1 1 30%;justify-content:center;padding-inline:.5rem;font-size:.85rem}}
 
 /* ---------- phase 2 ---------- */
@@ -605,3 +604,13 @@ body,.cook{background:var(--elev-0)}
 .day,.slot,.pchip,.pchip .pt,.pchip .pt>span{min-width:0}
 .pchip .pt>span,.slot,.day{overflow-wrap:anywhere}
 .pchip .pc{flex-wrap:wrap;row-gap:4px}
+/* v2.1.6 batch 1 */
+.wizard-steps{max-width:100%;scrollbar-width:none}
+.dlg-stack{grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr))}
+.dlg-stack select{text-overflow:ellipsis}
+@media(max-width:640px){
+  .fab .ic{width:24px;height:24px}
+  .fab.fab-mini{padding:0;width:56px;justify-content:center}
+  .fab.fab-mini span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+}
+.srcopts .chip{max-width:100%;white-space:normal;height:auto;min-height:var(--tap,44px)}
