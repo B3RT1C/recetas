@@ -2,6 +2,36 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versiones según [SemVer](https://semver.org/lang/es/).
 
+## [2.1.6] — 2026-11-03 — Pulido de la interfaz y Ajustes por apartados
+
+### Corregido
+- Los diálogos, hojas de filtros y el modo cocina se cierran al cambiar de pantalla (también con «Atrás»).
+- El paso a paso de importación ya no comparte clases con otros componentes («wizard» → `wizard-steps`) y la ficha de detalle usa `dfacts` en vez del `facts` de la lista.
+- Una sola definición de `.form-grid`: «Nueva receta» vuelve a una columna en móvil.
+- Sin desplazamiento horizontal a 360 y 390 px en Importar (la etiqueta «Próximamente» larga pasa a una línea aparte) ni en ninguna subpantalla de Ajustes.
+- Sin anillo de foco sobre el contenedor principal al navegar.
+- Se eliminan declaraciones CSS de maquetación duplicadas y contradictorias.
+
+### Cambiado
+- **Ajustes por apartados:** en móvil, un índice de filas grandes y cada apartado en su propia ruta (`#/ajustes/ia`, `#/ajustes/cuenta`…); en escritorio, dos columnas con menú lateral. Desaparecen las pestañas horizontales. Apartados: Apariencia, Portadas, Conectar tu IA, Acceso para agentes, Importación e Instagram, Precios y compra, Copias y exportación, Cuenta y seguridad, Estado y acerca de. Todos los ajustes existentes siguen funcionando.
+- El tema se elige con «Claro»/«Oscuro» en Apariencia (sincronizado con el botón de la cabecera).
+- Detalle de receta en dos columnas en escritorio con ingredientes fijos; en móvil, datos en tres columnas y acciones en rejilla.
+- Diálogos como hoja inferior en móvil; planificador con tira de días fija, huecos vacíos compactos y fechas cortas en «Mover».
+- Compra en varias columnas por pasillo en escritorio; las tiendas de origen se resumen como «primera +N».
+- Las fechas y los importes siguen el idioma elegido (español o inglés).
+- Más contraste en las estrellas de valoración (vacías y llenas, en claro y oscuro).
+- El botón flotante «Nueva» se reduce al desplazarse.
+
+### Añadido
+- Coste estimado total en la cabecera de la lista de la compra (si la lista muestra precios).
+- Apartados «Precios y compra» (aclara que los precios son estimados y que la lista no se envía a ninguna tienda) y «Copias y exportación».
+- Textos nuevos traducidos al español y al inglés.
+
+### Pruebas
+- La prueba de humo de maquetación recorre también Importar y todas las subrutas de Ajustes a 360, 390 y 1440 px, en claro y oscuro.
+- Nuevas pruebas: sin definiciones CSS de maquetación contradictorias para el mismo selector, índice de Ajustes en móvil y dos columnas en escritorio, ajustes de apariencia funcionando, diálogos cerrados al navegar, fechas según el idioma.
+- Demo de la landing y capturas móviles regeneradas con la interfaz nueva.
+
 ## [2.1.5] — 2026-10-30 — Corrección urgente: caché y planificador en móvil
 
 ### Corregido
