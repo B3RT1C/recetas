@@ -71,7 +71,7 @@ def main():
                 pg.evaluate("W.step = 3; W.coll = {id: 'C', nombre: 'Recetas'}; W.pick.clear(); viewImport()")
                 pg.wait_for_selector(".post")
                 pg.click("#all"); pg.wait_for_timeout(300); shot("importar")
-                pg.goto(f"{a.base}/#/ajustes"); pg.wait_for_selector("#aiF"); pg.wait_for_timeout(300); shot("ajustes")
+                pg.goto(f"{a.base}/#/ajustes/ia"); pg.wait_for_selector("#aiF"); pg.wait_for_timeout(300); shot("ajustes")
                 pg.wait_for_selector("#s-estado .stats"); pg.evaluate("document.querySelector('#s-estado').scrollIntoView()")
                 pg.wait_for_timeout(300); shot("estado")
                 pg.evaluate("document.querySelector('#s-acc').scrollIntoView()"); pg.wait_for_selector("#s-acc form")

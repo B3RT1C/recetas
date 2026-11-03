@@ -4,7 +4,8 @@ const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const main = $("#main");
-const eur = n => n == null ? "—" : n.toLocaleString("es-ES", { style: "currency", currency: "EUR" });
+const LOC = () => (window.LANG === "en" ? "en-GB" : "es-ES");
+const eur = n => n == null ? "—" : n.toLocaleString(LOC(), { style: "currency", currency: "EUR" });
 const norm = s => (s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
 /* ---------- small UI helpers ---------- */
@@ -26,7 +27,7 @@ function fmtQty(n) {
   if (n >= 10) return String(Math.round(n));
   const w = Math.floor(n), f = n - w;
   for (const [v, s] of FR) if (Math.abs(f - v) < .04) return (w ? w : "") + s;
-  return (Math.round(n * 10) / 10).toLocaleString("es-ES");
+  return (Math.round(n * 10) / 10).toLocaleString(LOC());
 }
 /* Smart scaling: whole-unit items (eggs, cloves, cans) are rounded sensibly. */
 const WHOLE = /huevo|diente|lata|sobre|yema|clara|pechuga|muslo|loncha|rebanada|tortilla|lomo/;
@@ -58,7 +59,7 @@ function renderNav(cur) {
   $("#tabbar").style.gridTemplateColumns = `repeat(${API.STATIC ? 4 : 5},1fr)`;
 }
 function themeIcon() { const d = document.documentElement.dataset.theme === "dark"; $("#themeBtn").innerHTML = ic(d ? "sun" : "moon"); $("#themeBtn").setAttribute("aria-label", t("theme")); }
-$("#themeBtn").onclick = () => { const r = document.documentElement; r.dataset.theme = r.dataset.theme === "dark" ? "light" : "dark"; localStorage.setItem("tema", r.dataset.theme); themeIcon(); };
+$("#themeBtn").onclick = () => { const r = document.documentElement; r.dataset.theme = r.dataset.theme === "dark" ? "light" : "dark"; localStorage.setItem("tema", r.dataset.theme); themeIcon(); $$("input[name=tema]").forEach(i => i.checked = i.value === r.dataset.theme); };
 
 const routes = {
   recetas: viewList, receta: viewDetail, editar: viewEditor, nueva: viewEditor, borrador: viewEditor,
@@ -284,7 +285,7 @@ function phaseTimes(r) {
 function mainIngredients(r, n = 5) {
   return [...(r.ingredientes || [])].filter(i => i.nombre).sort((a, b) => (b.precio_eur || 0) - (a.precio_eur || 0)).slice(0, n).map(i => i.nombre);
 }
-const fdate = s => { const d = s ? new Date(s) : null; return d && !isNaN(d) ? d.toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" }) : ""; };
+const fdate = s => { const d = s ? new Date(s) : null; return d && !isNaN(d) ? d.toLocaleDateString(LOC(), { day: "numeric", month: "short", year: "numeric" }) : ""; };
 function card(r) {
   if (VIEW.vista === "una") return cardWide(r, false);
   if (VIEW.vista === "compacta") return cardCompact(r);
@@ -856,7 +857,7 @@ addEventListener("auth-required", () => { if (AUTH.ok) { AUTH.ok = false; toast(
 /* ---------- shared pickers ---------- */
 const COMIDAS = [["comida", "Comida"], ["cena", "Cena"]];
 const DIAS = ["lun", "mar", "mié", "jue", "vie", "sáb", "dom"];
-const fmtDay = (iso, long) => new Date(iso + "T12:00").toLocaleDateString("es-ES", long === "mid" ? { weekday: "short", day: "numeric", month: "short" } : long ? { weekday: "long", day: "numeric", month: "long" } : { day: "numeric", month: "short" });
+const fmtDay = (iso, long) => new Date(iso + "T12:00").toLocaleDateString(LOC(), long === "mid" ? { weekday: "short", day: "numeric", month: "short" } : long ? { weekday: "long", day: "numeric", month: "long" } : { day: "numeric", month: "short" });
 const isoToday = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); };
 let recipeCache = null;
 async function allRecipes() { return recipeCache ??= (await API.recipes({})).filter(r => r.tipo === "receta"); }
@@ -993,7 +994,7 @@ async function viewShopping() {
   const pend = L.items.filter(i => i.estado === "pendiente"), have = L.items.filter(i => i.estado === "ya_lo_tengo"), done = L.items.filter(i => i.estado === "comprado");
   const groups = []; pend.forEach(i => { const g = groups.find(g => g.id === i.categoria_id); g ? g.items.push(i) : groups.push({ id: i.categoria_id, items: [i] }); });
   main.innerHTML = `
-  <div class="hero"><div><h1>${t("nav_compra")}</h1><p class="muted" style="margin:0">${pend.length} por comprar${done.length ? ` · ${done.length} comprados` : ""}${have.length ? ` · ${have.length} ya en casa` : ""}</p></div>
+  <div class="hero"><div><h1>${t("nav_compra")}</h1><p class="muted" style="margin:0">${pend.length} por comprar${done.length ? ` · ${done.length} comprados` : ""}${have.length ? ` · ${have.length} ya en casa` : ""}</p>${L.mostrar_precios && L.precio_estimado_eur != null ? `<p class="shop-total" style="margin:.2rem 0 0">${t("list_total")}: <b>${eur(L.precio_estimado_eur)}</b> <span class="badge est" title="${t("prices_estimated")}">${t("est")}</span></p>` : ""}</div>
     <div class="row no-print hero-actions">
       <button class="btn" type="button" id="shShare">${ic("share-2")} Compartir</button>
       <button class="btn" type="button" onclick="print()">${ic("printer")} Imprimir</button>
@@ -1224,26 +1225,74 @@ async function renderEstado(refresh) {
 }
 
 /* =========================================================== SETTINGS */
-async function viewSettings() {
+// Settings: an index of sections (mobile) or a side menu (desktop) plus one section per hash route, e.g. #/ajustes/ia.
+const SETTINGS = [["apariencia", "palette", "set_appearance"], ["portadas", "film", "set_covers"], ["ia", "bot", "set_ai"], ["agentes", "key-round", "set_agents"],
+  ["importacion", "instagram", "set_import"], ["precios", "euro", "set_prices"], ["copias", "download", "set_backup"], ["cuenta", "lock", "set_account"], ["estado", "activity", "set_status"]];
+const STATIC_SETTINGS = ["apariencia", "precios", "estado"];
+async function viewSettings(arg) {
   setTitle(t("nav_ajustes"));
+  const avail = SETTINGS.filter(([id]) => !API.STATIC || STATIC_SETTINGS.includes(id));
+  const cur = avail.find(([id]) => id === arg)?.[0];
+  if (arg && !cur) { location.replace("#/ajustes"); return; }
+  const sel = cur || "apariencia";
   const meta = await API.meta();
-  main.innerHTML = `<h1>${t("nav_ajustes")}</h1><div class="settings">
-  <nav class="side" aria-label="Apartados">${[["ap", t("appearance")], ...(API.STATIC ? [] : [["por", "Portadas"], ["ia", "Conectar tu IA"], ["tok", "Acceso para agentes"], ["ig", "Instagram"], ["estado", "Estado"], ["acc", "Acceso"], ["sesion", "Sesión"]]), ["about", t("about")]].map(([id, l]) => `<a href="#/ajustes" data-jump="${id}">${l}</a>`).join("")}</nav>
-  <div>
-   <section class="panel" id="s-ap"><h2>${t("appearance")}</h2><div class="row">
-     <button class="btn" type="button" id="tg">${ic("sun-moon")} ${t("theme")}</button>
-     <label>${t("language")} <select class="input" id="lang" style="width:auto">${[["es", "Español"], ["en", "English"]].map(([v, l]) => `<option value="${v}" ${LANG === v ? "selected" : ""}>${l}</option>`).join("")}</select></label></div>
-     <fieldset class="cover-opts" id="densOpt"><legend class="f">${t("density")}</legend>
+  const [, icon, key] = SETTINGS.find(([id]) => id === sel);
+  main.innerHTML = `<div class="settings ${cur ? "s-sub" : "s-index"}">
+  <div class="s-menu"><h1>${t("nav_ajustes")}</h1>
+  <nav class="side" aria-label="${t("set_sections")}">${avail.map(([id, ico, k]) => `<a href="#/ajustes/${id}" ${id === sel ? 'aria-current="page"' : ""}>${ic(ico)}<span>${t(k)}</span>${ic("chevron-right")}</a>`).join("")}</nav></div>
+  <div class="s-content">
+   <nav class="crumbs s-back"><a href="#/ajustes">${ic("arrow-left")} ${t("nav_ajustes")}</a></nav>
+   <h2 class="s-title">${ic(icon)} ${t(key)}</h2>
+   ${settingsSection(sel, meta)}
+  </div></div>`;
+  if (sel === "apariencia") bindAppearance();
+  if (API.STATIC) return;
+  const fail = (id, e) => { const b = $(id); if (b) b.innerHTML = `<p class="muted">${esc(e.message)}</p>`; };
+  ({
+    portadas: () => renderCoverDefault().catch(e => fail("#s-por", e)),
+    ia: () => renderAI().catch(e => fail("#s-ia", e)),
+    agentes: () => renderTokens().catch(e => fail("#s-tok", e)),
+    importacion: () => renderIG().catch(e => fail("#s-ig", e)),
+    precios: () => { $("#stPan") && ($("#stPan").onclick = () => pantryDialog()); $("#stCats") && ($("#stCats").onclick = () => catsDialog()); },
+    copias: () => { $("#stExp").onclick = () => exportDialog(); },
+    cuenta: () => { renderAcceso().catch(e => fail("#s-acc", e));
+      $("#logout").onclick = () => guard(async () => { await API.auth.logout(); AUTH.ok = false; location.hash = "#/login"; viewLogin(); }); },
+    estado: () => renderEstado().catch(e => fail("#s-estado", e)),
+  })[sel]?.();
+}
+function settingsSection(sel, meta) {
+  switch (sel) {
+    case "apariencia": return `<section class="panel" id="s-ap">
+     <fieldset class="cover-opts" id="themeOpt"><legend class="f">${t("theme_label")}</legend>
+       ${[["light", t("theme_light"), "sun"], ["dark", t("theme_dark"), "moon"]].map(([v, l, i]) =>
+         `<label class="cover-opt"><input type="radio" name="tema" value="${v}" ${(document.documentElement.dataset.theme || "light") === v ? "checked" : ""}><span><b>${ic(i)} ${l}</b></span></label>`).join("")}
+     </fieldset>
+     <label class="f" for="lang">${t("language")}</label><select class="input" id="lang">${[["es", "Español"], ["en", "English"]].map(([v, l]) => `<option value="${v}" ${LANG === v ? "selected" : ""}>${l}</option>`).join("")}</select>
+     <fieldset class="cover-opts" id="densOpt" style="margin-top:1rem"><legend class="f">${t("density")}</legend>
        ${[["comoda", t("density_comfy")], ["compacta", t("density_compact")]].map(([v, l]) =>
          `<label class="cover-opt"><input type="radio" name="interfaz" value="${v}" ${UIDENS === v ? "checked" : ""}><span><b>${l}</b></span></label>`).join("")}
        <small class="muted">${t("density_note")}</small>
      </fieldset>
-     <fieldset class="cover-opts" id="thumbOpt" style="margin-top:1rem"><legend class="f">En las listas, mostrar</legend>
-       ${[["portada", "Miniatura del vídeo o portada", "La imagen de cada receta (recomendado)"], ["icono", "Icono genérico", "Más ligera y uniforme; sin fotos"]].map(([v, l, n]) =>
+     <fieldset class="cover-opts" id="thumbOpt" style="margin-top:1rem"><legend class="f">${t("thumbs_legend")}</legend>
+       ${[["portada", t("thumbs_cover"), t("thumbs_cover_n")], ["icono", t("thumbs_icon"), t("thumbs_icon_n")]].map(([v, l, n]) =>
          `<label class="cover-opt"><input type="radio" name="miniaturas" value="${v}" ${THUMBS === v ? "checked" : ""}><span><b>${l}</b><small class="muted">${n}</small></span></label>`).join("")}
-     </fieldset></section>
-   ${API.STATIC ? "" : `<section class="panel" id="s-por"></section><section class="panel" id="s-ia"></section><section class="panel" id="s-tok"></section><section class="panel" id="s-ig"></section><section class="panel" id="s-acc"></section><section class="panel" id="s-estado"><h2>${ic("activity")} Estado</h2><p class="muted">Cargando…</p></section>
-   <section class="panel" id="s-sesion"><h2>${ic("lock")} Sesión</h2><p>Has entrado como <b>${esc(AUTH.user)}</b>. Para cambiar la contraseña usa <code>python -m app.cli create-admin --replace</code> en el servidor.</p><button class="btn" type="button" id="logout">Cerrar sesión</button></section>`}
+     </fieldset></section>`;
+    case "portadas": return `<section class="panel" id="s-por"><p class="muted">${t("loading")}</p></section>`;
+    case "ia": return `<section class="panel" id="s-ia"><p class="muted">${t("loading")}</p></section>`;
+    case "agentes": return `<section class="panel" id="s-tok"><p class="muted">${t("loading")}</p></section>`;
+    case "importacion": return `<section class="panel" id="s-ig"><p class="muted">${t("loading")}</p></section>`;
+    case "precios": return `<section class="panel" id="s-precios">
+     <p>${t("prices_body")}</p>
+     <ul class="small muted plain"><li>${ic("shield-check")} ${t("prices_no_store")}</li><li>${ic("euro")} ${t("prices_toggle")}</li></ul>
+     ${meta.nota_precios ? `<p class="small muted">${esc(meta.nota_precios)}</p>` : ""}
+     ${API.STATIC ? "" : `<div class="row" style="margin-top:1rem"><button class="btn" type="button" id="stPan">${ic("house")} ${t("pantry")}</button><button class="btn" type="button" id="stCats">${ic("layout-list")} ${t("aisles")}</button><a class="btn" href="#/compra">${ic("shopping-cart")} ${t("nav_compra")}</a></div>`}</section>`;
+    case "copias": return `<section class="panel" id="s-copias"><p>${t("backup_body")}</p>
+     <div class="row"><button class="btn primary" type="button" id="stExp">${ic("download")} ${t("export")}</button></div>
+     <p class="small muted" style="margin-top:1rem">${t("backup_note")}</p></section>`;
+    case "cuenta": return `<section class="panel" id="s-sesion"><h2>${ic("lock")} ${t("session")}</h2><p>${t("signed_in_as", `<b>${esc(AUTH.user)}</b>`)}</p>
+     <p class="small muted">${t("password_hint")} <code>python -m app.cli create-admin --replace</code></p><button class="btn" type="button" id="logout">${t("logout")}</button></section>
+     <section class="panel" id="s-acc"><p class="muted">${t("loading")}</p></section>`;
+    case "estado": return `${API.STATIC ? "" : `<section class="panel" id="s-estado"><p class="muted">${t("loading")}</p></section>`}
    <section class="panel" id="s-about"><h2>${t("about")}</h2>
      <p>Recetario personal que convierte vídeos de recetas guardados en Instagram en recetas escalables, con precios <b>estimados</b> y modo cocina. Versión ${esc(meta.version || "2")}.</p>
      <pre class="arch" aria-label="Arquitectura">Navegador (SPA vanilla JS, sin build)
@@ -1256,24 +1305,23 @@ FastAPI + uvicorn ──► SQLite (recetas como documentos JSON, migración sin
    ├─ Exportar: JSON · HTML · Markdown · ZIP con medios
    └─ Medios: videos/CÓDIGO.mp4 (compatible v1) · media/…</pre>
      <p class="small muted">${esc(meta.nota_precios || "")}</p>
-     ${API.STATIC ? `<p class="small">Esta es una demo estática de solo lectura con datos de ejemplo.</p>` : `<p class="small"><a href="/docs" target="_blank">Documentación de la API (OpenAPI) ${ic("external-link")}</a></p>`}</section>
-  </div></div>`;
-  $$("[data-jump]").forEach(a => a.onclick = e => { e.preventDefault(); $(`#s-${a.dataset.jump}`).scrollIntoView({ behavior: "smooth" }); });
-  $("#tg").onclick = () => $("#themeBtn").click();
+     ${API.STATIC ? `<p class="small">Esta es una demo estática de solo lectura con datos de ejemplo.</p>` : `<p class="small"><a href="/docs" target="_blank">Documentación de la API (OpenAPI) ${ic("external-link")}</a></p>`}</section>`;
+  }
+  return "";
+}
+function bindAppearance() {
+  $$("input[name=tema]").forEach(i => i.onchange = () => { document.documentElement.dataset.theme = i.value; localStorage.setItem("tema", i.value); themeIcon(); });
   $$("input[name=interfaz]").forEach(i => i.onchange = () => guard(async () => {
     setUIDens(i.value);
     if (!API.STATIC) await API.setPrefsLista({ interfaz: UIDENS });
-    toast("Preferencia guardada");
+    toast(t("pref_saved"));
   }));
   $$("input[name=miniaturas]").forEach(i => i.onchange = () => guard(async () => {
     THUMBS = i.value; localStorage.setItem("miniaturas", THUMBS);
     if (!API.STATIC) await API.setPrefsLista({ miniaturas: THUMBS });
-    toast("Preferencia guardada");
+    toast(t("pref_saved"));
   }));
   $("#lang").onchange = e => { localStorage.setItem("lang", e.target.value); location.reload(); };
-  if (API.STATIC) return;
-  renderCoverDefault().catch(() => {}); renderAI(); renderTokens(); renderIG(); renderAcceso().catch(e => $("#s-acc").innerHTML = `<h2>${ic("wifi")} Acceso</h2><p class="muted">${esc(e.message)}</p>`); renderEstado().catch(e => $("#s-estado").innerHTML = `<h2>${ic("activity")} Estado</h2><p class="muted">${esc(e.message)}</p>`);
-  $("#logout").onclick = () => guard(async () => { await API.auth.logout(); AUTH.ok = false; location.hash = "#/login"; viewLogin(); });
 }
 async function renderCoverDefault() {
   const box = $("#s-por"), c = await API.coverDefault();
